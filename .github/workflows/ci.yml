@@ -15,7 +15,7 @@ concurrency:
 jobs:
   lint-test:
     name: lint-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +53,15 @@ jobs:
         run: npm test
         env:
           CPN_IT: "1"
+
+      - name: Simulator diagnostics
+        if: failure()
+        run: |
+          ls -l /lib/ld-linux.so.2 /tmp/accesscpn/simulator || true
+          file /tmp/accesscpn/simulator/run.x86-linux || true
+          /tmp/accesscpn/simulator/run.x86-linux 2>&1 | head -20 || true
+          mount | grep -E ' /tmp | /dev/shm ' || true
+          cat /proc/sys/vm/mmap_min_addr; ulimit -a | head -20
 
       - name: VS Code integration test
         run: npm run test:integration
