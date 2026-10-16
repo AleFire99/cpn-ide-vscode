@@ -59,7 +59,7 @@ export function reloadAllWebviews(backendUrl: string): void {
 export interface BridgeOptions {
   /** In editor mode: the document path; writes to it go through onWriteDocument instead of the file system. */
   documentPath?: string;
-  readDocument?: () => string;
+  readDocument?: () => string | Promise<string>;
   onWriteDocument?: (text: string) => Thenable<unknown> | void;
 }
 

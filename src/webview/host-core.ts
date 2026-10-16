@@ -32,6 +32,16 @@ export function fileName(p: string): string {
   }
 }
 
+export function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/** Static page shown in place of the UI when a model cannot be loaded. */
+export function errorPageHtml(title: string, lines: string[]): string {
+  const items = lines.map((l) => `<li><code>${escapeHtml(l)}</code></li>`).join('');
+  return `<!doctype html><html><body style="font-family:sans-serif;padding:1em"><h3>${escapeHtml(title)}</h3><ul>${items}</ul></body></html>`;
+}
+
 /** Paths a webview may read/write: the bound document plus anything the user picked in a dialog. */
 export class PathAllowlist {
   private readonly allowed = new Set<string>();

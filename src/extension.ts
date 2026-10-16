@@ -2,13 +2,17 @@ import * as vscode from 'vscode';
 import { CpnEditorProvider, VIEW_TYPE } from './editor/cpnEditorProvider';
 import { serializeSpec, textModelPaths } from './model/convert';
 import { decompile } from './model/decompile';
+import { exportCpn } from './editor/exportCpn';
+import { PetriEditorProvider } from './editor/petriEditorProvider';
+import { PETRI_VIEW_TYPE } from './editor/petriModel';
+import { isSpecFile } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { decodeBytes, encodeText } from './webview/host-core';
 import { openStandalonePanel, uiState } from './webview/panel';
 
 export function activate(ctx: vscode.ExtensionContext): void {
   const backend = BackendManager.init(ctx);
-  ctx.subscriptions.push(backend, CpnEditorProvider.register(ctx));
+  ctx.subscriptions.push(backend, CpnEditorProvider.register(ctx), PetriEditorProvider.register(ctx));
 
   const openUi = async () => {
     try {
@@ -22,7 +26,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
   const openInCpnIde = async (uri?: vscode.Uri) => {
     const target = uri ?? vscode.window.activeTextEditor?.document.uri;
     if (!target) return openUi();
-    await vscode.commands.executeCommand('vscode.openWith', target, VIEW_TYPE);
+    await vscode.commands.executeCommand('vscode.openWith', target, isSpecFile(target.path) ? PETRI_VIEW_TYPE : VIEW_TYPE);
   };
 
   const openAsText = async (uri?: vscode.Uri) => {
@@ -74,6 +78,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('cpnIde.openInCpnIde', openInCpnIde),
     vscode.commands.registerCommand('cpnIde.openAsText', openAsText),
     vscode.commands.registerCommand('cpnIde.convertToText', convertToText),
+    vscode.commands.registerCommand('cpnIde.exportCpn', (uri?: vscode.Uri) => exportCpn(uri)),
     vscode.commands.registerCommand('cpnIde.stopBackend', () => backend.stop()),
     vscode.commands.registerCommand('cpnIde.showLog', () => backend.showLog()),
     // Test hook: reports whether a webview UI finished booting.
