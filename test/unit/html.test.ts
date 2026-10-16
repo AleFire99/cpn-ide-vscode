@@ -71,6 +71,14 @@ describe('buildWebviewHtml', () => {
     expect(html.indexOf('Content-Security-Policy')).toBeLessThan(iBoot);
   });
 
+  it('passes simulation and debug settings into window.__CPN__', () => {
+    const h = buildWebviewHtml({ ...opts, config: { mode: 'editor', stepDelayMs: 0, animate: false, debug: true } });
+    expect(h).toContain('"stepDelayMs":0');
+    expect(h).toContain('"animate":false');
+    expect(h).toContain('"debug":true');
+    expect(h).toContain('stepDelayMs: cfg.stepDelayMs, animate: cfg.animate, debug: cfg.debug');
+  });
+
   it('embeds config safely and sets the backend URL', () => {
     expect(html).toContain('"http://127.0.0.1:4567"');
     expect(html).toContain('merged.serverAddress = backend');

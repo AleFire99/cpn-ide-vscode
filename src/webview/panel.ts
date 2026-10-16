@@ -27,6 +27,16 @@ export function webviewOptions(ctx: vscode.ExtensionContext): vscode.WebviewOpti
   };
 }
 
+/** The cpnIde.simulation.* / cpnIde.debug settings, passed to the webview. Read on every render. */
+export function readUiSettings(): Pick<CpnConfig, 'stepDelayMs' | 'animate' | 'debug'> {
+  const c = vscode.workspace.getConfiguration('cpnIde');
+  return {
+    stepDelayMs: Math.max(0, c.get<number>('simulation.stepDelayMs', 100)),
+    animate: c.get<boolean>('simulation.animate', true),
+    debug: c.get<boolean>('debug', false),
+  };
+}
+
 export function renderHtml(ctx: vscode.ExtensionContext, webview: vscode.Webview, backendUrl: string, config: CpnConfig): string {
   uiState.backendUrl = backendUrl;
   const uiDir = vscode.Uri.joinPath(ctx.extensionUri, 'resources', 'ui');
@@ -39,7 +49,7 @@ export function renderHtml(ctx: vscode.ExtensionContext, webview: vscode.Webview
     cspSource: webview.cspSource,
     nonce: makeNonce(),
     backendUrl,
-    config,
+    config: { ...readUiSettings(), ...config },
   });
 }
 

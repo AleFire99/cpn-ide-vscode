@@ -35,6 +35,10 @@ variables, functions). They compile to CPN Tools XML.
 - Opening a `.petri.json` shows the net in CPN IDE; saving there writes back to the JSON. **Convert to Text Model** turns an existing `.cpn` into this format, and **Export .cpn** goes the other way.
 - Compile errors show up as diagnostics while you edit. When the backend is running and no CPN IDE panel is open, saved models are also type-checked by the simulator.
 
+## Simulation speed
+
+The bundled UI waits 500 ms between steps of a multi-step run; the backend needs a few ms. Set `cpnIde.simulation.stepDelayMs` (default 100) and `cpnIde.simulation.animate` to speed it up, and `cpnIde.debug` to bring back the UI's verbose console output. The settings apply when an editor is (re)opened. "CPN IDE: Run Simulation (No UI)" runs a model without the UI and prints the final marking to the "CPN IDE" output channel.
+
 ## Platform support
 
 | Platform | Local simulator | Notes |

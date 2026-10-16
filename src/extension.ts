@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import * as vscode from 'vscode';
 import { CpnEditorProvider, VIEW_TYPE } from './editor/cpnEditorProvider';
 import { exportCpn } from './editor/exportCpn';
@@ -7,6 +8,7 @@ import { PetriSync } from './editor/petriSync';
 import { decompile } from './model/decompile';
 import { isSpecFile, serializeSpec, textModelPaths } from './model/workspace';
 import { BackendManager } from './runtime/backend';
+import { formatResult, runHeadless } from './runtime/headless-sim';
 import { decodeBytes, encodeText } from './webview/host-core';
 import { openStandalonePanel, uiState } from './webview/panel';
 
@@ -72,7 +74,39 @@ export function activate(ctx: vscode.ExtensionContext): void {
     }
   };
 
+  const runSimulation = async (uri?: vscode.Uri) => {
+    const target = uri ?? vscode.window.activeTextEditor?.document.uri;
+    if (!target || !/\.cpn$/i.test(target.path)) {
+      void vscode.window.showErrorMessage('CPN IDE: open or select a .cpn file to simulate.');
+      return;
+    }
+    const input = await vscode.window.showInputBox({
+      prompt: 'Number of simulation steps',
+      value: '100',
+      validateInput: (v) => (/^[1-9]\d*$/.test(v.trim()) ? undefined : 'Enter a positive integer'),
+    });
+    if (input === undefined) return;
+    const out = backend.output;
+    out.show(true);
+    try {
+      const base = await backend.ensureStarted();
+      const xml = decodeBytes(await vscode.workspace.fs.readFile(target)).text;
+      out.appendLine(`[sim] ${target.fsPath}: up to ${input.trim()} step(s)`);
+      const r = await runHeadless({
+        fetch: (url, init) => fetch(url, init),
+        baseUrl: base,
+        xml,
+        maxSteps: Number(input),
+        sessionId: `headless-${randomUUID()}`,
+      });
+      for (const l of formatResult(r)) out.appendLine(l);
+    } catch (e) {
+      out.appendLine(`[sim] failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
   ctx.subscriptions.push(
+    vscode.commands.registerCommand('cpnIde.runSimulation', runSimulation),
     vscode.commands.registerCommand('cpnIde.open', openUi),
     vscode.commands.registerCommand('cpnIde.newNet', openUi),
     vscode.commands.registerCommand('cpnIde.openInCpnIde', openInCpnIde),
