@@ -98,7 +98,11 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
     });
     let started: Awaited<ReturnType<typeof startBackendProcess>> | undefined;
     try {
-      expect(await waitFor(() => !!findPortOwner(SIMULATOR_PORT), 10000)).toBe(true);
+      const up = await waitFor(() => !!findPortOwner(SIMULATOR_PORT), 10000);
+      if (!up) {
+        const log = fs.existsSync(path.join(foreignDir, 'cpnmld.log')) ? fs.readFileSync(path.join(foreignDir, 'cpnmld.log'), 'utf8') : '(no log)';
+        throw new Error(`daemon not found: exit=${daemon.exitCode} sig=${daemon.signalCode} uid=${process.getuid?.()} log=${log} tcp=${fs.readFileSync('/proc/net/tcp', 'utf8')}`);
+      }
       const owner = findPortOwner(SIMULATOR_PORT)!;
       expect(owner.pid).toBe(daemon.pid);
       expect(isForeignSimulator(owner, tmpDir)).toBe(true);
