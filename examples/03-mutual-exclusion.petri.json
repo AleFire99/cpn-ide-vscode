@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "declarations": "03-mutual-exclusion.sml",
+  "pages": [
+    {
+      "name": "MutualExclusion",
+      "places": [
+        { "name": "Idle", "type": "INT", "init": "1`1++1`2", "pos": [-250, 0] },
+        { "name": "Lock", "type": "UNIT", "init": "1`()", "pos": [0, -150] },
+        { "name": "Critical", "type": "INT", "pos": [250, 0] }
+      ],
+      "transitions": [
+        { "name": "Enter", "pos": [0, -50] },
+        { "name": "Leave", "pos": [0, 80] }
+      ],
+      "arcs": [
+        { "from": "Idle", "to": "Enter", "inscription": "p" },
+        { "from": "Lock", "to": "Enter", "inscription": "()" },
+        { "from": "Enter", "to": "Critical", "inscription": "p" },
+        { "from": "Critical", "to": "Leave", "inscription": "p" },
+        { "from": "Leave", "to": "Idle", "inscription": "p" },
+        { "from": "Leave", "to": "Lock", "inscription": "()" }
+      ]
+    }
+  ]
+}
