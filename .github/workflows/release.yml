@@ -71,10 +71,10 @@ jobs:
           fail_on_unmatched_files: true
 
   # Disabled until a Marketplace publisher exists and the VSCE_PAT secret
-  # (Azure DevOps PAT, scope Marketplace > Manage) is configured. Remove `if: false` to enable.
+  # (Azure DevOps PAT, scope Marketplace > Manage) is configured. Skipped unless the repository variable PUBLISH_MARKETPLACE is "true".
   publish-marketplace:
     name: publish-marketplace
-    if: ${{ false }}
+    if: vars.PUBLISH_MARKETPLACE == 'true'
     needs: release
     runs-on: ubuntu-latest
     steps:
