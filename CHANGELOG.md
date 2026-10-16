@@ -4,6 +4,7 @@
 
 - Text model format: `*.petri.json` (structure) + `*.sml` (declarations) compile to CPN Tools XML, with pages, subpages, fusion places, auto-layout and a JSON schema (`schema/petri.schema.json`).
 - Example models are now generated from text sources by `node scripts/gen-examples.mjs` (no CPN IDE download needed); new `04-hierarchy` example with a subpage and a fusion place.
+- **CPN IDE: Convert to Text Model** turns a `.cpn` into `.petri.json` + `.sml`, dropping graphics (monitors are dropped with a warning). Round-tripped models validate with the same initial marking. New `realtime` spec option for real-valued model time.
 
 ## 0.2.0 — 2026-10-16
 
