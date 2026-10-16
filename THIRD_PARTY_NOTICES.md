@@ -23,6 +23,13 @@ The bundled UI ships its own `3rdpartylicenses.txt` with the licenses of its dep
 - License: GNU General Public License v2.0 (GPL-2.0)
 - Project: https://cpntools.org
 
+### Modification: simulator daemon binds loopback only
+
+The upstream `cpnmld` daemon (`cpnmld.x86-linux`, `cpnmld.x86-cygwin`) binds `INADDR_ANY`, exposing the simulator
+to the network. `scripts/patch-cpnmld.mjs` (run by `scripts/fetch-cpn.sh`) changes that single `bind()` address
+immediate to `127.0.0.1` inside the redistributed engine jar, after verifying the SHA-256 of the original
+binaries. No other bytes change. The macOS daemon is not patched (the local simulator is unsupported there).
+
 ## Eclipse Temurin JRE
 
 - Java runtime downloaded on first use. It is not bundled with this extension.

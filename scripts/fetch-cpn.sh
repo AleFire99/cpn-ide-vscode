@@ -13,13 +13,16 @@ OUT_DIR="${OUT_DIR:-$ROOT/resources}"
 CACHE_DIR="${CACHE_DIR:-$ROOT/.cache}"
 INSTALLER="$CACHE_DIR/$(basename "$CPN_INSTALLER_URL")"
 STAMP="$OUT_DIR/.installer-sha256"
+# Bump PATCH_ID when scripts/patch-cpnmld.mjs changes so stale resources are rebuilt.
+PATCH_ID="loopback1"
+STAMP_VALUE="$CPN_INSTALLER_SHA256+$PATCH_ID"
 
 DOWNLOAD_ONLY=0
 [[ "${1:-}" == "--download-only" ]] && DOWNLOAD_ONLY=1
 
 mkdir -p "$CACHE_DIR" "$OUT_DIR"
 
-if [[ $DOWNLOAD_ONLY == 0 && -f "$STAMP" && "$(cat "$STAMP")" == "$CPN_INSTALLER_SHA256" \
+if [[ $DOWNLOAD_ONLY == 0 && -f "$STAMP" && "$(cat "$STAMP")" == "$STAMP_VALUE" \
       && -d "$OUT_DIR/backend" && -f "$OUT_DIR/ui/index.html" ]]; then
   echo "fetch-cpn: $OUT_DIR already up to date"
   exit 0
@@ -73,5 +76,6 @@ npx --yes "@electron/asar@$ASAR_VERSION" extract "$RES/app.asar" "$WORK/asar"
 rm -rf "$OUT_DIR/backend" "$OUT_DIR/ui"
 cp -r "$RES/backend" "$OUT_DIR/backend"
 cp -r "$WORK/asar/dist/cpn-ide" "$OUT_DIR/ui"
-echo "$CPN_INSTALLER_SHA256" > "$STAMP"
+node "$ROOT/scripts/patch-cpnmld.mjs" "$OUT_DIR/backend/cpn-ide-back-1.28-SNAPSHOT.jar"
+echo "$STAMP_VALUE" > "$STAMP"
 echo "fetch-cpn: done -> $OUT_DIR/backend, $OUT_DIR/ui"

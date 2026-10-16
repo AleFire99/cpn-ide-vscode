@@ -1,15 +1,18 @@
 # CPN IDE backend (Spring Boot + bundled 32-bit CPN simulator).
 # Build from the repository root:  docker build -f docker/Dockerfile -t cpn-ide-backend .
 # Note: rootless Podman mounts /dev/zero noexec, which breaks the 32-bit simulator
-# (mmap EPERM). Use Docker, or remount /dev/zero with exec inside the container.
+# (mmap EPERM). Use Docker, or remount /dev/zero with exec inside the container
+# (as root: mount -o remount,bind,exec /dev/zero).
+# The simulator daemon port (20001) is deliberately not EXPOSEd; the bundled cpnmld is
+# patched by scripts/patch-cpnmld.mjs to listen on 127.0.0.1 only.
 
 # ---- Stage 1: download the official installer and unpack the backend ----
 FROM docker.io/library/debian:bookworm-slim AS fetch
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl innoextract nodejs npm \
+ && apt-get install -y --no-install-recommends ca-certificates curl innoextract nodejs npm zip unzip \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
-COPY scripts/fetch-cpn.sh scripts/fetch-cpn.sh
+COPY scripts/fetch-cpn.sh scripts/patch-cpnmld.mjs scripts/
 RUN scripts/fetch-cpn.sh
 
 # ---- Stage 2: runtime ----
