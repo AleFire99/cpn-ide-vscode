@@ -2,7 +2,13 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
   SIMULATOR_PORT,
+  findPortOwner,
+  isForeignSimulator,
   isPortListening,
+  onlyTimeWait,
+  stopSimulatorProcess,
+  waitForPortRelease,
+  type PortOwner,
   killTree,
   preflight,
   probeHttp,
@@ -11,11 +17,14 @@ import {
   type RunningBackend,
 } from './backend-core';
 import { resolveJava } from './jre';
+import { reloadAllWebviews } from '../webview/panel';
 
 export class BackendManager implements vscode.Disposable {
   private static instance: BackendManager | undefined;
   private running: RunningBackend | undefined;
   private starting: Promise<string> | undefined;
+  private failureShown = false;
+  private retrying = false;
   readonly output = vscode.window.createOutputChannel('CPN IDE');
 
   private constructor(private readonly ctx: vscode.ExtensionContext) {}
@@ -60,16 +69,12 @@ export class BackendManager implements vscode.Disposable {
       const tmpDir = path.join(tmpRoot, String(process.pid));
       const reaped = reapStaleSimulators(tmpRoot);
       if (reaped.length) this.output.appendLine(`[backend] stopped ${reaped.length} leftover simulator process(es) from a previous session`);
-      if (await isPortListening(SIMULATOR_PORT)) {
-        this.output.appendLine(
-          `[warning] 127.0.0.1:${SIMULATOR_PORT} is already in use. The CPN simulator port is fixed, so this backend will ` +
-            'connect to that existing simulator daemon (e.g. another VS Code window or user). If you do not recognise it, stop it first.',
-        );
-      }
+      await this.prepareSimulatorPort();
 
       return await vscode.window.withProgress(
         { location: vscode.ProgressLocation.Notification, title: 'CPN IDE: starting backend...' },
         async () => {
+          this.failureShown = false;
           this.output.appendLine(`[backend] starting with ${javaPath}`);
           const r = await startBackendProcess({
             javaPath,
@@ -77,7 +82,10 @@ export class BackendManager implements vscode.Disposable {
             userHome: path.join(this.ctx.globalStorageUri.fsPath, 'data'),
             tmpDir,
             port,
-            onOutput: (s) => this.output.append(s),
+            onOutput: (s) => {
+              this.output.append(s);
+              if (s.includes('Error starting simulator')) void this.reportSimulatorFailure();
+            },
             onExit: (code, signal) => {
               this.output.appendLine(`[backend] exited (code=${code}, signal=${signal})`);
             },
@@ -94,6 +102,107 @@ export class BackendManager implements vscode.Disposable {
         if (c === 'Show Log') this.showLog();
       });
       throw e;
+    }
+  }
+
+  private get tmpRoot(): string {
+    return path.join(this.ctx.globalStorageUri.fsPath, 'tmp');
+  }
+
+  /** A same-user cpnmld outside our tmp root holding the simulator port (Linux only). */
+  private findForeignOwner(): PortOwner | undefined {
+    if (process.platform !== 'linux') return undefined;
+    const owner = findPortOwner(SIMULATOR_PORT);
+    return owner && isForeignSimulator(owner, this.tmpRoot) ? owner : undefined;
+  }
+
+  private async stopForeign(owner: PortOwner): Promise<void> {
+    this.output.appendLine(`[backend] stopping simulator daemon pid ${owner.pid} (${owner.cmdline})`);
+    await stopSimulatorProcess(owner.pid);
+  }
+
+  /** Wait for a TIME-WAIT port to clear (Linux), with a progress notification. */
+  private async waitForPort(): Promise<void> {
+    if (process.platform !== 'linux' || !onlyTimeWait(SIMULATOR_PORT)) return;
+    this.output.appendLine(`[backend] port ${SIMULATOR_PORT} is in TIME-WAIT; waiting for it to be released`);
+    await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: 'Waiting for the simulator port to be released…' },
+      () => waitForPortRelease(SIMULATOR_PORT, 70000),
+    );
+  }
+
+  /** Before spawning: deal with a foreign simulator daemon on the fixed port and with TIME-WAIT leftovers. */
+  private async prepareSimulatorPort(): Promise<void> {
+    const foreign = this.findForeignOwner();
+    if (foreign) {
+      for (;;) {
+        const c = await vscode.window.showWarningMessage(
+          `CPN IDE: another simulator daemon (pid ${foreign.pid}, started from ${foreign.cwd}) holds port ${SIMULATOR_PORT}. ` +
+            'If it is stale, the simulator will fail to start.',
+          'Stop it',
+          'Keep using it',
+          'Show Log',
+        );
+        if (c === 'Show Log') {
+          this.output.appendLine(`[warning] port ${SIMULATOR_PORT} is held by pid ${foreign.pid}: ${foreign.cmdline} (cwd ${foreign.cwd})`);
+          this.showLog();
+          continue;
+        }
+        if (c === 'Stop it') await this.stopForeign(foreign);
+        break;
+      }
+    } else if (await isPortListening(SIMULATOR_PORT)) {
+      this.output.appendLine(
+        `[warning] 127.0.0.1:${SIMULATOR_PORT} is already in use. The CPN simulator port is fixed, so this backend will ` +
+          'connect to that existing simulator daemon (e.g. another VS Code window or user). If you do not recognise it, stop it first.',
+      );
+    }
+    await this.waitForPort();
+  }
+
+  /** The backend reported (or the UI saw) that the simulator could not start. Shown once per backend session. */
+  async reportSimulatorFailure(): Promise<void> {
+    if (this.failureShown || this.retrying) return;
+    this.failureShown = true;
+    const foreign = this.findForeignOwner();
+    this.output.appendLine('[error] the simulator could not start');
+    const buttons = [...(foreign ? ['Stop stale simulator'] : []), 'Retry', 'Show Log'];
+    const c = await vscode.window.showErrorMessage(
+      'CPN IDE: the simulator could not start.' +
+        (foreign ? ` A stale simulator daemon (pid ${foreign.pid}) is holding port ${SIMULATOR_PORT}.` : ''),
+      ...buttons,
+    );
+    if (c === 'Show Log') {
+      this.showLog();
+    } else if (c === 'Retry') {
+      await this.retry();
+    } else if (c === 'Stop stale simulator' && foreign) {
+      const ok = await vscode.window.showWarningMessage(
+        `Stop simulator daemon pid ${foreign.pid} and its simulator processes?`,
+        { modal: true, detail: `${foreign.cmdline}\n${foreign.cwd}` },
+        'Stop it',
+      );
+      if (ok === 'Stop it') {
+        await this.stopForeign(foreign);
+        await this.retry();
+      }
+    }
+  }
+
+  /** Restart the backend (after the port is free) and reload every open CPN IDE webview. */
+  async retry(): Promise<void> {
+    if (this.retrying) return;
+    this.retrying = true;
+    try {
+      this.stop();
+      await new Promise((r) => setTimeout(r, 500));
+      await this.waitForPort();
+      const url = await this.ensureStarted();
+      reloadAllWebviews(url);
+    } catch {
+      /* ensureStarted already reported */
+    } finally {
+      this.retrying = false;
     }
   }
 
