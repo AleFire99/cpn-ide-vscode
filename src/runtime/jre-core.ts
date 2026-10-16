@@ -7,7 +7,7 @@ import * as path from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
-export const MIN_JAVA_MAJOR = 17;
+const MIN_JAVA_MAJOR = 17;
 
 export type AdoptiumOs = 'linux' | 'windows' | 'mac';
 export type AdoptiumArch = 'x64' | 'aarch64';
@@ -40,12 +40,12 @@ export function parseJavaMajor(output: string): number | undefined {
   return first;
 }
 
-export function javaExecutableName(platform: string): string {
+function javaExecutableName(platform: string): string {
   return platform === 'win32' ? 'java.exe' : 'java';
 }
 
 /** Run `<javaPath> -version`; resolves to the major version or undefined if not runnable. */
-export function getJavaMajor(javaPath: string): Promise<number | undefined> {
+function getJavaMajor(javaPath: string): Promise<number | undefined> {
   return new Promise((resolve) => {
     execFile(javaPath, ['-version'], { timeout: 15000, windowsHide: true }, (err, stdout, stderr) => {
       if (err) return resolve(undefined);
@@ -91,7 +91,7 @@ export interface JreAsset {
   release: string;
 }
 
-export async function fetchJreAsset(os: AdoptiumOs, arch: AdoptiumArch): Promise<JreAsset> {
+async function fetchJreAsset(os: AdoptiumOs, arch: AdoptiumArch): Promise<JreAsset> {
   const res = await fetch(buildAdoptiumUrl(os, arch));
   if (!res.ok) throw new Error(`Adoptium API returned HTTP ${res.status}`);
   const body = (await res.json()) as Array<{
@@ -113,7 +113,7 @@ export function safeDirName(s: string): string {
 }
 
 /** Download a URL to a file, returning the SHA-256 hex digest. */
-export async function downloadFile(
+async function downloadFile(
   url: string,
   dest: string,
   onProgress?: (received: number, total: number) => void,
@@ -133,7 +133,7 @@ export async function downloadFile(
   return hash.digest('hex');
 }
 
-export function extractArchive(archive: string, destDir: string): Promise<void> {
+function extractArchive(archive: string, destDir: string): Promise<void> {
   // bsdtar (Windows 10+, macOS) and GNU tar both handle .tar.gz; bsdtar also handles .zip.
   return new Promise((resolve, reject) => {
     // On Windows use the system bsdtar (Git-for-Windows GNU tar cannot read .zip).
@@ -145,7 +145,7 @@ export function extractArchive(archive: string, destDir: string): Promise<void> 
 }
 
 /** Find bin/java[.exe] within a few levels of dir. */
-export async function findJavaIn(dir: string, platform: string, depth = 4): Promise<string | undefined> {
+async function findJavaIn(dir: string, platform: string, depth = 4): Promise<string | undefined> {
   const exe = path.join(dir, 'bin', javaExecutableName(platform));
   try {
     await fs.access(exe);

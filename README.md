@@ -4,9 +4,7 @@
 
 Run [CPN IDE](https://cpnide.org/) — the editor and simulator for Coloured Petri Nets — inside VS Code, with nothing to install
 beforehand. The extension ships the CPN IDE backend and UI, downloads a portable Java 17 runtime on first use, and opens
-`.cpn` models in an editor tab.
-
-> Status: early development. See the [v0.1.0 milestone](../../milestone/1).
+`.cpn` models, or text models (`.petri.json`), in an editor tab.
 
 ## Examples
 
@@ -54,7 +52,8 @@ extension patches the bundled daemon to listen on `127.0.0.1` only, starts it in
 (`<globalStorage>/tmp/<pid>`), and stops it, with its workers, when the backend stops or exits. Because the port is
 fixed, only one daemon can run per machine: a second VS Code window (or another local user) reuses the daemon already
 listening on 20001, and the "CPN IDE" output channel warns when that happens. Daemons left by a crashed VS Code are
-cleaned up on the next start.
+cleaned up on the next start. Calls that create a net (`POST /api/v2/cpn/init`) go through a small local proxy that runs
+them one at a time, because two at once can hang the upstream backend.
 
 ## Docker backend
 

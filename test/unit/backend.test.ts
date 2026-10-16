@@ -1,9 +1,9 @@
 import * as http from 'node:http';
 import * as fs from 'node:fs';
 import * as net from 'node:net';
-import * as os from 'node:os';
 import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { removeTempDirs, tempDir } from './helpers';
 import {
   buildBackendArgs,
   findSimulatorPids,
@@ -78,9 +78,11 @@ describe('isPortListening', () => {
 });
 
 describe('simulator process discovery', () => {
+  afterEach(removeTempDirs);
+
   // Fake /proc: <pid>/cwd symlinks.
   function fakeProc(cwds: Record<string, string>): string {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fakeproc-'));
+    const root = tempDir('fakeproc-');
     for (const [pid, cwd] of Object.entries(cwds)) {
       fs.mkdirSync(path.join(root, pid));
       fs.symlinkSync(cwd, path.join(root, pid, 'cwd'));
@@ -97,7 +99,6 @@ describe('simulator process discovery', () => {
       '13': '/elsewhere',
     });
     expect(findSimulatorPids('/x/tmp', proc).sort()).toEqual([10, 11]);
-    fs.rmSync(proc, { recursive: true, force: true });
   });
 
   it('also finds forks that left the directory but still run a binary from it', () => {
@@ -105,16 +106,14 @@ describe('simulator process discovery', () => {
     fs.symlinkSync('/x/tmp/accesscpn/simulator/cpnmld.x86-linux', path.join(proc, '20', 'exe'));
     fs.symlinkSync('/usr/bin/java', path.join(proc, '21', 'exe'));
     expect(findSimulatorPids('/x/tmp', proc)).toEqual([20]);
-    fs.rmSync(proc, { recursive: true, force: true });
   });
 
   it('only cleans directories of dead owners', () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tmproot-'));
+    const root = tempDir('tmproot-');
     fs.mkdirSync(path.join(root, '111'));
     fs.mkdirSync(path.join(root, '222'));
     fs.mkdirSync(path.join(root, 'keep-me'));
     reapStaleSimulators(root, (pid) => pid === 222);
     expect(fs.readdirSync(root).sort()).toEqual(['222', 'keep-me']);
-    fs.rmSync(root, { recursive: true, force: true });
   });
 });

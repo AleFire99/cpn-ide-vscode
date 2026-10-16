@@ -36,7 +36,7 @@ export interface BuildHtmlOptions {
 }
 
 /** The UI's built-in application settings (CG in main.js); used when none are stored yet. */
-export const DEFAULT_SETTINGS = {
+const DEFAULT_SETTINGS = {
   serverAddress: 'http://localhost:8080',
   globref: 'globref CONST = 1;',
   color: 'colset TYPE = unit;',

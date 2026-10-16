@@ -13,7 +13,7 @@ export function uriToPath(u: vscode.Uri): string {
   return u.scheme === 'file' ? u.fsPath : u.toString();
 }
 
-export function pathToUri(p: string): vscode.Uri {
+function pathToUri(p: string): vscode.Uri {
   return /^[a-z][a-z0-9+.-]+:\/\//i.test(p) ? vscode.Uri.parse(p) : vscode.Uri.file(p);
 }
 
@@ -28,7 +28,7 @@ export function webviewOptions(ctx: vscode.ExtensionContext): vscode.WebviewOpti
 }
 
 /** The cpnIde.simulation.* / cpnIde.debug settings, passed to the webview. Read on every render. */
-export function readUiSettings(): Pick<CpnConfig, 'stepDelayMs' | 'animate' | 'debug'> {
+function readUiSettings(): Pick<CpnConfig, 'stepDelayMs' | 'animate' | 'debug'> {
   const c = vscode.workspace.getConfiguration('cpnIde');
   return {
     stepDelayMs: Math.max(0, c.get<number>('simulation.stepDelayMs', 100)),

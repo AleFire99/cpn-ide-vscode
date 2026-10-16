@@ -1,5 +1,4 @@
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -11,6 +10,7 @@ import {
 } from '../../src/runtime/backend-core';
 import { compile } from '../../src/model/compile';
 import { decompile } from '../../src/model/decompile';
+import { removeTempDirs, stopAndReleasePort, tempDir } from './helpers';
 
 interface SimState {
   enableTrans: string[];
@@ -27,7 +27,7 @@ describe.skipIf(!process.env.CPN_IT)('examples', () => {
     await waitForPortRelease(SIMULATOR_PORT);
     if (await isPortListening(SIMULATOR_PORT)) throw new Error(`port ${SIMULATOR_PORT} is already in use`);
     const root = path.resolve(__dirname, '../../resources');
-    const userHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cpn-ex-'));
+    const userHome = tempDir('cpn-ex-');
     backend = await startBackendProcess({
       javaPath: process.env.JAVA_BIN ?? 'java',
       backendDir: path.join(root, 'backend'),
@@ -37,14 +37,9 @@ describe.skipIf(!process.env.CPN_IT)('examples', () => {
     });
   }, 120000);
 
-  // Leave the fixed simulator port free for the next real-backend test file.
   afterAll(async () => {
-    if (!backend) return;
-    backend.stop();
-    for (const end = Date.now() + 10000; Date.now() < end && (await isPortListening(SIMULATOR_PORT)); ) {
-      await new Promise((r) => setTimeout(r, 200));
-    }
-    await waitForPortRelease(SIMULATOR_PORT);
+    if (backend) await stopAndReleasePort(backend);
+    removeTempDirs();
   }, 90000);
 
   const api = async <T>(session: string, route: string, body?: unknown): Promise<T> => {

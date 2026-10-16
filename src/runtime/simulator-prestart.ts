@@ -96,7 +96,7 @@ class ZipView {
 }
 
 /** Simulator file names for a platform (mirrors DaemonStarter). */
-export function simulatorFiles(platform: NodeJS.Platform): { cpnmld: string; run: string; files: string[] } | undefined {
+function simulatorFiles(platform: NodeJS.Platform): { cpnmld: string; run: string; files: string[] } | undefined {
   let suffix: string;
   if (platform === 'linux') suffix = '.x86-linux';
   else if (platform === 'win32') suffix = '.x86-cygwin';
@@ -107,7 +107,7 @@ export function simulatorFiles(platform: NodeJS.Platform): { cpnmld: string; run
 }
 
 /** Extract the simulator files from the backend jar into <tmpDir>/accesscpn/simulator (skipping existing ones). */
-export function extractSimulator(backendJar: string, tmpDir: string, platform: NodeJS.Platform = process.platform): string {
+function extractSimulator(backendJar: string, tmpDir: string, platform: NodeJS.Platform = process.platform): string {
   const names = simulatorFiles(platform);
   if (!names) throw new Error(`no bundled simulator for ${platform}`);
   const simDir = path.join(tmpDir, 'accesscpn', 'simulator');
