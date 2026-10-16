@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: develop
+    groups:
+      npm-dependencies:
+        patterns: ["*"]
+    ignore:
+      # Must match engines.vscode in package.json; bump both together by hand.
+      - dependency-name: "@types/vscode"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # TypeScript 7 (native compiler) is not yet supported by typescript-eslint 8.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Must match the Node.js version bundled with VS Code (22.x).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: develop
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+    target-branch: develop
+    ignore:
+      # The CPN IDE backend targets Java 17.
+      - dependency-name: "library/eclipse-temurin"
+        versions: [">= 18"]

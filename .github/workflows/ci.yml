@@ -1,0 +1,151 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Download the 187 MB installer from cpnide.org once per run (cached across runs by
+  # its SHA-256) and hand it to the other jobs as an artifact.
+  fetch-installer:
+    name: fetch-installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CPN_INSTALLER_SHA256: 19084e923258681b809e80b5a5c1944da6b7f072397d1194a26689b46a9b879a
+    steps:
+      - uses: actions/checkout@v7
+      - name: Cache CPN installer
+        id: cache
+        uses: actions/cache@v6
+        with:
+          path: .cache/cpn-ide-1.24.1031.setup.exe
+          key: cpn-installer-${{ env.CPN_INSTALLER_SHA256 }}
+      - name: Download installer
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: scripts/fetch-cpn.sh --download-only
+      - name: Verify checksum
+        run: echo "$CPN_INSTALLER_SHA256  .cache/cpn-ide-1.24.1031.setup.exe" | sha256sum -c
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cpn-installer
+          path: .cache/cpn-ide-1.24.1031.setup.exe
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+
+  lint-test:
+    name: lint-test
+    needs: fetch-installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Download CPN installer
+        uses: actions/download-artifact@v8
+        with:
+          name: cpn-installer
+          path: .cache
+      - name: Install system packages (innoextract, xvfb)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y innoextract xvfb
+
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
+
+      - name: VS Code integration test
+        run: npm run test:integration
+
+  # The 32-bit CPN simulator does not start on GitHub-hosted VMs (its SML heap image
+  # fails to load), but works in this container, the same base as docker/Dockerfile.
+  backend-it:
+    name: backend-it
+    needs: fetch-installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: eclipse-temurin:17-jre-jammy
+    steps:
+      - name: Install system packages
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl innoextract libc6-i386 git zip unzip
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Download CPN installer
+        uses: actions/download-artifact@v8
+        with:
+          name: cpn-installer
+          path: .cache
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
+      - name: Backend integration test
+        run: npm test
+        env:
+          CPN_IT: "1"
+
+  build-vsix:
+    name: build-vsix
+    needs: [fetch-installer, lint-test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download CPN installer
+        uses: actions/download-artifact@v8
+        with:
+          name: cpn-installer
+          path: .cache
+      - name: Install innoextract
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y innoextract
+
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
+
+      - run: npm run build
+
+      - name: Package VSIX (linux-x64, win32-x64)
+        run: |
+          mkdir -p dist-vsix
+          npx @vscode/vsce package --no-dependencies --target linux-x64 -o dist-vsix/
+          npx @vscode/vsce package --no-dependencies --target win32-x64 -o dist-vsix/
+          ls -l dist-vsix
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vsix
+          path: dist-vsix/*.vsix
+          if-no-files-found: error

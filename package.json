@@ -1,0 +1,117 @@
+{
+  "name": "cpn-ide-vscode",
+  "displayName": "CPN IDE",
+  "description": "Coloured Petri Nets editor and simulator (CPN IDE) inside VS Code, with nothing to install.",
+  "version": "0.1.0",
+  "publisher": "AleFire99",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AleFire99/cpn-ide-vscode.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCustomEditor:cpnIde.editor"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "cpnIde.open",
+        "title": "CPN IDE: Open"
+      },
+      {
+        "command": "cpnIde.newNet",
+        "title": "CPN IDE: New Net"
+      },
+      {
+        "command": "cpnIde.openInCpnIde",
+        "title": "CPN IDE: Open in CPN IDE"
+      },
+      {
+        "command": "cpnIde.stopBackend",
+        "title": "CPN IDE: Stop Backend"
+      },
+      {
+        "command": "cpnIde.showLog",
+        "title": "CPN IDE: Show Backend Log"
+      }
+    ],
+    "configuration": {
+      "title": "CPN IDE",
+      "properties": {
+        "cpnIde.backendUrl": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "URL of an external CPN IDE backend (for example the Docker image `ghcr.io/alefire99/cpn-ide-backend`). Leave empty to use the bundled local backend."
+        },
+        "cpnIde.javaPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to a Java 17+ executable. Leave empty to use `JAVA_HOME`, `java` on the PATH, or an automatically downloaded runtime."
+        },
+        "cpnIde.port": {
+          "type": "number",
+          "default": 0,
+          "markdownDescription": "Port for the local backend. `0` picks a free port automatically."
+        }
+      }
+    },
+    "customEditors": [
+      {
+        "viewType": "cpnIde.editor",
+        "displayName": "CPN IDE",
+        "selector": [
+          {
+            "filenamePattern": "*.cpn"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "cpnIde.openInCpnIde",
+          "when": "resourceExtname == .cpn",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "cpnIde.openInCpnIde",
+          "when": "resourceExtname == .cpn",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "package": "vsce package --no-dependencies",
+    "compile:test": "tsc -p test/integration/tsconfig.json",
+    "test:integration": "node esbuild.mjs && tsc -p test/integration/tsconfig.json && node out/test/integration/run.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.12.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.5",
+    "@vscode/test-electron": "^3.1.0",
+    "mocha": "^12.0.3",
+    "@types/mocha": "^10.0.10"
+  }
+}

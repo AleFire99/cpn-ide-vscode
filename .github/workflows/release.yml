@@ -1,0 +1,91 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify tag matches package.json version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version v$version"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Cache CPN installer
+        uses: actions/cache@v6
+        with:
+          path: .cache
+          key: cpn-installer-19084e923258681b809e80b5a5c1944da6b7f072397d1194a26689b46a9b879a
+
+      - name: Install innoextract
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y innoextract
+
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
+
+      - run: npm run build
+
+      - name: Package VSIX (linux-x64, win32-x64)
+        run: |
+          mkdir -p dist-vsix
+          npx @vscode/vsce package --no-dependencies --target linux-x64 -o dist-vsix/
+          npx @vscode/vsce package --no-dependencies --target win32-x64 -o dist-vsix/
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vsix
+          path: dist-vsix/*.vsix
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          files: dist-vsix/*.vsix
+          fail_on_unmatched_files: true
+
+  # Disabled until a Marketplace publisher exists and the VSCE_PAT secret
+  # (Azure DevOps PAT, scope Marketplace > Manage) is configured. Skipped unless the repository variable PUBLISH_MARKETPLACE is "true".
+  publish-marketplace:
+    name: publish-marketplace
+    if: vars.PUBLISH_MARKETPLACE == 'true'
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+          path: dist-vsix
+      - name: Publish to the VS Code Marketplace
+        run: |
+          for f in dist-vsix/*.vsix; do
+            npx @vscode/vsce publish --packagePath "$f"
+          done
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
