@@ -6,7 +6,8 @@ import { decodeBytes, encodeText } from '../webview/host-core';
 
 /** "CPN IDE: Convert to Text Model": write `<name>.petri.json` + `<name>.sml` next to a `.cpn` and open the JSON. */
 export async function convertToText(uri?: vscode.Uri): Promise<void> {
-  const src = uri ?? vscode.window.activeTextEditor?.document.uri;
+  const tab = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+  const src = uri ?? (tab instanceof vscode.TabInputCustom ? tab.uri : vscode.window.activeTextEditor?.document.uri);
   if (!src || !/\.cpn$/i.test(src.path)) return void vscode.window.showErrorMessage('CPN IDE: select a .cpn file to convert.');
   const out = BackendManager.get().output;
   try {
