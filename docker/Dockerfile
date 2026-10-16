@@ -13,7 +13,7 @@ COPY scripts/fetch-cpn.sh scripts/fetch-cpn.sh
 RUN scripts/fetch-cpn.sh
 
 # ---- Stage 2: runtime ----
-FROM docker.io/library/eclipse-temurin:17-jre-jammy
+FROM docker.io/library/eclipse-temurin:25-jre-jammy
 
 LABEL org.opencontainers.image.title="cpn-ide-backend" \
       org.opencontainers.image.description="CPN IDE backend (Coloured Petri Nets simulator REST API)" \
