@@ -13,8 +13,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Download the 187 MB installer from cpnide.org once per run (cached across runs by
+  # its SHA-256) and hand it to the other jobs as an artifact.
+  fetch-installer:
+    name: fetch-installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CPN_INSTALLER_SHA256: 19084e923258681b809e80b5a5c1944da6b7f072397d1194a26689b46a9b879a
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache CPN installer
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/cpn-ide-1.24.1031.setup.exe
+          key: cpn-installer-${{ env.CPN_INSTALLER_SHA256 }}
+      - name: Download installer
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: scripts/fetch-cpn.sh --download-only
+      - name: Verify checksum
+        run: echo "$CPN_INSTALLER_SHA256  .cache/cpn-ide-1.24.1031.setup.exe" | sha256sum -c
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cpn-installer
+          path: .cache/cpn-ide-1.24.1031.setup.exe
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+
   lint-test:
     name: lint-test
+    needs: fetch-installer
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -30,12 +60,11 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-      - name: Cache CPN installer
-        uses: actions/cache@v4
+      - name: Download CPN installer
+        uses: actions/download-artifact@v4
         with:
+          name: cpn-installer
           path: .cache
-          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
-
       - name: Install system packages (innoextract, xvfb)
         run: |
           sudo apt-get update
@@ -51,6 +80,7 @@ jobs:
   # fails to load), but works in this container, the same base as docker/Dockerfile.
   backend-it:
     name: backend-it
+    needs: fetch-installer
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container: eclipse-temurin:17-jre-jammy
@@ -65,11 +95,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Cache CPN installer
-        uses: actions/cache@v4
+      - name: Download CPN installer
+        uses: actions/download-artifact@v4
         with:
+          name: cpn-installer
           path: .cache
-          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
       - name: Fetch CPN IDE binaries
         run: scripts/fetch-cpn.sh
       - name: Backend integration test
@@ -79,7 +109,7 @@ jobs:
 
   build-vsix:
     name: build-vsix
-    needs: lint-test
+    needs: [fetch-installer, lint-test]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -92,12 +122,11 @@ jobs:
 
       - run: npm ci
 
-      - name: Cache CPN installer
-        uses: actions/cache@v4
+      - name: Download CPN installer
+        uses: actions/download-artifact@v4
         with:
+          name: cpn-installer
           path: .cache
-          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
-
       - name: Install innoextract
         run: |
           sudo apt-get update
