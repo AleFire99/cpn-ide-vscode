@@ -22,10 +22,10 @@ jobs:
     env:
       CPN_INSTALLER_SHA256: 19084e923258681b809e80b5a5c1944da6b7f072397d1194a26689b46a9b879a
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Cache CPN installer
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/cpn-ide-1.24.1031.setup.exe
           key: cpn-installer-${{ env.CPN_INSTALLER_SHA256 }}
@@ -34,7 +34,7 @@ jobs:
         run: scripts/fetch-cpn.sh --download-only
       - name: Verify checksum
         run: echo "$CPN_INSTALLER_SHA256  .cache/cpn-ide-1.24.1031.setup.exe" | sha256sum -c
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: cpn-installer
           path: .cache/cpn-ide-1.24.1031.setup.exe
@@ -48,9 +48,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -61,7 +61,7 @@ jobs:
       - run: npm test
 
       - name: Download CPN installer
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: cpn-installer
           path: .cache
@@ -89,14 +89,14 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl innoextract libc6-i386 git
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - name: Download CPN installer
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: cpn-installer
           path: .cache
@@ -113,9 +113,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -123,7 +123,7 @@ jobs:
       - run: npm ci
 
       - name: Download CPN installer
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: cpn-installer
           path: .cache
@@ -144,7 +144,7 @@ jobs:
           npx @vscode/vsce package --no-dependencies --target win32-x64 -o dist-vsix/
           ls -l dist-vsix
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vsix
           path: dist-vsix/*.vsix
