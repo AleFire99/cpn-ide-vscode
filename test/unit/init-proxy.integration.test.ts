@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { SIMULATOR_PORT, isPortListening, killTree, startBackendProcess, waitForPortRelease, type RunningBackend } from '../../src/runtime/backend-core';
+import { SIMULATOR_PORT, isPortListening, startBackendProcess, waitForPortRelease, type RunningBackend } from '../../src/runtime/backend-core';
 import { InitProxy } from '../../src/runtime/init-proxy';
 
 // Two concurrent first inits hang one of them in the real backend (#50); through the proxy they must both finish. Run: CPN_IT=1 npm test
@@ -30,7 +30,7 @@ describe.skipIf(!process.env.CPN_IT)('init proxy on the real backend', () => {
   afterAll(async () => {
     proxy.stop();
     if (!backend) return;
-    killTree(backend.child);
+    backend.stop();
     for (const end = Date.now() + 10000; Date.now() < end && (await isPortListening(SIMULATOR_PORT)); ) {
       await new Promise((r) => setTimeout(r, 200));
     }

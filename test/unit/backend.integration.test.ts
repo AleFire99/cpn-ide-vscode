@@ -10,7 +10,6 @@ import {
   findSimulatorPids,
   isForeignSimulator,
   isPortListening,
-  killTree,
   startBackendProcess,
   stopSimulatorProcess,
   waitForPortRelease,
@@ -69,7 +68,7 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
       expect(listenAddrs(SIMULATOR_PORT)).toEqual(['127.0.0.1']);
       expect(findSimulatorPids(tmpDir).length).toBeGreaterThan(0);
     } finally {
-      killTree(r.child);
+      r.stop();
     }
 
     // Stopping the backend must take the daemon and its workers down with it.
@@ -129,7 +128,7 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
       });
       expect(((await res.json()) as { success: boolean }).success).toBe(true);
     } finally {
-      if (started) killTree(started.child);
+      if (started) started.stop();
       try { daemon.kill('SIGKILL'); } catch { /* gone */ }
       await waitFor(() => findSimulatorPids(tmpDir).length === 0, 10000);
       for (const pid of findSimulatorPids(tmpDir)) process.kill(pid, 'SIGKILL');
@@ -173,13 +172,13 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
       await new Promise((res) => setTimeout(res, 3000));
       expect(await Promise.all([first, init(r.baseUrl, 'b')])).toEqual([true, true]);
       expect(log.join('')).not.toContain('Error starting simulator');
-      killTree(r.child);
+      r.stop();
       expect(await waitFor(() => !r!.isAlive() && findSimulatorPids(tmpDir).length === 0, 10000)).toBe(true);
       expect(await waitForPortRelease(SIMULATOR_PORT, 70000)).toBe(true);
       r = await start(log);
       expect(await init(r.baseUrl, 'c')).toBe(true);
     } finally {
-      if (r) killTree(r.child);
+      if (r) r.stop();
       await waitFor(() => findSimulatorPids(tmpDir).length === 0, 10000);
       for (const pid of findSimulatorPids(tmpDir)) process.kill(pid, 'SIGKILL');
       if (process.env.CI) process.stderr.write(log.join(''));

@@ -148,7 +148,7 @@ export function isPortListening(port: number, timeoutMs = 1000): Promise<boolean
   });
 }
 
-/** Linux: PIDs of processes whose cwd is inside <tmpDir>/accesscpn (simulator daemon and its workers). */
+/** Linux: PIDs of processes whose cwd or executable is inside <tmpDir>/accesscpn (simulator daemon and its per-session forks). */
 export function findSimulatorPids(tmpDir: string, procRoot = '/proc'): number[] {
   const base = path.join(tmpDir, 'accesscpn') + path.sep;
   const pids: number[] = [];
@@ -160,10 +160,15 @@ export function findSimulatorPids(tmpDir: string, procRoot = '/proc'): number[] 
   }
   for (const e of entries) {
     if (!/^\d+$/.test(e)) continue;
-    try {
-      if ((fs.readlinkSync(path.join(procRoot, e, 'cwd')) + path.sep).startsWith(base)) pids.push(Number(e));
-    } catch {
-      /* process vanished or not ours */
+    for (const link of ['cwd', 'exe']) {
+      try {
+        if ((fs.readlinkSync(path.join(procRoot, e, link)) + path.sep).startsWith(base)) {
+          pids.push(Number(e));
+          break;
+        }
+      } catch {
+        /* process vanished or not ours */
+      }
     }
   }
   return pids;
@@ -182,15 +187,13 @@ export function reapSimulators(tmpDir: string): number[] {
   return pids;
 }
 
-/** Kill the process and its children. */
+/** Kill the process and its children, synchronously (nothing is left to a timer that an exiting host would never run). */
 export function killTree(child: ChildProcess): void {
   if (child.exitCode !== null || child.pid === undefined) return;
   if (process.platform === 'win32') {
     spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
   } else {
-    killGroup(child.pid, 'SIGTERM');
-    const pid = child.pid;
-    setTimeout(() => killGroup(pid, 'SIGKILL'), 3000).unref();
+    killGroup(child.pid, 'SIGKILL');
   }
 }
 
@@ -198,6 +201,8 @@ export interface RunningBackend {
   child: ChildProcess;
   baseUrl: string;
   isAlive: () => boolean;
+  /** Synchronously kill java, the simulator daemon and every simulator process under tmpDir. Safe to call twice. */
+  stop: () => void;
 }
 
 /** Spawn the backend and wait until it answers HTTP. Kills it if startup fails. */
@@ -225,13 +230,17 @@ export async function startBackendProcess(
     }
   }
   let alive = true;
+  const stop = () => {
+    killTree(child);
+    daemon?.kill();
+    reapSimulators(o.tmpDir);
+  };
   const child = spawnBackend({
     ...o,
     port,
     onExit: (c, s) => {
       alive = false;
-      daemon?.kill();
-      reapSimulators(o.tmpDir);
+      stop();
       o.onExit?.(c, s);
     },
   });
@@ -239,10 +248,10 @@ export async function startBackendProcess(
   try {
     await waitForHttp(`${baseUrl}/`, o.timeoutMs ?? 90000, () => alive);
   } catch (e) {
-    killTree(child);
+    stop();
     throw e;
   }
-  return { child, baseUrl, isAlive: () => alive };
+  return { child, baseUrl, isAlive: () => alive, stop };
 }
 
 function pidAlive(pid: number): boolean {
