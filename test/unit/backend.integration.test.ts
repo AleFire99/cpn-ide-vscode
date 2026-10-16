@@ -14,7 +14,7 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
       javaPath: java,
       backendDir: path.join(root, 'backend'),
       userHome,
-      onOutput: () => {},
+      onOutput: (s: string) => { if (process.env.CI) process.stderr.write(s); },
     });
     try {
       const xml = fs.readFileSync(path.join(root, 'ui/assets/cpn/fuelstation-no-mon.cpn'), 'utf8');
