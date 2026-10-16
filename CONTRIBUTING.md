@@ -29,6 +29,11 @@ Branches:
 3. After merging, tag the merge commit on `main` as `vX.Y.Z`.
 4. Merge `main` back into `develop` so the release commits and version bump are kept.
 
+Pushing the tag triggers the `release` workflow. It fails unless the tag equals `v` plus the `version` in
+`package.json`; otherwise it runs lint and tests, builds the `linux-x64` and `win32-x64` VSIX files, and
+publishes a GitHub Release with generated notes and the VSIX files attached. Marketplace publishing is
+prepared but disabled in the workflow (it needs a `VSCE_PAT` secret).
+
 ## Hotfixes
 
 1. Create `hotfix/X.Y.Z` from `main`.

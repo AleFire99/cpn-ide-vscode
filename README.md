@@ -1,5 +1,7 @@
 # CPN IDE for VS Code
 
+[![ci](https://github.com/AleFire99/cpn-ide-vscode/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/AleFire99/cpn-ide-vscode/actions/workflows/ci.yml)
+
 Run [CPN IDE](https://cpnide.org/) — the editor and simulator for Coloured Petri Nets — inside VS Code, with nothing to install
 beforehand. The extension ships the CPN IDE backend and UI, downloads a portable Java 17 runtime on first use, and opens
 `.cpn` models in an editor tab.

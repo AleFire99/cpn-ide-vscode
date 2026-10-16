@@ -1,0 +1,122 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-test:
+    name: lint-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Cache CPN installer
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
+
+      - name: Install system packages (innoextract, xvfb)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y innoextract xvfb
+
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
+
+      - name: VS Code integration test
+        run: npm run test:integration
+
+  # The 32-bit CPN simulator does not start on GitHub-hosted VMs (its SML heap image
+  # fails to load), but works in this container, the same base as docker/Dockerfile.
+  backend-it:
+    name: backend-it
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: eclipse-temurin:17-jre-jammy
+    steps:
+      - name: Install system packages
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl innoextract libc6-i386 git
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cache CPN installer
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
+      - name: Backend integration test
+        run: npm test
+        env:
+          CPN_IT: "1"
+
+  build-vsix:
+    name: build-vsix
+    needs: lint-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache CPN installer
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
+
+      - name: Install innoextract
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y innoextract
+
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
+
+      - run: npm run build
+
+      - name: Package VSIX (linux-x64, win32-x64)
+        run: |
+          mkdir -p dist-vsix
+          npx @vscode/vsce package --no-dependencies --target linux-x64 -o dist-vsix/
+          npx @vscode/vsce package --no-dependencies --target win32-x64 -o dist-vsix/
+          ls -l dist-vsix
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: dist-vsix/*.vsix
+          if-no-files-found: error
