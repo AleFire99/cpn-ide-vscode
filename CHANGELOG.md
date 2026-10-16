@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-10-17
 
 ### Features
 
@@ -13,9 +13,12 @@
 - **CPN IDE: Run Simulation (No UI)** simulates a `.cpn` or `.petri.json` straight on the backend and prints step count, time and final markings to the "CPN IDE" output channel.
 - Examples are generated from text sources by `node scripts/gen-examples.mjs` (no CPN IDE download needed); new `04-hierarchy` example with a subpage and a fusion place.
 
+- Extension icon and Marketplace listing; the release workflow can publish to the VS Code Marketplace and Open VSX.
+
 ### Fixes
 
 - Two nets validated at the same time (e.g. from two CPN IDE panels) no longer hang the backend: requests go through a small local proxy that runs net creation (`POST /api/v2/cpn/init`) one at a time.
+- After a backend stop, the extension waits for every closing connection on the simulator port (not only TIME-WAIT) before starting a new simulator.
 - Stopping the backend kills java, the simulator daemon and every per-session simulator process synchronously, so none outlive the extension host or a test run.
 
 ## 0.2.0 — 2026-10-16
