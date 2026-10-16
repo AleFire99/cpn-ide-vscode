@@ -136,7 +136,9 @@ export async function downloadFile(
 export function extractArchive(archive: string, destDir: string): Promise<void> {
   // bsdtar (Windows 10+, macOS) and GNU tar both handle .tar.gz; bsdtar also handles .zip.
   return new Promise((resolve, reject) => {
-    execFile('tar', ['-xf', archive, '-C', destDir], { windowsHide: true }, (err, _o, stderr) =>
+    // On Windows use the system bsdtar (Git-for-Windows GNU tar cannot read .zip).
+    const tar = process.platform === 'win32' ? path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe') : 'tar';
+    execFile(tar, ['-xf', archive, '-C', destDir], { windowsHide: true }, (err, _o, stderr) =>
       err ? reject(new Error(`tar failed: ${stderr || err.message}`)) : resolve(),
     );
   });

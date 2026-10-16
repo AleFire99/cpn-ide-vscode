@@ -86,15 +86,20 @@ export interface SpawnOptions {
   onExit?: (code: number | null, signal: NodeJS.Signals | null) => void;
 }
 
-export function spawnBackend(o: SpawnOptions): ChildProcess {
-  fs.mkdirSync(o.userHome, { recursive: true });
-  const args = [
+export function buildBackendArgs(o: Pick<SpawnOptions, 'userHome' | 'port' | 'backendDir'>): string[] {
+  return [
     `-Duser.home=${o.userHome}`,
     `-Dserver.port=${o.port}`,
+    '-Dserver.address=127.0.0.1', // never expose the simulator API to the LAN
     `-DPROP_FILE=${path.join(o.backendDir, 'application.properties')}`,
     '-jar',
     BACKEND_JAR,
   ];
+}
+
+export function spawnBackend(o: SpawnOptions): ChildProcess {
+  fs.mkdirSync(o.userHome, { recursive: true });
+  const args = buildBackendArgs(o);
   const child = spawn(o.javaPath, args, {
     cwd: o.backendDir,
     windowsHide: true,

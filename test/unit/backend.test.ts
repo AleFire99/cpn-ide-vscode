@@ -1,7 +1,7 @@
 import * as http from 'node:http';
 import * as net from 'node:net';
 import { describe, expect, it } from 'vitest';
-import { pickFreePort, preflightError, probeHttp, waitForHttp } from '../../src/runtime/backend-core';
+import { buildBackendArgs, pickFreePort, preflightError, probeHttp, waitForHttp } from '../../src/runtime/backend-core';
 
 describe('pickFreePort', () => {
   it('returns a bindable port', async () => {
@@ -10,6 +10,14 @@ describe('pickFreePort', () => {
     await new Promise<void>((resolve, reject) => {
       const s = net.createServer().listen(port, '127.0.0.1', () => s.close(() => resolve())).on('error', reject);
     });
+  });
+});
+
+describe('buildBackendArgs', () => {
+  it('binds to loopback only', () => {
+    const args = buildBackendArgs({ userHome: '/h', port: 1234, backendDir: '/b' });
+    expect(args).toContain('-Dserver.address=127.0.0.1');
+    expect(args).toContain('-Dserver.port=1234');
   });
 });
 
