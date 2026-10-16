@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Text model format: `*.petri.json` (structure) + `*.sml` (declarations) compile to CPN Tools XML, with pages, subpages, fusion places, auto-layout and a JSON schema (`schema/petri.schema.json`).
+- Example models are now generated from text sources by `node scripts/gen-examples.mjs` (no CPN IDE download needed); new `04-hierarchy` example with a subpage and a fusion place.
+
 ## 0.2.0 — 2026-10-16
 
 - ▶ button in the editor title bar of a `.cpn` file opens it in CPN IDE; a file icon in CPN IDE reopens it as XML text (`.CPN` works too).

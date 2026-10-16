@@ -18,7 +18,7 @@ interface SimState {
 
 const examples = path.resolve(__dirname, '../../examples');
 
-// Validates and simulates every model in examples/ on the real backend. Run: CPN_IT=1 npm test
+// Validates and simulates the generated models in examples/ (from *.petri.json + *.sml) on the real backend. Run: CPN_IT=1 npm test
 describe.skipIf(!process.env.CPN_IT)('examples', () => {
   let backend: RunningBackend;
 
@@ -98,5 +98,11 @@ describe.skipIf(!process.env.CPN_IT)('examples', () => {
       const lock = s.tokensAndMark[1];
       expect(lock.tokens + critical.tokens).toBe(1); // the lock is either free or held by the process in Critical
     }
+  }, 120000);
+
+  it('04-hierarchy: runs the Worker subpage three times, sharing Count through the fusion set', async () => {
+    const r = await run('04-hierarchy.cpn', 10);
+    expect(r.steps).toBe(3);
+    expect(r.final).toEqual(['empty', '1`(1,false)++1`(2,true)++1`(3,false)', '1`3', '1`3', 'empty', '1`(1,false)++1`(2,true)++1`(3,false)']);
   }, 120000);
 });
