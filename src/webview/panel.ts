@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { BackendManager } from '../runtime/backend';
 import { decodeBytes, encodeText, PathAllowlist, toVsCodeFilters } from './host-core';
 import { buildWebviewHtml, makeNonce, type CpnConfig } from './html';
 
@@ -40,6 +41,19 @@ export function renderHtml(ctx: vscode.ExtensionContext, webview: vscode.Webview
     backendUrl,
     config,
   });
+}
+
+const reloaders = new Set<(backendUrl: string) => void>();
+
+/** Register a function that re-renders a webview against a (new) backend URL. */
+export function registerReloader(fn: (backendUrl: string) => void): vscode.Disposable {
+  reloaders.add(fn);
+  return { dispose: () => void reloaders.delete(fn) };
+}
+
+/** Re-render every open CPN IDE webview, e.g. after the backend was restarted. */
+export function reloadAllWebviews(backendUrl: string): void {
+  for (const fn of reloaders) fn(backendUrl);
 }
 
 export interface BridgeOptions {
@@ -116,6 +130,12 @@ export function attachBridge(webview: vscode.Webview, opts: BridgeOptions = {}):
     async ready() {
       uiState.ready++;
     },
+    async uiError(a) {
+      const msg = `[ui] HTTP ${String(a.status)} from ${String(a.url)}: ${String(a.text)}`;
+      uiState.errors.push(msg);
+      BackendManager.get().output.appendLine(msg);
+      if (/starting simulator|cpnmld|run\.x86/i.test(String(a.text))) void BackendManager.get().reportSimulatorFailure();
+    },
     async error(a) {
       uiState.errors.push(String(a.message));
     },
@@ -144,9 +164,13 @@ export function openStandalonePanel(ctx: vscode.ExtensionContext, backendUrl: st
   });
   panel.webview.html = renderHtml(ctx, panel.webview, backendUrl, { mode: 'standalone' });
   const bridge = attachBridge(panel.webview);
+  const reloader = registerReloader((url) => {
+    panel.webview.html = renderHtml(ctx, panel.webview, url, { mode: 'standalone' });
+  });
   uiState.panels++;
   panel.onDidDispose(() => {
     bridge.dispose();
+    reloader.dispose();
     uiState.panels--;
   });
   return panel;
