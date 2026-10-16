@@ -25,7 +25,12 @@ export class InitProxy {
       });
       this.server = server;
     }
-    return `http://127.0.0.1:${(this.server.address() as AddressInfo).port}`;
+    return this.url!;
+  }
+
+  /** Proxy base URL while listening. */
+  get url(): string | undefined {
+    return this.server ? `http://127.0.0.1:${(this.server.address() as AddressInfo).port}` : undefined;
   }
 
   stop(): void {

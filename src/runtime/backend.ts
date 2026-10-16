@@ -46,8 +46,9 @@ export class BackendManager implements vscode.Disposable {
   /** Base URL of the backend if one is already available; never starts anything. */
   currentUrl(): string | undefined {
     const external = vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl', '').trim();
-    if (external) return external.replace(/\/+$/, '');
-    return this.running?.isAlive() ? this.running.baseUrl : undefined;
+    // Through the proxy when it runs, so these calls queue up with the UI's inits.
+    if (external) return this.proxy.url ?? external.replace(/\/+$/, '');
+    return this.running?.isAlive() ? this.proxy.url ?? this.running.baseUrl : undefined;
   }
 
   /** Start (or reuse) the backend and return its base URL. Shows an error message on failure. */

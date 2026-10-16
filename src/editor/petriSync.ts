@@ -131,7 +131,7 @@ export class PetriSync implements vscode.Disposable {
     this.publish();
     const compiled = model.compiled;
     const check = async () => {
-      // An open CPN IDE panel validates on its own; a concurrent check could hang one of them.
+      // An open CPN IDE panel validates on its own and shows the issues itself.
       const url = BackendManager.get().currentUrl();
       if (!url || uiState.panels > 0) return;
       try {
