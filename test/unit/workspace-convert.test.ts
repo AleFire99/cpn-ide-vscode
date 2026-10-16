@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { serializeSpec, textModelPaths } from '../../src/model/convert';
+import { serializeSpec, textModelPaths } from '../../src/model/workspace';
 
 describe('textModelPaths', () => {
   it('puts the text model next to the .cpn', () => {

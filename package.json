@@ -17,7 +17,8 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onCustomEditor:cpnIde.editor"
+    "onCustomEditor:cpnIde.editor",
+    "onCustomEditor:cpnIde.petriEditor"
   ],
   "contributes": {
     "commands": [
@@ -50,6 +51,10 @@
       {
         "command": "cpnIde.showLog",
         "title": "CPN IDE: Show Backend Log"
+      },
+      {
+        "command": "cpnIde.exportCpn",
+        "title": "CPN IDE: Export .cpn"
       }
     ],
     "configuration": {
@@ -88,13 +93,23 @@
           }
         ],
         "priority": "option"
+      },
+      {
+        "viewType": "cpnIde.petriEditor",
+        "displayName": "CPN IDE (Petri model)",
+        "selector": [
+          {
+            "filenamePattern": "*.petri.json"
+          }
+        ],
+        "priority": "default"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "cpnIde.openInCpnIde",
-          "when": "resourceExtname =~ /^\\.cpn$/i && activeCustomEditorId != cpnIde.editor",
+          "when": "(resourceExtname =~ /^\\.cpn$/i && activeCustomEditorId != cpnIde.editor) || (resourceFilename =~ /\\.petri\\.json$/i && activeCustomEditorId != cpnIde.petriEditor)",
           "group": "navigation"
         },
         {
@@ -104,14 +119,24 @@
         },
         {
           "command": "cpnIde.openAsText",
-          "when": "activeCustomEditorId == cpnIde.editor",
+          "when": "activeCustomEditorId == cpnIde.editor || activeCustomEditorId == cpnIde.petriEditor",
           "group": "navigation"
+        },
+        {
+          "command": "cpnIde.exportCpn",
+          "when": "resourceFilename =~ /\\.petri\\.json$/i",
+          "group": "navigation@2"
         }
       ],
       "explorer/context": [
         {
           "command": "cpnIde.openInCpnIde",
-          "when": "resourceExtname =~ /^\\.cpn$/i",
+          "when": "resourceExtname =~ /^\\.cpn$/i || resourceFilename =~ /\\.petri\\.json$/i",
+          "group": "navigation"
+        },
+        {
+          "command": "cpnIde.exportCpn",
+          "when": "resourceFilename =~ /\\.petri\\.json$/i",
           "group": "navigation"
         },
         {
@@ -123,7 +148,11 @@
       "commandPalette": [
         {
           "command": "cpnIde.openAsText",
-          "when": "activeCustomEditorId == cpnIde.editor"
+          "when": "activeCustomEditorId == cpnIde.editor || activeCustomEditorId == cpnIde.petriEditor"
+        },
+        {
+          "command": "cpnIde.exportCpn",
+          "when": "resourceFilename =~ /\\.petri\\.json$/i"
         }
       ]
     }

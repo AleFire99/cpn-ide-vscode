@@ -32,6 +32,8 @@ variables, functions). They compile to CPN Tools XML.
 - The standard declarations (`UNIT`, `BOOL`, `INT`, `P_HIGH`, ...) are added automatically; declare the same name to override one.
 - `(*! Block *)` or `(*! Outer / Inner *)` in the `.sml` starts a named block of declarations in the CPN Tools tree.
 - Positions (`pos`) are optional; nodes without one are laid out automatically.
+- Opening a `.petri.json` shows the net in CPN IDE; saving there writes back to the JSON. **Convert to Text Model** turns an existing `.cpn` into this format, and **Export .cpn** goes the other way.
+- Compile errors show up as diagnostics while you edit. When the backend is running and no CPN IDE panel is open, saved models are also type-checked by the simulator.
 
 ## Platform support
 
