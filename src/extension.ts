@@ -22,10 +22,17 @@ export function activate(ctx: vscode.ExtensionContext): void {
     await vscode.commands.executeCommand('vscode.openWith', target, VIEW_TYPE);
   };
 
+  const openAsText = async (uri?: vscode.Uri) => {
+    const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+    const target = uri ?? (input instanceof vscode.TabInputCustom ? input.uri : undefined);
+    if (target) await vscode.commands.executeCommand('vscode.openWith', target, 'default');
+  };
+
   ctx.subscriptions.push(
     vscode.commands.registerCommand('cpnIde.open', openUi),
     vscode.commands.registerCommand('cpnIde.newNet', openUi),
     vscode.commands.registerCommand('cpnIde.openInCpnIde', openInCpnIde),
+    vscode.commands.registerCommand('cpnIde.openAsText', openAsText),
     vscode.commands.registerCommand('cpnIde.stopBackend', () => backend.stop()),
     vscode.commands.registerCommand('cpnIde.showLog', () => backend.showLog()),
     // Test hook: reports whether a webview UI finished booting.

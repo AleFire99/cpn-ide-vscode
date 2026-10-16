@@ -38,4 +38,26 @@ suite('CPN IDE webview editor', () => {
     const tab = vscode.window.tabGroups.activeTabGroup.activeTab;
     assert.ok(tab && tab.input instanceof vscode.TabInputCustom && tab.input.viewType === 'cpnIde.editor');
   });
+
+  test('title-bar buttons switch between XML text and CPN IDE', async () => {
+    const uri = vscode.Uri.file(process.env.CPN_TEST_FILE as string);
+    const activeTab = () => vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+
+    await vscode.commands.executeCommand('cpnIde.openAsText');
+    let input = activeTab();
+    assert.ok(input instanceof vscode.TabInputText, 'expected the XML text editor');
+    assert.strictEqual(input.uri.fsPath, uri.fsPath);
+
+    await vscode.commands.executeCommand('cpnIde.openInCpnIde');
+    input = activeTab();
+    assert.ok(input instanceof vscode.TabInputCustom && input.viewType === 'cpnIde.editor', 'expected the CPN IDE editor');
+  });
+
+  test('play button is contributed for .cpn editors', () => {
+    const pkg = vscode.extensions.getExtension('AleFire99.cpn-ide-vscode')!.packageJSON;
+    const cmd = pkg.contributes.commands.find((c: { command: string }) => c.command === 'cpnIde.openInCpnIde');
+    assert.strictEqual(cmd.icon, '$(play)');
+    const menu = pkg.contributes.menus['editor/title'].find((m: { command: string }) => m.command === 'cpnIde.openInCpnIde');
+    assert.strictEqual(menu.group, 'navigation');
+  });
 });
