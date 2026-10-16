@@ -2,7 +2,7 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Coloured Petri Nets editor and simulator (CPN IDE) inside VS Code, with nothing to install.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
@@ -31,7 +31,13 @@
       },
       {
         "command": "cpnIde.openInCpnIde",
-        "title": "CPN IDE: Open in CPN IDE"
+        "title": "CPN IDE: Open in CPN IDE",
+        "icon": "$(play)"
+      },
+      {
+        "command": "cpnIde.openAsText",
+        "title": "CPN IDE: Reopen as XML Text",
+        "icon": "$(go-to-file)"
       },
       {
         "command": "cpnIde.stopBackend",
@@ -75,18 +81,29 @@
       }
     ],
     "menus": {
-      "explorer/context": [
-        {
-          "command": "cpnIde.openInCpnIde",
-          "when": "resourceExtname == .cpn",
-          "group": "navigation"
-        }
-      ],
       "editor/title": [
         {
           "command": "cpnIde.openInCpnIde",
-          "when": "resourceExtname == .cpn",
+          "when": "resourceExtname =~ /^\\.cpn$/i && activeCustomEditorId != cpnIde.editor",
           "group": "navigation"
+        },
+        {
+          "command": "cpnIde.openAsText",
+          "when": "activeCustomEditorId == cpnIde.editor",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "cpnIde.openInCpnIde",
+          "when": "resourceExtname =~ /^\\.cpn$/i",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "cpnIde.openAsText",
+          "when": "activeCustomEditorId == cpnIde.editor"
         }
       ]
     }

@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as net from 'node:net';
 import * as path from 'node:path';
+import { portTaken, prestartSimulator, type PrestartedSimulator } from './simulator-prestart';
 
 export const BACKEND_JAR = 'cpn-ide-back-1.28-SNAPSHOT.jar';
 
@@ -201,15 +202,36 @@ export interface RunningBackend {
 
 /** Spawn the backend and wait until it answers HTTP. Kills it if startup fails. */
 export async function startBackendProcess(
-  o: Omit<SpawnOptions, 'port' | 'onExit'> & { port?: number; timeoutMs?: number; onExit?: SpawnOptions['onExit'] },
+  o: Omit<SpawnOptions, 'port' | 'onExit'> & {
+    port?: number;
+    timeoutMs?: number;
+    onExit?: SpawnOptions['onExit'];
+    /** Start the simulator daemon ourselves before java (default true; see simulator-prestart.ts). */
+    prestartSimulator?: boolean;
+  },
 ): Promise<RunningBackend> {
   const port = o.port || (await pickFreePort());
+  let daemon: PrestartedSimulator | undefined;
+  if (o.prestartSimulator !== false && (process.platform === 'linux' || process.platform === 'win32')) {
+    if (await portTaken(SIMULATOR_PORT)) {
+      o.onOutput(`[backend] port ${SIMULATOR_PORT} is in use; not starting a simulator daemon\n`);
+    } else {
+      try {
+        daemon = await prestartSimulator(path.join(o.backendDir, BACKEND_JAR), o.tmpDir, o.onOutput);
+      } catch (e) {
+        // Fall back to Access/CPN's lazy start.
+        o.onOutput(`[backend] simulator pre-start failed: ${e instanceof Error ? e.message : String(e)}\n`);
+      }
+    }
+  }
   let alive = true;
   const child = spawnBackend({
     ...o,
     port,
     onExit: (c, s) => {
       alive = false;
+      daemon?.kill();
+      reapSimulators(o.tmpDir);
       o.onExit?.(c, s);
     },
   });
@@ -252,4 +274,148 @@ export function reapStaleSimulators(tmpRoot: string, isAlive: (pid: number) => b
     fs.rmSync(dir, { recursive: true, force: true });
   }
   return reaped;
+}
+
+// ---- Port ownership (Linux, via /proc) ----
+
+export interface PortOwner {
+  pid: number;
+  cmdline: string;
+  cwd: string;
+  uid: number;
+}
+
+const TCP_LISTEN = '0A';
+const TCP_TIME_WAIT = '06';
+
+interface TcpRow {
+  state: string;
+  inode: string;
+}
+
+/** Parse /proc/net/tcp[6] text: rows whose local port is `port`. */
+export function parseProcNetTcp(text: string, port: number): TcpRow[] {
+  const hexPort = port.toString(16).toUpperCase().padStart(4, '0');
+  const rows: TcpRow[] = [];
+  for (const line of text.split('\n').slice(1)) {
+    const f = line.trim().split(/\s+/);
+    if (f.length < 10 || !f[1].toUpperCase().endsWith(`:${hexPort}`)) continue;
+    rows.push({ state: f[3].toUpperCase(), inode: f[9] });
+  }
+  return rows;
+}
+
+function readTcpRows(port: number, procRoot: string): TcpRow[] {
+  const rows: TcpRow[] = [];
+  for (const f of ['tcp', 'tcp6']) {
+    try {
+      rows.push(...parseProcNetTcp(fs.readFileSync(path.join(procRoot, 'net', f), 'utf8'), port));
+    } catch {
+      /* not available */
+    }
+  }
+  return rows;
+}
+
+/** Linux: the process (of this user) holding a LISTEN socket on `port`, or undefined. */
+export function findPortOwner(port: number, procRoot = '/proc'): PortOwner | undefined {
+  const inodes = new Set(readTcpRows(port, procRoot).filter((r) => r.state === TCP_LISTEN && r.inode !== '0').map((r) => r.inode));
+  if (!inodes.size) return undefined;
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(procRoot);
+  } catch {
+    return undefined;
+  }
+  for (const e of entries) {
+    if (!/^\d+$/.test(e)) continue;
+    const dir = path.join(procRoot, e);
+    try {
+      const hit = fs.readdirSync(path.join(dir, 'fd')).some((fd) => {
+        const m = /^socket:\[(\d+)\]$/.exec(fs.readlinkSync(path.join(dir, 'fd', fd)));
+        return !!m && inodes.has(m[1]);
+      });
+      if (!hit) continue;
+      const cmdline = fs.readFileSync(path.join(dir, 'cmdline'), 'utf8').split('\0').filter(Boolean).join(' ');
+      const cwd = fs.readlinkSync(path.join(dir, 'cwd'));
+      const uidM = /^Uid:\s+(\d+)/m.exec(fs.readFileSync(path.join(dir, 'status'), 'utf8'));
+      return { pid: Number(e), cmdline, cwd, uid: uidM ? Number(uidM[1]) : -1 };
+    } catch {
+      /* other user's process or vanished */
+    }
+  }
+  return undefined;
+}
+
+/** A cpnmld of the current user that does not belong to our private tmp root (e.g. the standalone CPN IDE's). */
+export function isForeignSimulator(owner: PortOwner, ourTmpRoot: string, uid = process.getuid?.() ?? -1): boolean {
+  if (!/cpnmld/.test(owner.cmdline) || owner.uid !== uid) return false;
+  const root = path.resolve(ourTmpRoot) + path.sep;
+  return !(path.resolve(owner.cwd) + path.sep).startsWith(root);
+}
+
+/** True if the port has TIME-WAIT sockets and nothing else (no listener, no live connection). */
+export function onlyTimeWait(port: number, procRoot = '/proc'): boolean {
+  const rows = readTcpRows(port, procRoot);
+  return rows.length > 0 && rows.every((r) => r.state === TCP_TIME_WAIT);
+}
+
+/** Descendant PIDs (recursive) of a process, from the ppid field of /proc/<pid>/stat. */
+export function descendantPids(root: number, procRoot = '/proc'): number[] {
+  const parent = new Map<number, number>();
+  try {
+    for (const e of fs.readdirSync(procRoot)) {
+      if (!/^\d+$/.test(e)) continue;
+      try {
+        const s = fs.readFileSync(path.join(procRoot, e, 'stat'), 'utf8');
+        parent.set(Number(e), Number(s.slice(s.lastIndexOf(')') + 2).split(' ')[1]));
+      } catch {
+        /* vanished */
+      }
+    }
+  } catch {
+    return [];
+  }
+  const out: number[] = [];
+  const queue = [root];
+  while (queue.length) {
+    const p = queue.shift()!;
+    for (const [pid, ppid] of parent) {
+      if (ppid === p && !out.includes(pid)) {
+        out.push(pid);
+        queue.push(pid);
+      }
+    }
+  }
+  return out;
+}
+
+/** SIGTERM a simulator daemon and its run.x86 children, SIGKILL whatever is left after graceMs. */
+export async function stopSimulatorProcess(pid: number, graceMs = 3000): Promise<void> {
+  const all = [pid, ...descendantPids(pid)];
+  const send = (sig: NodeJS.Signals) => {
+    for (const p of all) {
+      try {
+        process.kill(p, sig);
+      } catch {
+        /* gone */
+      }
+    }
+  };
+  send('SIGTERM');
+  for (const end = Date.now() + graceMs; Date.now() < end; ) {
+    if (!all.some((p) => pidAlive(p))) return;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  send('SIGKILL');
+  await new Promise((r) => setTimeout(r, 200));
+}
+
+/** Resolve true once the port has no TIME-WAIT sockets left, false after timeoutMs. */
+export async function waitForPortRelease(port: number, timeoutMs = 70000, procRoot = '/proc'): Promise<boolean> {
+  for (const end = Date.now() + timeoutMs; Date.now() < end; ) {
+    if (!onlyTimeWait(port, procRoot)) return true;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  return !onlyTimeWait(port, procRoot);
 }
