@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CPN text model",
+  "description": "Structure of a Coloured Petri Net. Declarations live in a separate CPN ML file (see \"declarations\").",
+  "type": "object",
+  "required": ["version", "pages"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "declarations": {
+      "type": "string",
+      "description": "CPN ML declarations file, relative to this file. Defaults to the same name with .sml. Standard declarations (UNIT, BOOL, INT, INTINF, TIME, REAL, STRING, P_HIGH, P_NORMAL, P_LOW) are added automatically."
+    },
+    "realtime": { "type": "boolean", "description": "Use real-valued model time (CPN Tools option realtimestamp), so time inscriptions such as @+1.5 are reals. Default false (integer time)." },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/page" }
+    }
+  },
+  "definitions": {
+    "pos": {
+      "type": "array",
+      "description": "[x, y]. Omit to place the node automatically.",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "page": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "Unique page name." },
+        "places": { "type": "array", "items": { "$ref": "#/definitions/place" } },
+        "transitions": { "type": "array", "items": { "$ref": "#/definitions/transition" } },
+        "arcs": { "type": "array", "items": { "$ref": "#/definitions/arc" } }
+      }
+    },
+    "place": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "key": { "type": "string", "description": "Reference used by arcs and port assignments when the name is not unique on the page. Defaults to the name." },
+        "type": { "type": "string", "description": "Color set." },
+        "init": { "type": "string", "description": "Initial marking, e.g. 3`() or 1`1++1`2." },
+        "pos": { "$ref": "#/definitions/pos" },
+        "port": { "enum": ["in", "out", "io", "general"], "description": "Makes this place a port of its page." },
+        "fusion": { "type": "string", "description": "Fusion set name; all places with the same name share one marking." }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "key": { "type": "string", "description": "Reference used by arcs when the name is not unique on the page. Defaults to the name." },
+        "guard": { "type": "string", "description": "Guard without the brackets, e.g. n <= 5." },
+        "time": { "type": "string", "description": "Time inscription, e.g. @+5." },
+        "code": { "type": "string", "description": "Code segment." },
+        "priority": { "type": "string", "description": "Priority, e.g. P_HIGH." },
+        "pos": { "$ref": "#/definitions/pos" },
+        "subpage": {
+          "type": "object",
+          "description": "Makes this a substitution transition for another page.",
+          "required": ["page"],
+          "additionalProperties": false,
+          "properties": {
+            "page": { "type": "string", "description": "Name of the subpage." },
+            "ports": {
+              "type": "object",
+              "description": "Socket place on this page -> port place on the subpage.",
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "arc": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "type": "string", "description": "Place or transition key." },
+        "to": { "type": "string", "description": "Place or transition key." },
+        "inscription": { "type": "string" },
+        "bidirectional": { "type": "boolean", "description": "Double arc: consumes and produces the inscription." },
+        "bends": { "type": "array", "items": { "$ref": "#/definitions/pos" } }
+      }
+    }
+  }
+}

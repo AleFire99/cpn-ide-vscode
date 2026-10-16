@@ -1,5 +1,7 @@
 /** Pure helpers for the extension-host side of the webview bridge. */
 
+import { baseFileName } from '../model/workspace';
+
 export interface Decoded {
   text: string;
   encoding: 'utf8' | 'latin1';
@@ -22,14 +24,24 @@ export function encodeText(text: string, encoding: 'utf8' | 'latin1' = 'utf8'): 
   return encoding === 'latin1' ? Buffer.from(text, 'latin1') : Buffer.from(text, 'utf8');
 }
 
+/** File name of a path or URI string, URI-decoded; 'mynet.cpn' when there is none. */
 export function fileName(p: string): string {
-  const clean = p.split(/[?#]/)[0];
-  const last = clean.split(/[\\/]/).filter(Boolean).pop() ?? 'mynet.cpn';
+  const last = baseFileName(p) || 'mynet.cpn';
   try {
     return decodeURIComponent(last);
   } catch {
     return last;
   }
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/** Static page shown in place of the UI when a model cannot be loaded. */
+export function errorPageHtml(title: string, lines: string[]): string {
+  const items = lines.map((l) => `<li><code>${escapeHtml(l)}</code></li>`).join('');
+  return `<!doctype html><html><body style="font-family:sans-serif;padding:1em"><h3>${escapeHtml(title)}</h3><ul>${items}</ul></body></html>`;
 }
 
 /** Paths a webview may read/write: the bound document plus anything the user picked in a dialog. */

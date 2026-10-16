@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "declarations": "02-producer-consumer.sml",
+  "pages": [
+    {
+      "name": "ProducerConsumer",
+      "places": [
+        { "name": "Next", "type": "INT", "init": "1`1", "pos": [-300, -100] },
+        { "name": "Buffer", "type": "INT", "pos": [0, 0] },
+        { "name": "Consumed", "type": "INT", "pos": [300, 0] }
+      ],
+      "transitions": [
+        { "name": "Produce", "guard": "n <= 5", "pos": [-300, 0] },
+        { "name": "Consume", "pos": [150, 0] }
+      ],
+      "arcs": [
+        { "from": "Next", "to": "Produce", "inscription": "n" },
+        { "from": "Produce", "to": "Next", "inscription": "n+1" },
+        { "from": "Produce", "to": "Buffer", "inscription": "n" },
+        { "from": "Buffer", "to": "Consume", "inscription": "x" },
+        { "from": "Consume", "to": "Consumed", "inscription": "x" }
+      ]
+    }
+  ]
+}

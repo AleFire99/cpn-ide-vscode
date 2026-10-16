@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "declarations": "01-simple-flow.sml",
+  "pages": [
+    {
+      "name": "SimpleFlow",
+      "places": [
+        { "name": "Start", "type": "UNIT", "init": "3`()", "pos": [-200, 0] },
+        { "name": "Done", "type": "UNIT", "pos": [200, 0] }
+      ],
+      "transitions": [{ "name": "Move", "pos": [0, 0] }],
+      "arcs": [
+        { "from": "Start", "to": "Move", "inscription": "()" },
+        { "from": "Move", "to": "Done", "inscription": "()" }
+      ]
+    }
+  ]
+}

@@ -2,28 +2,56 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Coloured Petri Nets editor and simulator (CPN IDE) inside VS Code, with nothing to install.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/AleFire99/cpn-ide-vscode.git"
   },
+  "homepage": "https://github.com/AleFire99/cpn-ide-vscode#readme",
+  "bugs": {
+    "url": "https://github.com/AleFire99/cpn-ide-vscode/issues"
+  },
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1f3a5f",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
+    "Visualization",
+    "Education",
     "Other"
+  ],
+  "keywords": [
+    "petri net",
+    "petri nets",
+    "coloured petri nets",
+    "colored petri nets",
+    "cpn",
+    "cpn tools",
+    "cpn ide",
+    "simulation",
+    "modeling",
+    "formal methods"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onCustomEditor:cpnIde.editor"
+    "onCustomEditor:cpnIde.editor",
+    "onCustomEditor:cpnIde.petriEditor"
   ],
   "contributes": {
     "commands": [
       {
         "command": "cpnIde.open",
         "title": "CPN IDE: Open"
+      },
+      {
+        "command": "cpnIde.runSimulation",
+        "title": "CPN IDE: Run Simulation (No UI)"
       },
       {
         "command": "cpnIde.newNet",
@@ -33,6 +61,10 @@
         "command": "cpnIde.openInCpnIde",
         "title": "CPN IDE: Open in CPN IDE",
         "icon": "$(play)"
+      },
+      {
+        "command": "cpnIde.convertToText",
+        "title": "CPN IDE: Convert to Text Model"
       },
       {
         "command": "cpnIde.openAsText",
@@ -46,6 +78,10 @@
       {
         "command": "cpnIde.showLog",
         "title": "CPN IDE: Show Backend Log"
+      },
+      {
+        "command": "cpnIde.exportCpn",
+        "title": "CPN IDE: Export .cpn"
       }
     ],
     "configuration": {
@@ -65,9 +101,31 @@
           "type": "number",
           "default": 0,
           "markdownDescription": "Port for the local backend. `0` picks a free port automatically."
+        },
+        "cpnIde.simulation.stepDelayMs": {
+          "type": "number",
+          "default": 100,
+          "minimum": 0,
+          "markdownDescription": "Delay in milliseconds between steps of a multi-step simulation in the CPN IDE UI (upstream: 500). Applies when an editor is (re)opened."
+        },
+        "cpnIde.simulation.animate": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Animate token movement during simulation in the CPN IDE UI. Turn off for faster simulation. Applies when an editor is (re)opened."
+        },
+        "cpnIde.debug": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Keep the CPN IDE UI's verbose `console.log` output (full request/response payloads) in the webview developer tools."
         }
       }
     },
+    "jsonValidation": [
+      {
+        "fileMatch": "*.petri.json",
+        "url": "./schema/petri.schema.json"
+      }
+    ],
     "customEditors": [
       {
         "viewType": "cpnIde.editor",
@@ -78,32 +136,71 @@
           }
         ],
         "priority": "option"
+      },
+      {
+        "viewType": "cpnIde.petriEditor",
+        "displayName": "CPN IDE (Petri model)",
+        "selector": [
+          {
+            "filenamePattern": "*.petri.json"
+          }
+        ],
+        "priority": "default"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "cpnIde.openInCpnIde",
-          "when": "resourceExtname =~ /^\\.cpn$/i && activeCustomEditorId != cpnIde.editor",
+          "when": "(resourceExtname =~ /^\\.cpn$/i && activeCustomEditorId != cpnIde.editor) || (resourceFilename =~ /\\.petri\\.json$/i && activeCustomEditorId != cpnIde.petriEditor)",
+          "group": "navigation"
+        },
+        {
+          "command": "cpnIde.convertToText",
+          "when": "resourceExtname =~ /^\\.cpn$/i",
           "group": "navigation"
         },
         {
           "command": "cpnIde.openAsText",
-          "when": "activeCustomEditorId == cpnIde.editor",
+          "when": "activeCustomEditorId == cpnIde.editor || activeCustomEditorId == cpnIde.petriEditor",
           "group": "navigation"
+        },
+        {
+          "command": "cpnIde.exportCpn",
+          "when": "resourceFilename =~ /\\.petri\\.json$/i",
+          "group": "navigation@2"
         }
       ],
       "explorer/context": [
         {
           "command": "cpnIde.openInCpnIde",
+          "when": "resourceExtname =~ /^\\.cpn$/i || resourceFilename =~ /\\.petri\\.json$/i",
+          "group": "navigation"
+        },
+        {
+          "command": "cpnIde.exportCpn",
+          "when": "resourceFilename =~ /\\.petri\\.json$/i",
+          "group": "navigation"
+        },
+        {
+          "command": "cpnIde.convertToText",
           "when": "resourceExtname =~ /^\\.cpn$/i",
+          "group": "navigation"
+        },
+        {
+          "command": "cpnIde.runSimulation",
+          "when": "resourceExtname =~ /^\\.cpn$/i || resourceFilename =~ /\\.petri\\.json$/i",
           "group": "navigation"
         }
       ],
       "commandPalette": [
         {
           "command": "cpnIde.openAsText",
-          "when": "activeCustomEditorId == cpnIde.editor"
+          "when": "activeCustomEditorId == cpnIde.editor || activeCustomEditorId == cpnIde.petriEditor"
+        },
+        {
+          "command": "cpnIde.exportCpn",
+          "when": "resourceFilename =~ /\\.petri\\.json$/i"
         }
       ]
     }
@@ -119,16 +216,17 @@
     "test:integration": "node esbuild.mjs && tsc -p test/integration/tsconfig.json && node out/test/integration/run.js"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.20.5",
     "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
+    "fast-xml-parser": "^5.11.2",
+    "mocha": "^12.0.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.2",
-    "vitest": "^5.0.5",
-    "@vscode/test-electron": "^3.1.0",
-    "mocha": "^12.0.3",
-    "@types/mocha": "^10.0.10"
+    "vitest": "^5.0.5"
   }
 }

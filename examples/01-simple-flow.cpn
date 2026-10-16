@@ -4,101 +4,25 @@
 <generator tool='CPN Tools' version='4.0.1' format='6'/>
 <cpnet>
 <globbox>
-<block id='ID1412310166'>
-                <id>
-                    Standard priorities
-                </id>
-                <ml id='ID1412310255'>
-                    <layout>
-                        val P_HIGH = 100;
-                    </layout>
-                    val P_HIGH = 100;
-                </ml>
-                <ml id='ID1412310292'>
-                    <layout>
-                        val P_NORMAL = 1000;
-                    </layout>
-                    val P_NORMAL = 1000;
-                </ml>
-                <ml id='ID1412310322'>
-                    <layout>
-                        val P_LOW = 10000;
-                    </layout>
-                    val P_LOW = 10000;
-                </ml>
-            </block>
-<block id='ID1'>
-                <id>
-                    Standard declarations
-                </id>
-                <color id='ID85042'>
-                    <id>
-                        UNIT
-                    </id>
-                    <unit>
-                    </unit>
-                    <layout>
-                        colset UNIT = unit;
-                    </layout>
-                </color>
-                <color id='ID4'>
-                    <id>
-                        BOOL
-                    </id>
-                    <bool>
-                    </bool>
-                </color>
-                <color id='ID3'>
-                    <id>
-                        INT
-                    </id>
-                    <int>
-                    </int>
-                </color>
-                <color id='ID1412312409'>
-                    <id>
-                        INTINF
-                    </id>
-                    <intinf>
-                    </intinf>
-                    <layout>
-                        colset INTINF = intinf;
-                    </layout>
-                </color>
-                <color id='ID1412312425'>
-                    <id>
-                        TIME
-                    </id>
-                    <time>
-                    </time>
-                    <layout>
-                        colset TIME = time;
-                    </layout>
-                </color>
-                <color id='ID1412322990'>
-                    <id>
-                        REAL
-                    </id>
-                    <real>
-                    </real>
-                    <layout>
-                        colset REAL = real;
-                    </layout>
-                </color>
-                <color id='ID5'>
-                    <id>
-                        STRING
-                    </id>
-                    <string>
-                    </string>
-                </color>
-
+<block id='ID1'><id>Standard priorities</id>
+<ml id='ID2'><layout>val P_HIGH = 100;</layout>val P_HIGH = 100;</ml>
+<ml id='ID3'><layout>val P_NORMAL = 1000;</layout>val P_NORMAL = 1000;</ml>
+<ml id='ID4'><layout>val P_LOW = 10000;</layout>val P_LOW = 10000;</ml>
+</block>
+<block id='ID5'><id>Standard declarations</id>
+<color id='ID6'><id>UNIT</id><unit></unit><layout>colset UNIT = unit;</layout></color>
+<color id='ID7'><id>BOOL</id><bool></bool><layout>colset BOOL = bool;</layout></color>
+<color id='ID8'><id>INT</id><int></int><layout>colset INT = int;</layout></color>
+<color id='ID9'><id>INTINF</id><intinf></intinf><layout>colset INTINF = intinf;</layout></color>
+<color id='ID10'><id>TIME</id><time/><layout>colset TIME = time;</layout></color>
+<color id='ID11'><id>REAL</id><real></real><layout>colset REAL = real;</layout></color>
+<color id='ID12'><id>STRING</id><string/><layout>colset STRING = string;</layout></color>
 </block>
 </globbox>
-<page id='ID1015'>
+<page id='ID13'>
 <pageattr name='SimpleFlow'/>
-<place id='ID1000'>
-<posattr x='-200' y='0'/>
+<place id='ID14'>
+<posattr x='-200.000000' y='0.000000'/>
 <fillattr colour='White' pattern='' filled='false'/>
 <lineattr colour='Black' thick='1' type='Solid'/>
 <textattr colour='Black' bold='false'/>
@@ -106,23 +30,23 @@
 <ellipse w='70.000000' h='40.000000'/>
 <token x='-10.000000' y='0.000000'/>
 <marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
-<type id='ID1001'>
-<posattr x='-155' y='-30'/>
+<type id='ID17'>
+<posattr x='-155.000000' y='-30.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'>UNIT</text>
 </type>
-<initmark id='ID1002'>
-<posattr x='-155' y='30'/>
+<initmark id='ID18'>
+<posattr x='-155.000000' y='30.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'>3`()</text>
 </initmark>
 </place>
-<place id='ID1003'>
-<posattr x='200' y='0'/>
+<place id='ID15'>
+<posattr x='200.000000' y='0.000000'/>
 <fillattr colour='White' pattern='' filled='false'/>
 <lineattr colour='Black' thick='1' type='Solid'/>
 <textattr colour='Black' bold='false'/>
@@ -130,68 +54,68 @@
 <ellipse w='70.000000' h='40.000000'/>
 <token x='-10.000000' y='0.000000'/>
 <marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
-<type id='ID1004'>
-<posattr x='245' y='-30'/>
+<type id='ID19'>
+<posattr x='245.000000' y='-30.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'>UNIT</text>
 </type>
-<initmark id='ID1005'>
-<posattr x='245' y='30'/>
+<initmark id='ID20'>
+<posattr x='245.000000' y='30.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'></text>
 </initmark>
 </place>
-<trans id='ID1006' explicit='false'>
-<posattr x='0' y='0'/>
+<trans id='ID16' explicit='false'>
+<posattr x='0.000000' y='0.000000'/>
 <fillattr colour='White' pattern='' filled='false'/>
 <lineattr colour='Black' thick='1' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text>Move</text>
 <box w='80.000000' h='40.000000'/>
 <binding x='7.200000' y='-3.000000'/>
-<cond id='ID1007'>
-<posattr x='-40' y='35'/>
+<cond id='ID21'>
+<posattr x='-40.000000' y='35.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'></text>
 </cond>
-<time id='ID1008'>
-<posattr x='50' y='35'/>
+<time id='ID22'>
+<posattr x='50.000000' y='35.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'></text>
 </time>
-<code id='ID1009'>
-<posattr x='50' y='-35'/>
+<code id='ID23'>
+<posattr x='50.000000' y='-35.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'></text>
 </code>
-<priority id='ID1010'>
-<posattr x='-50' y='-35'/>
+<priority id='ID24'>
+<posattr x='-50.000000' y='-35.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <text tool='CPN Tools' version='4.0.1'></text>
 </priority>
 </trans>
-<arc id='ID1011' orientation='PtoT' order='1'>
+<arc id='ID25' orientation='PtoT' order='1'>
 <posattr x='0.000000' y='0.000000'/>
 <fillattr colour='White' pattern='' filled='false'/>
 <lineattr colour='Black' thick='1' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <arrowattr headsize='1.200000' currentcyckle='2'/>
-<transend idref='ID1006'/>
-<placeend idref='ID1000'/>
-<annot id='ID1012'>
-<posattr x='-100' y='12'/>
+<transend idref='ID16'/>
+<placeend idref='ID14'/>
+<annot id='ID26'>
+<posattr x='-100.000000' y='12.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
@@ -199,16 +123,16 @@
 </annot>
 <text></text>
 </arc>
-<arc id='ID1013' orientation='TtoP' order='1'>
+<arc id='ID27' orientation='TtoP' order='1'>
 <posattr x='0.000000' y='0.000000'/>
 <fillattr colour='White' pattern='' filled='false'/>
 <lineattr colour='Black' thick='1' type='Solid'/>
 <textattr colour='Black' bold='false'/>
 <arrowattr headsize='1.200000' currentcyckle='2'/>
-<transend idref='ID1006'/>
-<placeend idref='ID1003'/>
-<annot id='ID1014'>
-<posattr x='100' y='12'/>
+<transend idref='ID16'/>
+<placeend idref='ID15'/>
+<annot id='ID28'>
+<posattr x='100.000000' y='12.000000'/>
 <fillattr colour='White' pattern='Solid' filled='false'/>
 <lineattr colour='Black' thick='0' type='Solid'/>
 <textattr colour='Black' bold='false'/>
@@ -218,354 +142,62 @@
 </arc>
 <constraints></constraints>
 </page>
-<instances><instance id='ID1015itop' page='ID1015'/></instances>
+
+<instances>
+<instance id='ID13itop' page='ID13'>
+</instance>
+</instances>
 <options>
-            <option name='realtimestamp'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='fair_be'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='global_fairness'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='outputdirectory'>
-                <value>
-                    <text>
-                        &lt;same as model&gt;
-                    </text>
-                </value>
-            </option>
-            <option name='extensions.10006.enable'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='extensions.10001.enable'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='extensions.10003.enable'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='extensions.10005.enable'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='extensions.10002.enable'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='repavg'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='repciavg'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='repcount'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='repfirstval'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='replastval'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='repmax'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='repmin'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='repssquare'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='repssqdev'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='repstddev'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='repsum'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='repvariance'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='avg'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='ciavg'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='count'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='firstval'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='lastval'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='max'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='min'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='ssquare'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='ssqdev'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='stddev'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='sum'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='variance'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='firstupdate'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='interval'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='lastupdate'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedavg'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedciavg'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedcount'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedfirstval'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedlastval'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedmax'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedmin'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedssquare'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedssqdev'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedstddev'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedsum'>
-                <value>
-                    <boolean>
-                        true
-                    </boolean>
-                </value>
-            </option>
-            <option name='untimedvariance'>
-                <value>
-                    <boolean>
-                        false
-                    </boolean>
-                </value>
-            </option>
-        </options>
-        <binders/>
-        <monitorblock name='Monitors'>
-            <monitor id='ID4285858218' name='Count transition occurrences monitor (BTran)' type='6' typedescription='Count transition occurrences' disabled='false'>
-                <node idref='ID1412328496' pageinstanceidref='ID6itop'/>
-                <option name='Timed' value='false'>
-                </option>
-                <option name='Logging' value='true'>
-                </option>
-            </monitor>
-        </monitorblock>
+<option name='realtimestamp'><value><boolean>false</boolean></value></option>
+<option name='fair_be'><value><boolean>false</boolean></value></option>
+<option name='global_fairness'><value><boolean>false</boolean></value></option>
+<option name='outputdirectory'><value><text>&lt;same as model&gt;</text></value></option>
+<option name='extensions.10006.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10001.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10003.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10005.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10002.enable'><value><boolean>true</boolean></value></option>
+<option name='repavg'><value><boolean>true</boolean></value></option>
+<option name='repciavg'><value><boolean>true</boolean></value></option>
+<option name='repcount'><value><boolean>false</boolean></value></option>
+<option name='repfirstval'><value><boolean>false</boolean></value></option>
+<option name='replastval'><value><boolean>false</boolean></value></option>
+<option name='repmax'><value><boolean>true</boolean></value></option>
+<option name='repmin'><value><boolean>true</boolean></value></option>
+<option name='repssquare'><value><boolean>false</boolean></value></option>
+<option name='repssqdev'><value><boolean>false</boolean></value></option>
+<option name='repstddev'><value><boolean>true</boolean></value></option>
+<option name='repsum'><value><boolean>false</boolean></value></option>
+<option name='repvariance'><value><boolean>false</boolean></value></option>
+<option name='avg'><value><boolean>true</boolean></value></option>
+<option name='ciavg'><value><boolean>false</boolean></value></option>
+<option name='count'><value><boolean>true</boolean></value></option>
+<option name='firstval'><value><boolean>false</boolean></value></option>
+<option name='lastval'><value><boolean>false</boolean></value></option>
+<option name='max'><value><boolean>true</boolean></value></option>
+<option name='min'><value><boolean>true</boolean></value></option>
+<option name='ssquare'><value><boolean>false</boolean></value></option>
+<option name='ssqdev'><value><boolean>false</boolean></value></option>
+<option name='stddev'><value><boolean>false</boolean></value></option>
+<option name='sum'><value><boolean>false</boolean></value></option>
+<option name='variance'><value><boolean>false</boolean></value></option>
+<option name='firstupdate'><value><boolean>false</boolean></value></option>
+<option name='interval'><value><boolean>false</boolean></value></option>
+<option name='lastupdate'><value><boolean>false</boolean></value></option>
+<option name='untimedavg'><value><boolean>true</boolean></value></option>
+<option name='untimedciavg'><value><boolean>false</boolean></value></option>
+<option name='untimedcount'><value><boolean>true</boolean></value></option>
+<option name='untimedfirstval'><value><boolean>false</boolean></value></option>
+<option name='untimedlastval'><value><boolean>false</boolean></value></option>
+<option name='untimedmax'><value><boolean>true</boolean></value></option>
+<option name='untimedmin'><value><boolean>true</boolean></value></option>
+<option name='untimedssquare'><value><boolean>false</boolean></value></option>
+<option name='untimedssqdev'><value><boolean>false</boolean></value></option>
+<option name='untimedstddev'><value><boolean>false</boolean></value></option>
+<option name='untimedsum'><value><boolean>true</boolean></value></option>
+<option name='untimedvariance'><value><boolean>false</boolean></value></option>
+</options>
+<binders/>
+<monitorblock name='Monitors'/>
 </cpnet>
 </workspaceElements>

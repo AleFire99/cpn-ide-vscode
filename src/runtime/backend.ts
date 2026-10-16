@@ -5,17 +5,17 @@ import {
   findPortOwner,
   isForeignSimulator,
   isPortListening,
-  onlyTimeWait,
+  onlyClosing,
   stopSimulatorProcess,
   waitForPortRelease,
   type PortOwner,
-  killTree,
   preflight,
   probeHttp,
   reapStaleSimulators,
   startBackendProcess,
   type RunningBackend,
 } from './backend-core';
+import { InitProxy } from './init-proxy';
 import { resolveJava } from './jre';
 import { reloadAllWebviews } from '../webview/panel';
 
@@ -26,6 +26,8 @@ export class BackendManager implements vscode.Disposable {
   private failureShown = false;
   private initWatchdog: NodeJS.Timeout | undefined;
   private retrying = false;
+  // Stable URL in front of the backend (also across restarts) that serializes net creation; see InitProxy.
+  private readonly proxy = new InitProxy();
   readonly output = vscode.window.createOutputChannel('CPN IDE');
 
   private constructor(private readonly ctx: vscode.ExtensionContext) {}
@@ -38,6 +40,14 @@ export class BackendManager implements vscode.Disposable {
   static get(): BackendManager {
     if (!BackendManager.instance) throw new Error('BackendManager not initialised');
     return BackendManager.instance;
+  }
+
+  /** Base URL of the backend if one is already available; never starts anything. */
+  currentUrl(): string | undefined {
+    const external = vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl', '').trim();
+    // Through the proxy when it runs, so these calls queue up with the UI's inits.
+    if (external) return this.proxy.url ?? external.replace(/\/+$/, '');
+    return this.running?.isAlive() ? this.proxy.url ?? this.running.baseUrl : undefined;
   }
 
   /** Start (or reuse) the backend and return its base URL. Shows an error message on failure. */
@@ -54,9 +64,9 @@ export class BackendManager implements vscode.Disposable {
       if (external) {
         const url = external.replace(/\/+$/, '');
         if (!(await probeHttp(url, 5000))) throw new Error(`No CPN IDE backend reachable at ${url} (cpnIde.backendUrl)`);
-        return url;
+        return await this.proxy.start(url);
       }
-      if (this.running?.isAlive()) return this.running.baseUrl;
+      if (this.running?.isAlive()) return await this.proxy.start(this.running.baseUrl);
 
       const problem = preflight(process.platform);
       if (problem) throw new Error(problem);
@@ -66,9 +76,8 @@ export class BackendManager implements vscode.Disposable {
       const backendDir = path.join(this.ctx.extensionPath, 'resources', 'backend');
 
       // One java.io.tmpdir per extension host (named by PID) so windows never clean up each other's simulator.
-      const tmpRoot = path.join(this.ctx.globalStorageUri.fsPath, 'tmp');
-      const tmpDir = path.join(tmpRoot, String(process.pid));
-      const reaped = reapStaleSimulators(tmpRoot);
+      const tmpDir = path.join(this.tmpRoot, String(process.pid));
+      const reaped = reapStaleSimulators(this.tmpRoot);
       if (reaped.length) this.output.appendLine(`[backend] stopped ${reaped.length} leftover simulator process(es) from a previous session`);
       await this.prepareSimulatorPort();
 
@@ -94,7 +103,7 @@ export class BackendManager implements vscode.Disposable {
           });
           this.running = r;
           this.output.appendLine(`[backend] ready at ${r.baseUrl}`);
-          return r.baseUrl;
+          return await this.proxy.start(r.baseUrl);
         },
       );
     } catch (e) {
@@ -137,17 +146,17 @@ export class BackendManager implements vscode.Disposable {
     await stopSimulatorProcess(owner.pid);
   }
 
-  /** Wait for a TIME-WAIT port to clear (Linux), with a progress notification. */
+  /** Wait for a port with only closing sockets (TIME-WAIT, FIN-WAIT, ...) to clear (Linux), with a progress notification. */
   private async waitForPort(): Promise<void> {
-    if (process.platform !== 'linux' || !onlyTimeWait(SIMULATOR_PORT)) return;
-    this.output.appendLine(`[backend] port ${SIMULATOR_PORT} is in TIME-WAIT; waiting for it to be released`);
+    if (process.platform !== 'linux' || !onlyClosing(SIMULATOR_PORT)) return;
+    this.output.appendLine(`[backend] port ${SIMULATOR_PORT} still has closing connections; waiting for it to be released`);
     await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: 'Waiting for the simulator port to be released…' },
       () => waitForPortRelease(SIMULATOR_PORT, 70000),
     );
   }
 
-  /** Before spawning: deal with a foreign simulator daemon on the fixed port and with TIME-WAIT leftovers. */
+  /** Before spawning: deal with a foreign simulator daemon on the fixed port and with closing-socket leftovers. */
   private async prepareSimulatorPort(): Promise<void> {
     const foreign = this.findForeignOwner();
     if (foreign) {
@@ -226,7 +235,7 @@ export class BackendManager implements vscode.Disposable {
     clearTimeout(this.initWatchdog);
     this.initWatchdog = undefined;
     if (this.running) {
-      killTree(this.running.child);
+      this.running.stop();
       this.running = undefined;
       this.output.appendLine('[backend] stopped');
     }
@@ -238,6 +247,7 @@ export class BackendManager implements vscode.Disposable {
 
   dispose(): void {
     this.stop();
+    this.proxy.stop();
     this.output.dispose();
     BackendManager.instance = undefined;
   }

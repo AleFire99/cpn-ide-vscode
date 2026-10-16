@@ -9,6 +9,11 @@
   var vscode = acquireVsCodeApi();
   var cfg = window.__CPN__ || { mode: 'standalone' };
 
+  // The UI logs full request/response payloads; keep that out of the way unless cpnIde.debug is on.
+  if (!cfg.debug) {
+    ['log', 'debug', 'info'].forEach(function (n) { console[n] = function () {}; });
+  }
+
   // --- request/response bridge to the extension host ---
   var pending = {};
   var nextId = 1;

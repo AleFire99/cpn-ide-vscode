@@ -13,7 +13,7 @@ export function uriToPath(u: vscode.Uri): string {
   return u.scheme === 'file' ? u.fsPath : u.toString();
 }
 
-export function pathToUri(p: string): vscode.Uri {
+function pathToUri(p: string): vscode.Uri {
   return /^[a-z][a-z0-9+.-]+:\/\//i.test(p) ? vscode.Uri.parse(p) : vscode.Uri.file(p);
 }
 
@@ -24,6 +24,16 @@ export function webviewOptions(ctx: vscode.ExtensionContext): vscode.WebviewOpti
       vscode.Uri.joinPath(ctx.extensionUri, 'resources', 'ui'),
       vscode.Uri.joinPath(ctx.extensionUri, 'media'),
     ],
+  };
+}
+
+/** The cpnIde.simulation.* / cpnIde.debug settings, passed to the webview. Read on every render. */
+function readUiSettings(): Pick<CpnConfig, 'stepDelayMs' | 'animate' | 'debug'> {
+  const c = vscode.workspace.getConfiguration('cpnIde');
+  return {
+    stepDelayMs: Math.max(0, c.get<number>('simulation.stepDelayMs', 100)),
+    animate: c.get<boolean>('simulation.animate', true),
+    debug: c.get<boolean>('debug', false),
   };
 }
 
@@ -39,7 +49,7 @@ export function renderHtml(ctx: vscode.ExtensionContext, webview: vscode.Webview
     cspSource: webview.cspSource,
     nonce: makeNonce(),
     backendUrl,
-    config,
+    config: { ...readUiSettings(), ...config },
   });
 }
 
@@ -59,7 +69,7 @@ export function reloadAllWebviews(backendUrl: string): void {
 export interface BridgeOptions {
   /** In editor mode: the document path; writes to it go through onWriteDocument instead of the file system. */
   documentPath?: string;
-  readDocument?: () => string;
+  readDocument?: () => string | Promise<string>;
   onWriteDocument?: (text: string) => Thenable<unknown> | void;
 }
 

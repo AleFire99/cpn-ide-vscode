@@ -13,8 +13,8 @@ OUT_DIR="${OUT_DIR:-$ROOT/resources}"
 CACHE_DIR="${CACHE_DIR:-$ROOT/.cache}"
 INSTALLER="$CACHE_DIR/$(basename "$CPN_INSTALLER_URL")"
 STAMP="$OUT_DIR/.installer-sha256"
-# Bump PATCH_ID when scripts/patch-cpnmld.mjs changes so stale resources are rebuilt.
-PATCH_ID="loopback1"
+# Bump PATCH_ID when scripts/patch-cpnmld.mjs or patch-ui.mjs change so stale resources are rebuilt.
+PATCH_ID="loopback1+ui1"
 STAMP_VALUE="$CPN_INSTALLER_SHA256+$PATCH_ID"
 
 DOWNLOAD_ONLY=0
@@ -77,5 +77,6 @@ rm -rf "$OUT_DIR/backend" "$OUT_DIR/ui"
 cp -r "$RES/backend" "$OUT_DIR/backend"
 cp -r "$WORK/asar/dist/cpn-ide" "$OUT_DIR/ui"
 node "$ROOT/scripts/patch-cpnmld.mjs" "$OUT_DIR/backend/cpn-ide-back-1.28-SNAPSHOT.jar"
+node "$ROOT/scripts/patch-ui.mjs" "$OUT_DIR/ui"
 echo "$STAMP_VALUE" > "$STAMP"
 echo "fetch-cpn: done -> $OUT_DIR/backend, $OUT_DIR/ui"

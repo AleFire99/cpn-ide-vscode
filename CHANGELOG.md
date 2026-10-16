@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0 — 2026-10-17
+
+### Features
+
+- Text models: `*.petri.json` (structure) + `*.sml` (declarations) compile to CPN Tools XML, with pages, subpages, fusion places, auto-layout, a `realtime` option and a JSON schema (`schema/petri.schema.json`).
+- `*.petri.json` opens in the CPN IDE canvas. Saving there updates the JSON and leaves the `.sml` alone unless declarations changed.
+- **CPN IDE: Convert to Text Model** turns a `.cpn` into `.petri.json` + `.sml` (graphics are dropped, monitors too, with a warning). Round-tripped models validate with the same initial marking.
+- **CPN IDE: Export .cpn** writes the compiled model of a `.petri.json`.
+- Live diagnostics: text models reload when their `.petri.json` or `.sml` changes on disk. Compile errors appear as diagnostics; with the backend running and no CPN IDE panel open, the backend's type check is reported too.
+- Faster simulation (#46): the UI no longer waits a fixed 500 ms between multi-step steps. New settings `cpnIde.simulation.stepDelayMs` (default 100) and `cpnIde.simulation.animate`; the UI's verbose `console.log` output is silenced unless `cpnIde.debug` is on. The bundled UI is patched at build time (`scripts/patch-ui.mjs`); re-run `scripts/fetch-cpn.sh` to apply it to existing resources.
+- **CPN IDE: Run Simulation (No UI)** simulates a `.cpn` or `.petri.json` straight on the backend and prints step count, time and final markings to the "CPN IDE" output channel.
+- Examples are generated from text sources by `node scripts/gen-examples.mjs` (no CPN IDE download needed); new `04-hierarchy` example with a subpage and a fusion place.
+
+- Extension icon and Marketplace listing; the release workflow can publish to the VS Code Marketplace and Open VSX.
+
+### Fixes
+
+- Two nets validated at the same time (e.g. from two CPN IDE panels) no longer hang the backend: requests go through a small local proxy that runs net creation (`POST /api/v2/cpn/init`) one at a time.
+- After a backend stop, the extension waits for every closing connection on the simulator port (not only TIME-WAIT) before starting a new simulator.
+- Stopping the backend kills java, the simulator daemon and every per-session simulator process synchronously, so none outlive the extension host or a test run.
+
 ## 0.2.0 — 2026-10-16
 
 - ▶ button in the editor title bar of a `.cpn` file opens it in CPN IDE; a file icon in CPN IDE reopens it as XML text (`.CPN` works too).
@@ -8,7 +29,7 @@
 - When the simulator can't start you get an error with **Retry**, **Stop stale simulator** and **Show Log**, plus a 60 s watchdog for hung validations.
 - A stale simulator daemon on port 20001 is detected at startup, with an offer to stop it. After a crash the extension waits for the port to be released.
 
-Known limitation: two validations sent within ~3 s of each other can still hang inside the upstream backend (the UI sends one at a time).
+Known limitation (fixed in 0.3.0): two validations sent within ~3 s of each other can hang inside the upstream backend.
 
 ## 0.1.0 — 2026-10-16
 

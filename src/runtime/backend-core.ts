@@ -21,7 +21,7 @@ export async function pickFreePort(): Promise<number> {
   });
 }
 
-export const LINUX_LOADER = '/lib/ld-linux.so.2';
+const LINUX_LOADER = '/lib/ld-linux.so.2';
 
 /** Returns an error message if the local backend cannot run on this platform, else undefined. */
 export function preflightError(platform: string, loaderExists: boolean): string | undefined {
@@ -101,7 +101,7 @@ export function buildBackendArgs(o: Pick<SpawnOptions, 'userHome' | 'tmpDir' | '
   ];
 }
 
-export function spawnBackend(o: SpawnOptions): ChildProcess {
+function spawnBackend(o: SpawnOptions): ChildProcess {
   fs.mkdirSync(o.userHome, { recursive: true });
   fs.mkdirSync(o.tmpDir, { recursive: true });
   const args = buildBackendArgs(o);
@@ -148,7 +148,7 @@ export function isPortListening(port: number, timeoutMs = 1000): Promise<boolean
   });
 }
 
-/** Linux: PIDs of processes whose cwd is inside <tmpDir>/accesscpn (simulator daemon and its workers). */
+/** Linux: PIDs of processes whose cwd or executable is inside <tmpDir>/accesscpn (simulator daemon and its per-session forks). */
 export function findSimulatorPids(tmpDir: string, procRoot = '/proc'): number[] {
   const base = path.join(tmpDir, 'accesscpn') + path.sep;
   const pids: number[] = [];
@@ -160,17 +160,22 @@ export function findSimulatorPids(tmpDir: string, procRoot = '/proc'): number[] 
   }
   for (const e of entries) {
     if (!/^\d+$/.test(e)) continue;
-    try {
-      if ((fs.readlinkSync(path.join(procRoot, e, 'cwd')) + path.sep).startsWith(base)) pids.push(Number(e));
-    } catch {
-      /* process vanished or not ours */
+    for (const link of ['cwd', 'exe']) {
+      try {
+        if ((fs.readlinkSync(path.join(procRoot, e, link)) + path.sep).startsWith(base)) {
+          pids.push(Number(e));
+          break;
+        }
+      } catch {
+        /* process vanished or not ours */
+      }
     }
   }
   return pids;
 }
 
 /** Kill simulator processes left behind in tmpDir by a backend that was killed hard. Returns the PIDs signalled. */
-export function reapSimulators(tmpDir: string): number[] {
+function reapSimulators(tmpDir: string): number[] {
   const pids = findSimulatorPids(tmpDir);
   for (const pid of pids) {
     try {
@@ -182,15 +187,13 @@ export function reapSimulators(tmpDir: string): number[] {
   return pids;
 }
 
-/** Kill the process and its children. */
-export function killTree(child: ChildProcess): void {
+/** Kill the process and its children, synchronously (nothing is left to a timer that an exiting host would never run). */
+function killTree(child: ChildProcess): void {
   if (child.exitCode !== null || child.pid === undefined) return;
   if (process.platform === 'win32') {
     spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
   } else {
-    killGroup(child.pid, 'SIGTERM');
-    const pid = child.pid;
-    setTimeout(() => killGroup(pid, 'SIGKILL'), 3000).unref();
+    killGroup(child.pid, 'SIGKILL');
   }
 }
 
@@ -198,6 +201,8 @@ export interface RunningBackend {
   child: ChildProcess;
   baseUrl: string;
   isAlive: () => boolean;
+  /** Synchronously kill java, the simulator daemon and every simulator process under tmpDir. Safe to call twice. */
+  stop: () => void;
 }
 
 /** Spawn the backend and wait until it answers HTTP. Kills it if startup fails. */
@@ -225,13 +230,17 @@ export async function startBackendProcess(
     }
   }
   let alive = true;
+  const stop = () => {
+    killTree(child);
+    daemon?.kill();
+    reapSimulators(o.tmpDir);
+  };
   const child = spawnBackend({
     ...o,
     port,
     onExit: (c, s) => {
       alive = false;
-      daemon?.kill();
-      reapSimulators(o.tmpDir);
+      stop();
       o.onExit?.(c, s);
     },
   });
@@ -239,10 +248,10 @@ export async function startBackendProcess(
   try {
     await waitForHttp(`${baseUrl}/`, o.timeoutMs ?? 90000, () => alive);
   } catch (e) {
-    killTree(child);
+    stop();
     throw e;
   }
-  return { child, baseUrl, isAlive: () => alive };
+  return { child, baseUrl, isAlive: () => alive, stop };
 }
 
 function pidAlive(pid: number): boolean {
@@ -286,7 +295,8 @@ export interface PortOwner {
 }
 
 const TCP_LISTEN = '0A';
-const TCP_TIME_WAIT = '06';
+// FIN_WAIT1, FIN_WAIT2, TIME_WAIT, CLOSE, CLOSE_WAIT, LAST_ACK, CLOSING: sockets of a gone daemon that still block a new bind().
+const TCP_CLOSING = new Set(['04', '05', '06', '07', '08', '09', '0B']);
 
 interface TcpRow {
   state: string;
@@ -354,10 +364,10 @@ export function isForeignSimulator(owner: PortOwner, ourTmpRoot: string, uid = p
   return !(path.resolve(owner.cwd) + path.sep).startsWith(root);
 }
 
-/** True if the port has TIME-WAIT sockets and nothing else (no listener, no live connection). */
-export function onlyTimeWait(port: number, procRoot = '/proc'): boolean {
+/** True if the port only has closing sockets left (TIME-WAIT, FIN-WAIT, ...): no listener, no live connection. */
+export function onlyClosing(port: number, procRoot = '/proc'): boolean {
   const rows = readTcpRows(port, procRoot);
-  return rows.length > 0 && rows.every((r) => r.state === TCP_TIME_WAIT);
+  return rows.length > 0 && rows.every((r) => TCP_CLOSING.has(r.state));
 }
 
 /** Descendant PIDs (recursive) of a process, from the ppid field of /proc/<pid>/stat. */
@@ -411,11 +421,11 @@ export async function stopSimulatorProcess(pid: number, graceMs = 3000): Promise
   await new Promise((r) => setTimeout(r, 200));
 }
 
-/** Resolve true once the port has no TIME-WAIT sockets left, false after timeoutMs. */
+/** Resolve true once the port has no closing sockets left, false after timeoutMs. */
 export async function waitForPortRelease(port: number, timeoutMs = 70000, procRoot = '/proc'): Promise<boolean> {
   for (const end = Date.now() + timeoutMs; Date.now() < end; ) {
-    if (!onlyTimeWait(port, procRoot)) return true;
+    if (!onlyClosing(port, procRoot)) return true;
     await new Promise((r) => setTimeout(r, 1000));
   }
-  return !onlyTimeWait(port, procRoot);
+  return !onlyClosing(port, procRoot);
 }

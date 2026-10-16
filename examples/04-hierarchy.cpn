@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE workspaceElements PUBLIC "-//CPN//DTD CPNXML 1.0//EN" "http://cpntools.org/DTD/6/cpn.dtd">
+<workspaceElements>
+<generator tool='CPN Tools' version='4.0.1' format='6'/>
+<cpnet>
+<globbox>
+<block id='ID1'><id>Standard priorities</id>
+<ml id='ID2'><layout>val P_HIGH = 100;</layout>val P_HIGH = 100;</ml>
+<ml id='ID3'><layout>val P_NORMAL = 1000;</layout>val P_NORMAL = 1000;</ml>
+<ml id='ID4'><layout>val P_LOW = 10000;</layout>val P_LOW = 10000;</ml>
+</block>
+<block id='ID5'><id>Standard declarations</id>
+<color id='ID6'><id>UNIT</id><unit></unit><layout>colset UNIT = unit;</layout></color>
+<color id='ID7'><id>BOOL</id><bool></bool><layout>colset BOOL = bool;</layout></color>
+<color id='ID8'><id>INT</id><int></int><layout>colset INT = int;</layout></color>
+<color id='ID9'><id>INTINF</id><intinf></intinf><layout>colset INTINF = intinf;</layout></color>
+<color id='ID10'><id>TIME</id><time/><layout>colset TIME = time;</layout></color>
+<color id='ID11'><id>REAL</id><real></real><layout>colset REAL = real;</layout></color>
+<color id='ID12'><id>STRING</id><string/><layout>colset STRING = string;</layout></color>
+</block>
+<block id='ID13'><id>Types</id>
+<color id='ID14'><id>JOB</id><int><with><ml>1</ml><ml>10</ml></with></int><layout>colset JOB = int with 1..10;</layout></color>
+<color id='ID15'><id>RESULT</id><product><id>JOB</id><id>BOOL</id></product><layout>colset RESULT = product JOB * BOOL;</layout></color>
+</block>
+<block id='ID16'><id>Variables</id>
+<var id='ID17'><type><id>JOB</id></type><id>j</id><layout>var j: JOB;</layout></var>
+<var id='ID18'><type><id>INT</id></type><id>c</id><layout>var c: INT;</layout></var>
+</block>
+<block id='ID19'><id>Functions</id>
+<ml id='ID20'><layout>fun isEven (n: JOB) = n mod 2 = 0;</layout>fun isEven (n: JOB) = n mod 2 = 0;</ml>
+</block>
+</globbox>
+<page id='ID21'>
+<pageattr name='Top'/>
+<place id='ID22'>
+<posattr x='-250.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Jobs</text>
+<ellipse w='70.000000' h='40.000000'/>
+<token x='-10.000000' y='0.000000'/>
+<marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
+<type id='ID31'>
+<posattr x='-205.000000' y='-30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>JOB</text>
+</type>
+<initmark id='ID32'>
+<posattr x='-205.000000' y='30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>1`1++1`2++1`3</text>
+</initmark>
+</place>
+<place id='ID23'>
+<posattr x='250.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Results</text>
+<ellipse w='70.000000' h='40.000000'/>
+<token x='-10.000000' y='0.000000'/>
+<marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
+<type id='ID33'>
+<posattr x='295.000000' y='-30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>RESULT</text>
+</type>
+<initmark id='ID34'>
+<posattr x='295.000000' y='30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</initmark>
+</place>
+<place id='ID24'>
+<posattr x='0.000000' y='-150.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Count</text>
+<ellipse w='70.000000' h='40.000000'/>
+<token x='-10.000000' y='0.000000'/>
+<marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
+<type id='ID36'>
+<posattr x='45.000000' y='-180.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>INT</text>
+</type>
+<initmark id='ID37'>
+<posattr x='45.000000' y='-120.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>1`0</text>
+</initmark>
+<fusioninfo id='ID35' name='Counter'>
+<posattr x='-40.000000' y='-120.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+</fusioninfo>
+</place>
+<trans id='ID25' explicit='false'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Process</text>
+<box w='80.000000' h='40.000000'/>
+<subst subpage='ID26' portsock='(ID27,ID22)(ID28,ID23)'>
+<subpageinfo id='ID38' name='Worker'>
+<posattr x='0.000000' y='-30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+</subpageinfo>
+</subst>
+<binding x='7.200000' y='-3.000000'/>
+<cond id='ID39'>
+<posattr x='-40.000000' y='35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</cond>
+<time id='ID40'>
+<posattr x='50.000000' y='35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</time>
+<code id='ID41'>
+<posattr x='50.000000' y='-35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</code>
+<priority id='ID42'>
+<posattr x='-50.000000' y='-35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</priority>
+</trans>
+<arc id='ID43' orientation='PtoT' order='1'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<arrowattr headsize='1.200000' currentcyckle='2'/>
+<transend idref='ID25'/>
+<placeend idref='ID22'/>
+<annot id='ID44'>
+<posattr x='-125.000000' y='12.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</annot>
+<text></text>
+</arc>
+<arc id='ID45' orientation='TtoP' order='1'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<arrowattr headsize='1.200000' currentcyckle='2'/>
+<transend idref='ID25'/>
+<placeend idref='ID23'/>
+<annot id='ID46'>
+<posattr x='125.000000' y='12.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</annot>
+<text></text>
+</arc>
+<constraints></constraints>
+</page>
+<page id='ID26'>
+<pageattr name='Worker'/>
+<place id='ID27'>
+<posattr x='-220.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>In</text>
+<ellipse w='70.000000' h='40.000000'/>
+<token x='-10.000000' y='0.000000'/>
+<marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
+<type id='ID48'>
+<posattr x='-175.000000' y='-30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>JOB</text>
+</type>
+<initmark id='ID49'>
+<posattr x='-175.000000' y='30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</initmark>
+<port id='ID47' type='In'>
+<posattr x='-250.000000' y='-25.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>In</text>
+</port>
+</place>
+<place id='ID28'>
+<posattr x='220.000000' y='60.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Out</text>
+<ellipse w='70.000000' h='40.000000'/>
+<token x='-10.000000' y='0.000000'/>
+<marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
+<type id='ID51'>
+<posattr x='265.000000' y='30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>RESULT</text>
+</type>
+<initmark id='ID52'>
+<posattr x='265.000000' y='90.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</initmark>
+<port id='ID50' type='Out'>
+<posattr x='190.000000' y='35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Out</text>
+</port>
+</place>
+<place id='ID29'>
+<posattr x='220.000000' y='-60.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Count</text>
+<ellipse w='70.000000' h='40.000000'/>
+<token x='-10.000000' y='0.000000'/>
+<marking x='0.000000' y='0.000000' hidden='false'><snap snap_id='0' anchor.horizontal='0' anchor.vertical='0'/></marking>
+<type id='ID54'>
+<posattr x='265.000000' y='-90.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>INT</text>
+</type>
+<initmark id='ID55'>
+<posattr x='265.000000' y='-30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>1`0</text>
+</initmark>
+<fusioninfo id='ID53' name='Counter'>
+<posattr x='180.000000' y='-30.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+</fusioninfo>
+</place>
+<trans id='ID30' explicit='false'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text>Work</text>
+<box w='80.000000' h='40.000000'/>
+<binding x='7.200000' y='-3.000000'/>
+<cond id='ID56'>
+<posattr x='-40.000000' y='35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</cond>
+<time id='ID57'>
+<posattr x='50.000000' y='35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</time>
+<code id='ID58'>
+<posattr x='50.000000' y='-35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</code>
+<priority id='ID59'>
+<posattr x='-50.000000' y='-35.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'></text>
+</priority>
+</trans>
+<arc id='ID60' orientation='PtoT' order='1'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<arrowattr headsize='1.200000' currentcyckle='2'/>
+<transend idref='ID30'/>
+<placeend idref='ID27'/>
+<annot id='ID61'>
+<posattr x='-110.000000' y='12.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>j</text>
+</annot>
+<text></text>
+</arc>
+<arc id='ID62' orientation='TtoP' order='1'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<arrowattr headsize='1.200000' currentcyckle='2'/>
+<transend idref='ID30'/>
+<placeend idref='ID28'/>
+<annot id='ID63'>
+<posattr x='110.000000' y='42.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>(j, isEven j)</text>
+</annot>
+<text></text>
+</arc>
+<arc id='ID64' orientation='PtoT' order='1'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<arrowattr headsize='1.200000' currentcyckle='2'/>
+<transend idref='ID30'/>
+<placeend idref='ID29'/>
+<annot id='ID65'>
+<posattr x='110.000000' y='-18.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>c</text>
+</annot>
+<text></text>
+</arc>
+<arc id='ID66' orientation='TtoP' order='1'>
+<posattr x='0.000000' y='0.000000'/>
+<fillattr colour='White' pattern='' filled='false'/>
+<lineattr colour='Black' thick='1' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<arrowattr headsize='1.200000' currentcyckle='2'/>
+<transend idref='ID30'/>
+<placeend idref='ID29'/>
+<annot id='ID67'>
+<posattr x='110.000000' y='-18.000000'/>
+<fillattr colour='White' pattern='Solid' filled='false'/>
+<lineattr colour='Black' thick='0' type='Solid'/>
+<textattr colour='Black' bold='false'/>
+<text tool='CPN Tools' version='4.0.1'>c + 1</text>
+</annot>
+<text></text>
+</arc>
+<constraints></constraints>
+</page>
+<fusion id='ID69' name='Counter'>
+<fusion_elm idref='ID24'/>
+<fusion_elm idref='ID29'/>
+</fusion>
+<instances>
+<instance id='ID21itop' page='ID21'>
+<instance id='ID68' trans='ID25'>
+</instance>
+</instance>
+</instances>
+<options>
+<option name='realtimestamp'><value><boolean>false</boolean></value></option>
+<option name='fair_be'><value><boolean>false</boolean></value></option>
+<option name='global_fairness'><value><boolean>false</boolean></value></option>
+<option name='outputdirectory'><value><text>&lt;same as model&gt;</text></value></option>
+<option name='extensions.10006.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10001.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10003.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10005.enable'><value><boolean>true</boolean></value></option>
+<option name='extensions.10002.enable'><value><boolean>true</boolean></value></option>
+<option name='repavg'><value><boolean>true</boolean></value></option>
+<option name='repciavg'><value><boolean>true</boolean></value></option>
+<option name='repcount'><value><boolean>false</boolean></value></option>
+<option name='repfirstval'><value><boolean>false</boolean></value></option>
+<option name='replastval'><value><boolean>false</boolean></value></option>
+<option name='repmax'><value><boolean>true</boolean></value></option>
+<option name='repmin'><value><boolean>true</boolean></value></option>
+<option name='repssquare'><value><boolean>false</boolean></value></option>
+<option name='repssqdev'><value><boolean>false</boolean></value></option>
+<option name='repstddev'><value><boolean>true</boolean></value></option>
+<option name='repsum'><value><boolean>false</boolean></value></option>
+<option name='repvariance'><value><boolean>false</boolean></value></option>
+<option name='avg'><value><boolean>true</boolean></value></option>
+<option name='ciavg'><value><boolean>false</boolean></value></option>
+<option name='count'><value><boolean>true</boolean></value></option>
+<option name='firstval'><value><boolean>false</boolean></value></option>
+<option name='lastval'><value><boolean>false</boolean></value></option>
+<option name='max'><value><boolean>true</boolean></value></option>
+<option name='min'><value><boolean>true</boolean></value></option>
+<option name='ssquare'><value><boolean>false</boolean></value></option>
+<option name='ssqdev'><value><boolean>false</boolean></value></option>
+<option name='stddev'><value><boolean>false</boolean></value></option>
+<option name='sum'><value><boolean>false</boolean></value></option>
+<option name='variance'><value><boolean>false</boolean></value></option>
+<option name='firstupdate'><value><boolean>false</boolean></value></option>
+<option name='interval'><value><boolean>false</boolean></value></option>
+<option name='lastupdate'><value><boolean>false</boolean></value></option>
+<option name='untimedavg'><value><boolean>true</boolean></value></option>
+<option name='untimedciavg'><value><boolean>false</boolean></value></option>
+<option name='untimedcount'><value><boolean>true</boolean></value></option>
+<option name='untimedfirstval'><value><boolean>false</boolean></value></option>
+<option name='untimedlastval'><value><boolean>false</boolean></value></option>
+<option name='untimedmax'><value><boolean>true</boolean></value></option>
+<option name='untimedmin'><value><boolean>true</boolean></value></option>
+<option name='untimedssquare'><value><boolean>false</boolean></value></option>
+<option name='untimedssqdev'><value><boolean>false</boolean></value></option>
+<option name='untimedstddev'><value><boolean>false</boolean></value></option>
+<option name='untimedsum'><value><boolean>true</boolean></value></option>
+<option name='untimedvariance'><value><boolean>false</boolean></value></option>
+</options>
+<binders/>
+<monitorblock name='Monitors'/>
+</cpnet>
+</workspaceElements>
