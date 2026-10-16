@@ -83,6 +83,8 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
 
   it('detects a foreign simulator daemon, stops it, and then initialises a net', async () => {
     if (await isPortListening(SIMULATOR_PORT)) throw new Error(`port ${SIMULATOR_PORT} is already in use`);
+    // The previous test's daemon leaves 127.0.0.1:20001 in TIME-WAIT, which makes a new cpnmld fail to bind.
+    expect(await waitForPortRelease(SIMULATOR_PORT, 70000)).toBe(true);
     const root = path.resolve(__dirname, '../../resources');
     const userHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cpn-it-'));
     const tmpDir = path.join(userHome, 'tmp');
