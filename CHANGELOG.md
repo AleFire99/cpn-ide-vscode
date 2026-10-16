@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 — 2026-10-16
+
+- ▶ button in the editor title bar of a `.cpn` file opens it in CPN IDE; a file icon in CPN IDE reopens it as XML text (`.CPN` works too).
+- Three small example models in `examples/` (simple flow, producer/consumer, mutual exclusion) that validate cleanly; CI simulates them and checks their final markings.
+- Fix: the UI no longer hangs on "validating". The extension now starts the simulator daemon itself before the backend, so Access/CPN's racy lazy start no longer runs.
+- When the simulator can't start you get an error with **Retry**, **Stop stale simulator** and **Show Log**, plus a 60 s watchdog for hung validations.
+- A stale simulator daemon on port 20001 is detected at startup, with an offer to stop it. After a crash the extension waits for the port to be released.
+
+Known limitation: two validations sent within ~3 s of each other can still hang inside the upstream backend (the UI sends one at a time).
+
 ## 0.1.0 — 2026-10-16
 
 First release.
