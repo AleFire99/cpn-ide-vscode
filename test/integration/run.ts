@@ -22,6 +22,8 @@ async function main(): Promise<void> {
   for (const f of ['04-hierarchy.petri.json', '04-hierarchy.sml']) fs.copyFileSync(path.join(root, 'examples', f), path.join(work, f));
   try {
     await runTests({
+      // Offline runs (e.g. inside `unshare -rn`) can point at an already downloaded VS Code.
+      vscodeExecutablePath: process.env.VSCODE_EXECUTABLE || undefined,
       extensionDevelopmentPath: root,
       extensionTestsPath: path.join(__dirname, 'suite/index'),
       extensionTestsEnv: { CPN_TEST_FILE: path.join(work, 'sample.cpn') },

@@ -81,7 +81,7 @@ describe('validateRemote', () => {
     expect(url).toBe('http://h:1/api/v2/cpn/init');
     expect(init.method).toBe('POST');
     expect(init.headers['X-SessionId']).toBe('cpnide-validate-7');
-    expect(JSON.parse(init.body)).toEqual({ xml: '<xml/>', complex_verify: true, need_sim_restart: false });
+    expect(JSON.parse(init.body)).toEqual({ xml: '<xml/>', complex_verify: true, need_sim_restart: true });
   });
 
   it('throws on HTTP errors', async () => {

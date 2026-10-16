@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 import { CpnEditorProvider, VIEW_TYPE } from './editor/cpnEditorProvider';
-import { serializeSpec, textModelPaths } from './model/convert';
-import { decompile } from './model/decompile';
 import { exportCpn } from './editor/exportCpn';
 import { PetriEditorProvider } from './editor/petriEditorProvider';
 import { PETRI_VIEW_TYPE } from './editor/petriModel';
 import { PetriSync } from './editor/petriSync';
-import { isSpecFile } from './model/workspace';
+import { decompile } from './model/decompile';
+import { isSpecFile, serializeSpec, textModelPaths } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { decodeBytes, encodeText } from './webview/host-core';
 import { openStandalonePanel, uiState } from './webview/panel';

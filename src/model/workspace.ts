@@ -40,7 +40,7 @@ export function resolveSibling(specPath: string, rel: string): string {
   return out.join('/');
 }
 
-/** Merge a decompiled spec into the existing one: keeps `$schema` and `declarations`, replaces the pages. */
+/** Merge a decompiled spec into the existing one: keeps `$schema` and `declarations`, takes `realtime` and the pages. */
 export function mergeSpec(existing: PetriSpec | undefined, decompiled: PetriSpec): PetriSpec {
   const schema = existing?.$schema ?? decompiled.$schema;
   const declarations = existing?.declarations ?? decompiled.declarations;
@@ -48,13 +48,24 @@ export function mergeSpec(existing: PetriSpec | undefined, decompiled: PetriSpec
     ...(schema !== undefined ? { $schema: schema } : {}),
     version: 1,
     ...(declarations !== undefined ? { declarations } : {}),
+    ...(decompiled.realtime ? { realtime: true } : {}),
     pages: decompiled.pages,
   };
 }
 
-/** Pretty JSON, 2 spaces, trailing newline. */
-export function serializeSpec(spec: PetriSpec): string {
-  return JSON.stringify(spec, null, 2) + '\n';
+/** `<dir>/<base>.petri.json` and `<base>.sml` next to a `.cpn` path (either slash style). */
+export function textModelPaths(cpnPath: string): { json: string; sml: string; smlName: string } {
+  const slash = Math.max(cpnPath.lastIndexOf('/'), cpnPath.lastIndexOf('\\'));
+  const dir = cpnPath.slice(0, slash + 1);
+  const base = cpnPath.slice(slash + 1).replace(/\.cpn$/i, '') || 'model';
+  return { json: `${dir}${base}${SPEC_SUFFIX}`, sml: `${dir}${base}.sml`, smlName: `${base}.sml` };
+}
+
+/** Pretty JSON, 2 spaces, trailing newline; `smlName` sets the declarations file. */
+export function serializeSpec(spec: PetriSpec, smlName?: string): string {
+  const { $schema, version, declarations, ...rest } = spec;
+  const head = { ...($schema !== undefined ? { $schema } : {}), version, ...((smlName ?? declarations) !== undefined ? { declarations: smlName ?? declarations } : {}) };
+  return JSON.stringify({ ...head, ...rest }, null, 2) + '\n';
 }
 
 const normalizedDecls = (sml: string): string[] => parseSml(sml).decls.map((d) => normalizeDecl(d.text));

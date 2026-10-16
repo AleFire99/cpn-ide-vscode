@@ -130,15 +130,21 @@ export interface InitResponse {
 
 export type FetchLike = (
   url: string,
-  init: { method: string; headers: Record<string, string>; body: string },
+  init: { method: string; headers: Record<string, string>; body: string; signal?: AbortSignal },
 ) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
 
-/** Ask a running backend to check a model. Throws on transport / HTTP errors. */
-export async function validateRemote(fetchFn: FetchLike, baseUrl: string, xml: string, sessionId: string): Promise<InitResponse> {
+/**
+ * Ask a running backend to check a model. Throws on transport / HTTP errors and after `timeoutMs`.
+ * The simulator must be restarted: without it, declarations of the previously loaded model leak in
+ * and produce bogus issues. Callers must not run two of these (or a UI validation) at once: two
+ * concurrent first inits on the backend reliably leave one of them hanging.
+ */
+export async function validateRemote(fetchFn: FetchLike, baseUrl: string, xml: string, sessionId: string, timeoutMs = 60000): Promise<InitResponse> {
   const res = await fetchFn(`${baseUrl.replace(/\/+$/, '')}/api/v2/cpn/init`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-SessionId': sessionId },
-    body: JSON.stringify({ xml, complex_verify: true, need_sim_restart: false }),
+    body: JSON.stringify({ xml, complex_verify: true, need_sim_restart: true }),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`backend answered HTTP ${res.status}`);
   return (await res.json()) as InitResponse;

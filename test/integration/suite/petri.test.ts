@@ -59,9 +59,22 @@ suite('CPN IDE petri model editor', () => {
 
     // Fixing the file clears it again (the file watcher recompiles).
     fs.writeFileSync(path.join(dir, 'bad.sml'), sml);
-    await waitFor('diagnostics to clear', () => {
-      const all = [...vscode.languages.getDiagnostics(smlUri), ...vscode.languages.getDiagnostics(specUri)].filter((d) => d.source === 'cpn');
-      return all.length === 0 ? true : undefined;
-    }, 60000);
+    const left = () => [...vscode.languages.getDiagnostics(smlUri), ...vscode.languages.getDiagnostics(specUri)].filter((d) => d.source === 'cpn');
+    await waitFor(`diagnostics to clear (left: ${left().map((d) => d.message).join(' | ')})`, () => (left().length === 0 ? true : undefined), 60000).catch((e) => {
+      throw new Error(`${e.message}; now left: ${left().map((d) => d.message).join(' | ')}`);
+    });
+  });
+
+  test('with no CPN IDE panel open, the backend checks a saved model and reports type errors', async () => {
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    await waitFor('panels to close', async () => ((await state())?.panels === 0 ? true : undefined), 30000);
+    const specPath = path.join(dir, 'bad.petri.json');
+    const specUri = vscode.Uri.file(specPath);
+    fs.writeFileSync(specPath, fs.readFileSync(specPath, 'utf8').replace('"type": "RESULT"', '"type": "NOPE"'));
+    const diags = await waitFor('a backend diagnostic', () => {
+      const all = vscode.languages.getDiagnostics(specUri).filter((d) => d.source === 'cpn');
+      return all.length ? all : undefined;
+    }, 90000);
+    assert.ok(diags.some((d) => /color-set/i.test(d.message)), diags.map((d) => d.message).join(' | '));
   });
 });

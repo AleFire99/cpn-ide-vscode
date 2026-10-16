@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { locatePointer, modelIssuesToFindings, remoteIssuesToFindings, validateRemote, type FetchLike, type Finding } from '../model/diagnostics';
 import { contentHash, isSpecFile } from '../model/workspace';
 import { BackendManager } from '../runtime/backend';
+import { uiState } from '../webview/panel';
 import { loadModel, readText, smlUriFor, type LoadedModel } from './petriModel';
 
 const DEBOUNCE_MS = 300;
@@ -26,7 +27,8 @@ export class PetriSync implements vscode.Disposable {
   private readonly written = new Map<string, string>();
   private readonly pending = new Map<string, { timer: NodeJS.Timeout; reload: boolean; uri: vscode.Uri }>();
   private readonly subs: vscode.Disposable[] = [];
-  private validations = 0;
+  /** Backend validations run one at a time (see validateRemote). */
+  private queue: Promise<unknown> = Promise.resolve();
 
   static init(): PetriSync {
     PetriSync.instance ??= new PetriSync();
@@ -119,24 +121,29 @@ export class PetriSync implements vscode.Disposable {
     if (reload) {
       for (const e of [...this.editors]) if (e.specUri.toString() === specUri.toString()) void e.reload();
     }
-    let found: Finding[];
-    if (model.compiled) {
-      found = [];
-      const url = BackendManager.get().currentUrl();
-      if (url) {
-        try {
-          const resp = await validateRemote(fetch as unknown as FetchLike, url, model.compiled.xml, `cpnide-validate-${++this.validations}`);
-          found = remoteIssuesToFindings(resp, model.compiled.idMap);
-        } catch (e) {
-          BackendManager.get().output.appendLine(`[validate] ${specUri.fsPath}: ${e instanceof Error ? e.message : String(e)}`);
-          return; // keep the previous diagnostics: the check did not happen
-        }
-      }
-    } else {
-      found = modelIssuesToFindings(model.issues ?? []);
+    if (!model.compiled) {
+      this.findings.set(specUri.toString(), this.toDiagnostics(model, modelIssuesToFindings(model.issues ?? [])));
+      this.publish();
+      return;
     }
-    this.findings.set(specUri.toString(), this.toDiagnostics(model, found));
+    // It compiles: drop old compile errors now, backend findings follow if the check runs.
+    this.findings.set(specUri.toString(), new Map());
     this.publish();
+    const compiled = model.compiled;
+    const check = async () => {
+      // An open CPN IDE panel validates on its own; a concurrent check could hang one of them.
+      const url = BackendManager.get().currentUrl();
+      if (!url || uiState.panels > 0) return;
+      try {
+        const resp = await validateRemote(fetch as unknown as FetchLike, url, compiled.xml, 'cpnide-validate');
+        this.findings.set(specUri.toString(), this.toDiagnostics(model, remoteIssuesToFindings(resp, compiled.idMap)));
+        this.publish();
+      } catch (e) {
+        BackendManager.get().output.appendLine(`[validate] ${specUri.fsPath}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    };
+    this.queue = this.queue.then(check, check);
+    await this.queue;
   }
 
   private toDiagnostics(model: LoadedModel, found: Finding[]) {
