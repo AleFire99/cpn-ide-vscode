@@ -133,6 +133,15 @@
       this.addEventListener('load', function () { whenRendered(function () { notify('ready', {}); }); });
       this.addEventListener('error', function () { notify('error', { message: 'startup model request failed' }); });
     }
+    if (!this.__cpnStartup) {
+      // Surface backend failures (e.g. simulator could not start) that the UI itself swallows.
+      this.addEventListener('loadend', function () {
+        if (this.status !== 500 || !/\/api\//.test(this.__cpnUrl)) return;
+        var text = '';
+        try { text = typeof this.responseText === 'string' ? this.responseText : JSON.stringify(this.response); } catch (e) { /* binary */ }
+        notify('uiError', { url: this.__cpnUrl, status: 500, text: String(text).slice(0, 500) });
+      });
+    }
     return origOpen.apply(this, arguments);
   };
   XMLHttpRequest.prototype.send = function () {

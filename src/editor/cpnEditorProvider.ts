@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BackendManager } from '../runtime/backend';
 import { fileName } from '../webview/host-core';
-import { attachBridge, renderHtml, uiState, uriToPath, webviewOptions } from '../webview/panel';
+import { attachBridge, registerReloader, renderHtml, uiState, uriToPath, webviewOptions } from '../webview/panel';
 
 export const VIEW_TYPE = 'cpnIde.editor';
 
@@ -30,12 +30,16 @@ export class CpnEditorProvider implements vscode.CustomTextEditorProvider {
       return;
     }
     const docPath = uriToPath(document.uri);
-    panel.webview.html = renderHtml(this.ctx, panel.webview, baseUrl, {
-      mode: 'editor',
-      fileName: fileName(docPath),
-      filePath: docPath,
-      initialXml: document.getText(),
-    });
+    const render = (url: string) => {
+      panel.webview.html = renderHtml(this.ctx, panel.webview, url, {
+        mode: 'editor',
+        fileName: fileName(docPath),
+        filePath: docPath,
+        initialXml: document.getText(),
+      });
+    };
+    render(baseUrl);
+    const reloader = registerReloader(render);
     const bridge = attachBridge(panel.webview, {
       documentPath: docPath,
       readDocument: () => document.getText(),
@@ -51,6 +55,7 @@ export class CpnEditorProvider implements vscode.CustomTextEditorProvider {
     uiState.panels++;
     panel.onDidDispose(() => {
       bridge.dispose();
+      reloader.dispose();
       uiState.panels--;
     });
   }
