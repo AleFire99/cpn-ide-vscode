@@ -100,6 +100,14 @@ describe('simulator process discovery', () => {
     fs.rmSync(proc, { recursive: true, force: true });
   });
 
+  it('also finds forks that left the directory but still run a binary from it', () => {
+    const proc = fakeProc({ '20': '/elsewhere', '21': '/elsewhere' });
+    fs.symlinkSync('/x/tmp/accesscpn/simulator/cpnmld.x86-linux', path.join(proc, '20', 'exe'));
+    fs.symlinkSync('/usr/bin/java', path.join(proc, '21', 'exe'));
+    expect(findSimulatorPids('/x/tmp', proc)).toEqual([20]);
+    fs.rmSync(proc, { recursive: true, force: true });
+  });
+
   it('only cleans directories of dead owners', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tmproot-'));
     fs.mkdirSync(path.join(root, '111'));

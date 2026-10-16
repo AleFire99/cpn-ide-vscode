@@ -11,6 +11,7 @@
 - Faster simulation (#46): the UI no longer waits a fixed 500 ms between multi-step steps. New settings `cpnIde.simulation.stepDelayMs` (default 100) and `cpnIde.simulation.animate`; the bundled UI is patched at build time (`scripts/patch-ui.mjs`). Re-run `scripts/fetch-cpn.sh` to apply it to existing resources.
 - The UI's verbose `console.log` output is silenced unless `cpnIde.debug` is on.
 - Command "CPN IDE: Run Simulation (No UI)" simulates a `.cpn` file straight on the backend and prints step count, time and final markings to the "CPN IDE" output channel.
+- Stopping the backend now kills java, the simulator daemon and every per-session simulator process synchronously, so none outlive the extension host or a test run.
 
 ## 0.2.0 — 2026-10-16
 

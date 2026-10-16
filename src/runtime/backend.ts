@@ -9,7 +9,6 @@ import {
   stopSimulatorProcess,
   waitForPortRelease,
   type PortOwner,
-  killTree,
   preflight,
   probeHttp,
   reapStaleSimulators,
@@ -237,7 +236,7 @@ export class BackendManager implements vscode.Disposable {
     clearTimeout(this.initWatchdog);
     this.initWatchdog = undefined;
     if (this.running) {
-      killTree(this.running.child);
+      this.running.stop();
       this.running = undefined;
       this.output.appendLine('[backend] stopped');
     }

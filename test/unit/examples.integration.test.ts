@@ -5,7 +5,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   SIMULATOR_PORT,
   isPortListening,
-  killTree,
   startBackendProcess,
   waitForPortRelease,
   type RunningBackend,
@@ -41,7 +40,7 @@ describe.skipIf(!process.env.CPN_IT)('examples', () => {
   // Leave the fixed simulator port free for the next real-backend test file.
   afterAll(async () => {
     if (!backend) return;
-    killTree(backend.child);
+    backend.stop();
     for (const end = Date.now() + 10000; Date.now() < end && (await isPortListening(SIMULATOR_PORT)); ) {
       await new Promise((r) => setTimeout(r, 200));
     }
