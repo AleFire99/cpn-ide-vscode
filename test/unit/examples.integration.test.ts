@@ -2,7 +2,14 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { SIMULATOR_PORT, isPortListening, killTree, startBackendProcess, type RunningBackend } from '../../src/runtime/backend-core';
+import {
+  SIMULATOR_PORT,
+  isPortListening,
+  killTree,
+  startBackendProcess,
+  waitForPortRelease,
+  type RunningBackend,
+} from '../../src/runtime/backend-core';
 
 interface SimState {
   enableTrans: string[];
@@ -16,6 +23,7 @@ describe.skipIf(!process.env.CPN_IT)('examples', () => {
   let backend: RunningBackend;
 
   beforeAll(async () => {
+    await waitForPortRelease(SIMULATOR_PORT);
     if (await isPortListening(SIMULATOR_PORT)) throw new Error(`port ${SIMULATOR_PORT} is already in use`);
     const root = path.resolve(__dirname, '../../resources');
     const userHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cpn-ex-'));
@@ -28,9 +36,15 @@ describe.skipIf(!process.env.CPN_IT)('examples', () => {
     });
   }, 120000);
 
-  afterAll(() => {
-    if (backend) killTree(backend.child);
-  });
+  // Leave the fixed simulator port free for the next real-backend test file.
+  afterAll(async () => {
+    if (!backend) return;
+    killTree(backend.child);
+    for (const end = Date.now() + 10000; Date.now() < end && (await isPortListening(SIMULATOR_PORT)); ) {
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    await waitForPortRelease(SIMULATOR_PORT);
+  }, 90000);
 
   const api = async <T>(session: string, route: string, body?: unknown): Promise<T> => {
     const res = await fetch(`${backend.baseUrl}/api/v2/cpn/${route}`, {
