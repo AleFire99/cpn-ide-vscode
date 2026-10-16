@@ -15,7 +15,7 @@ concurrency:
 jobs:
   lint-test:
     name: lint-test
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -36,35 +36,46 @@ jobs:
           path: .cache
           key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
 
-      - name: Install system packages (innoextract, 32-bit glibc, xvfb)
+      - name: Install system packages (innoextract, xvfb)
         run: |
           sudo apt-get update
-          sudo apt-get install -y innoextract libc6-i386 xvfb
+          sudo apt-get install -y innoextract xvfb
 
       - name: Fetch CPN IDE binaries
         run: scripts/fetch-cpn.sh
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+      - name: VS Code integration test
+        run: npm run test:integration
 
+  # The 32-bit CPN simulator does not start on GitHub-hosted VMs (its SML heap image
+  # fails to load), but works in this container, the same base as docker/Dockerfile.
+  backend-it:
+    name: backend-it
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: eclipse-temurin:17-jre-jammy
+    steps:
+      - name: Install system packages
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl innoextract libc6-i386 git
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cache CPN installer
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
+      - name: Fetch CPN IDE binaries
+        run: scripts/fetch-cpn.sh
       - name: Backend integration test
         run: npm test
         env:
           CPN_IT: "1"
-
-      - name: Simulator diagnostics
-        if: failure()
-        run: |
-          ls -l /lib/ld-linux.so.2 /tmp/accesscpn/simulator || true
-          file /tmp/accesscpn/simulator/run.x86-linux || true
-          /tmp/accesscpn/simulator/run.x86-linux 2>&1 | head -20 || true
-          mount | grep -E ' /tmp | /dev/shm ' || true
-          cat /proc/sys/vm/mmap_min_addr; ulimit -a | head -20
-
-      - name: VS Code integration test
-        run: npm run test:integration
 
   build-vsix:
     name: build-vsix
