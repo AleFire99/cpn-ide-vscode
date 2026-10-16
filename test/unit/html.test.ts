@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeBytes, encodeText, fileName, toVsCodeFilters } from '../../src/webview/host-core';
+import { decodeBytes, encodeText, fileName, PathAllowlist, toVsCodeFilters } from '../../src/webview/host-core';
 import { buildCsp, buildWebviewHtml, safeJson } from '../../src/webview/html';
 
 const INDEX = `<!doctype html>
@@ -100,5 +100,15 @@ describe('host-core', () => {
     expect(fileName('C:\\x\\y.cpn')).toBe('y.cpn');
     expect(toVsCodeFilters([{ name: 'CPN', extensions: ['cpn', '*'] }])).toEqual({ CPN: ['cpn'] });
     expect(toVsCodeFilters(undefined)).toBeUndefined();
+  });
+});
+
+describe('PathAllowlist', () => {
+  it('allows only registered paths', () => {
+    const a = new PathAllowlist(['/a/doc.cpn']);
+    expect(a.has('/a/doc.cpn')).toBe(true);
+    expect(() => a.assert('/etc/passwd')).toThrow(/Access denied/);
+    a.add('/b/other.cpn');
+    expect(() => a.assert('/b/other.cpn')).not.toThrow();
   });
 });

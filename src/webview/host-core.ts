@@ -32,6 +32,27 @@ export function fileName(p: string): string {
   }
 }
 
+/** Paths a webview may read/write: the bound document plus anything the user picked in a dialog. */
+export class PathAllowlist {
+  private readonly allowed = new Set<string>();
+
+  constructor(initial: Iterable<string> = []) {
+    for (const p of initial) this.add(p);
+  }
+
+  add(p: string): void {
+    this.allowed.add(p);
+  }
+
+  has(p: string): boolean {
+    return this.allowed.has(p);
+  }
+
+  assert(p: string): void {
+    if (!this.has(p)) throw new Error(`Access denied: ${p} was not opened or chosen in this panel`);
+  }
+}
+
 /** Dialog filters from Electron form ({name, extensions}[]) to VS Code form. */
 export function toVsCodeFilters(f: unknown): Record<string, string[]> | undefined {
   if (!Array.isArray(f)) return undefined;

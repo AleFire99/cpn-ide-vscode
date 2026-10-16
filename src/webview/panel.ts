@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { decodeBytes, encodeText, toVsCodeFilters } from './host-core';
+import { decodeBytes, encodeText, PathAllowlist, toVsCodeFilters } from './host-core';
 import { buildWebviewHtml, makeNonce, type CpnConfig } from './html';
 
 /** Observable by the integration tests through the `cpnIde._lastReady` command. */
@@ -57,6 +57,7 @@ export interface BridgeOptions {
  * Everything else is written as UTF-8.
  */
 export function attachBridge(webview: vscode.Webview, opts: BridgeOptions = {}): vscode.Disposable {
+  const allowed = new PathAllowlist(opts.documentPath ? [opts.documentPath] : []);
   const encodings = new Map<string, 'utf8' | 'latin1'>();
 
   const handlers: Record<string, (a: Record<string, unknown>) => Promise<unknown>> = {
@@ -69,7 +70,9 @@ export function attachBridge(webview: vscode.Webview, opts: BridgeOptions = {}):
         filters: toVsCodeFilters(o.filters) ?? { 'CPN models': ['cpn', 'CPN'] },
         title: typeof o.title === 'string' ? o.title : undefined,
       });
-      return uris?.map(uriToPath);
+      const paths = uris?.map(uriToPath);
+      paths?.forEach((x) => allowed.add(x));
+      return paths;
     },
     async showSaveDialog(a) {
       const o = (a.options ?? {}) as Record<string, unknown>;
@@ -84,10 +87,13 @@ export function attachBridge(webview: vscode.Webview, opts: BridgeOptions = {}):
         filters: toVsCodeFilters(o.filters) ?? { 'CPN models': ['cpn'] },
         title: typeof o.title === 'string' ? o.title : undefined,
       });
-      return u ? uriToPath(u) : undefined;
+      if (!u) return undefined;
+      allowed.add(uriToPath(u));
+      return uriToPath(u);
     },
     async readFile(a) {
       const p = String(a.path);
+      allowed.assert(p);
       if (opts.documentPath === p && opts.readDocument) return opts.readDocument();
       const d = decodeBytes(await vscode.workspace.fs.readFile(pathToUri(p)));
       encodings.set(p, d.encoding);
@@ -95,6 +101,7 @@ export function attachBridge(webview: vscode.Webview, opts: BridgeOptions = {}):
     },
     async writeFile(a) {
       const p = String(a.path);
+      allowed.assert(p);
       const data = String(a.data);
       if (opts.documentPath === p && opts.onWriteDocument) {
         await opts.onWriteDocument(data);
