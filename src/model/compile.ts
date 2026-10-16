@@ -41,9 +41,9 @@ const LABEL_ATTRS = `<fillattr colour='White' pattern='Solid' filled='false'/>
 const PORT_TYPES = { in: 'In', out: 'Out', io: 'I/O', general: 'General' } as const;
 
 // Simulator options of the CPN IDE template net (resources/ui/assets/cpn/mynet.cpn).
-const OPTIONS = (() => {
+const OPTIONS = (realtime: boolean) => {
   const bools: [string, boolean][] = [
-    ['realtimestamp', false], ['fair_be', false], ['global_fairness', false],
+    ['realtimestamp', realtime], ['fair_be', false], ['global_fairness', false],
     ['extensions.10006.enable', true], ['extensions.10001.enable', true], ['extensions.10003.enable', true],
     ['extensions.10005.enable', true], ['extensions.10002.enable', true],
     ['repavg', true], ['repciavg', true], ['repcount', false], ['repfirstval', false], ['replastval', false],
@@ -64,7 +64,7 @@ const OPTIONS = (() => {
     ...bools.slice(3).map(([n, v]) => opt(n, `<boolean>${v}</boolean>`)),
     '</options>',
   ].join('\n');
-})();
+};
 
 function colsetXml(c: Colset): string {
   const id = (x: string) => `<id>${esc(x)}</id>`;
@@ -408,7 +408,7 @@ ${fusionXml.join('\n')}
 <instances>
 ${instances}
 </instances>
-${OPTIONS}
+${OPTIONS(spec.realtime === true)}
 <binders/>
 <monitorblock name='Monitors'/>
 </cpnet>

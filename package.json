@@ -35,6 +35,10 @@
         "icon": "$(play)"
       },
       {
+        "command": "cpnIde.convertToText",
+        "title": "CPN IDE: Convert to Text Model"
+      },
+      {
         "command": "cpnIde.openAsText",
         "title": "CPN IDE: Reopen as XML Text",
         "icon": "$(go-to-file)"
@@ -94,6 +98,11 @@
           "group": "navigation"
         },
         {
+          "command": "cpnIde.convertToText",
+          "when": "resourceExtname =~ /^\\.cpn$/i",
+          "group": "navigation"
+        },
+        {
           "command": "cpnIde.openAsText",
           "when": "activeCustomEditorId == cpnIde.editor",
           "group": "navigation"
@@ -102,6 +111,11 @@
       "explorer/context": [
         {
           "command": "cpnIde.openInCpnIde",
+          "when": "resourceExtname =~ /^\\.cpn$/i",
+          "group": "navigation"
+        },
+        {
+          "command": "cpnIde.convertToText",
           "when": "resourceExtname =~ /^\\.cpn$/i",
           "group": "navigation"
         }
