@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
+import { removeTempDirs, tempDir } from './helpers';
 import { PATCHES, TARGET, patchChecked, patchUi, patchUiDir } from '../../scripts/patch-ui.mjs';
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -70,8 +70,8 @@ const realMain = fs.existsSync(realUi) ? fs.readdirSync(realUi).find((f) => /^ma
 
 describe.skipIf(!realMain)('real bundle (copy)', () => {
   it('finds every needle exactly once and yields the pinned hash', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'patch-ui-'));
-    try {
+    const dir = tempDir('patch-ui-');
+    {
       fs.copyFileSync(path.join(realUi, realMain!), path.join(dir, realMain!));
       const text = fs.readFileSync(path.join(dir, realMain!), 'utf8');
       const patched = text.includes(PATCHES[0].to);
@@ -82,8 +82,8 @@ describe.skipIf(!realMain)('real bundle (copy)', () => {
       }
       expect(sha(fs.readFileSync(path.join(dir, realMain!), 'utf8'))).toBe(TARGET.patched);
       expect(patchUiDir(dir)).toBe(false);
-    } finally {
-      fs.rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  afterAll(removeTempDirs);
 });

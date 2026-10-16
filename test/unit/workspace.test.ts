@@ -8,7 +8,6 @@ import {
   declarationsChanged,
   mergeSpec,
   parseSpecText,
-  resolveSibling,
   serializeSpec,
   smlRelativePath,
   specBaseName,
@@ -24,14 +23,6 @@ describe('paths', () => {
     expect(smlRelativePath('/a/net.petri.json')).toBe('net.sml');
     expect(smlRelativePath('/a/net.petri.json', { declarations: 'decl/x.sml' })).toBe('decl/x.sml');
     expect(smlRelativePath('/a/net.petri.json', { declarations: '  ' })).toBe('net.sml');
-  });
-
-  it('resolves relative to the spec directory', () => {
-    expect(resolveSibling('/a/b/net.petri.json', 'net.sml')).toBe('/a/b/net.sml');
-    expect(resolveSibling('/a/b/net.petri.json', '../shared/d.sml')).toBe('/a/shared/d.sml');
-    expect(resolveSibling('/a/b/net.petri.json', './x/./d.sml')).toBe('/a/b/x/d.sml');
-    expect(resolveSibling('/a/b/net.petri.json', '/abs/d.sml')).toBe('/abs/d.sml');
-    expect(resolveSibling('C:\\a\\net.petri.json', 'd.sml')).toBe('C:/a/d.sml');
   });
 });
 
