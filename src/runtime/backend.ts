@@ -5,7 +5,7 @@ import {
   findPortOwner,
   isForeignSimulator,
   isPortListening,
-  onlyTimeWait,
+  onlyClosing,
   stopSimulatorProcess,
   waitForPortRelease,
   type PortOwner,
@@ -146,17 +146,17 @@ export class BackendManager implements vscode.Disposable {
     await stopSimulatorProcess(owner.pid);
   }
 
-  /** Wait for a TIME-WAIT port to clear (Linux), with a progress notification. */
+  /** Wait for a port with only closing sockets (TIME-WAIT, FIN-WAIT, ...) to clear (Linux), with a progress notification. */
   private async waitForPort(): Promise<void> {
-    if (process.platform !== 'linux' || !onlyTimeWait(SIMULATOR_PORT)) return;
-    this.output.appendLine(`[backend] port ${SIMULATOR_PORT} is in TIME-WAIT; waiting for it to be released`);
+    if (process.platform !== 'linux' || !onlyClosing(SIMULATOR_PORT)) return;
+    this.output.appendLine(`[backend] port ${SIMULATOR_PORT} still has closing connections; waiting for it to be released`);
     await vscode.window.withProgress(
       { location: vscode.ProgressLocation.Notification, title: 'Waiting for the simulator port to be released…' },
       () => waitForPortRelease(SIMULATOR_PORT, 70000),
     );
   }
 
-  /** Before spawning: deal with a foreign simulator daemon on the fixed port and with TIME-WAIT leftovers. */
+  /** Before spawning: deal with a foreign simulator daemon on the fixed port and with closing-socket leftovers. */
   private async prepareSimulatorPort(): Promise<void> {
     const foreign = this.findForeignOwner();
     if (foreign) {

@@ -295,7 +295,8 @@ export interface PortOwner {
 }
 
 const TCP_LISTEN = '0A';
-const TCP_TIME_WAIT = '06';
+// FIN_WAIT1, FIN_WAIT2, TIME_WAIT, CLOSE, CLOSE_WAIT, LAST_ACK, CLOSING: sockets of a gone daemon that still block a new bind().
+const TCP_CLOSING = new Set(['04', '05', '06', '07', '08', '09', '0B']);
 
 interface TcpRow {
   state: string;
@@ -363,10 +364,10 @@ export function isForeignSimulator(owner: PortOwner, ourTmpRoot: string, uid = p
   return !(path.resolve(owner.cwd) + path.sep).startsWith(root);
 }
 
-/** True if the port has TIME-WAIT sockets and nothing else (no listener, no live connection). */
-export function onlyTimeWait(port: number, procRoot = '/proc'): boolean {
+/** True if the port only has closing sockets left (TIME-WAIT, FIN-WAIT, ...): no listener, no live connection. */
+export function onlyClosing(port: number, procRoot = '/proc'): boolean {
   const rows = readTcpRows(port, procRoot);
-  return rows.length > 0 && rows.every((r) => r.state === TCP_TIME_WAIT);
+  return rows.length > 0 && rows.every((r) => TCP_CLOSING.has(r.state));
 }
 
 /** Descendant PIDs (recursive) of a process, from the ppid field of /proc/<pid>/stat. */
@@ -420,11 +421,11 @@ export async function stopSimulatorProcess(pid: number, graceMs = 3000): Promise
   await new Promise((r) => setTimeout(r, 200));
 }
 
-/** Resolve true once the port has no TIME-WAIT sockets left, false after timeoutMs. */
+/** Resolve true once the port has no closing sockets left, false after timeoutMs. */
 export async function waitForPortRelease(port: number, timeoutMs = 70000, procRoot = '/proc'): Promise<boolean> {
   for (const end = Date.now() + timeoutMs; Date.now() < end; ) {
-    if (!onlyTimeWait(port, procRoot)) return true;
+    if (!onlyClosing(port, procRoot)) return true;
     await new Promise((r) => setTimeout(r, 1000));
   }
-  return !onlyTimeWait(port, procRoot);
+  return !onlyClosing(port, procRoot);
 }

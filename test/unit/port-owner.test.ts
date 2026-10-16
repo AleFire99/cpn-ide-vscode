@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { removeTempDirs, tempDir } from './helpers';
-import { descendantPids, findPortOwner, isForeignSimulator, onlyTimeWait, parseProcNetTcp } from '../../src/runtime/backend-core';
+import { descendantPids, findPortOwner, isForeignSimulator, onlyClosing, parseProcNetTcp } from '../../src/runtime/backend-core';
 
 const HEAD = '  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n';
 // 20001 = 0x4E21
@@ -61,11 +61,16 @@ describe('findPortOwner', () => {
   });
 });
 
-describe('onlyTimeWait', () => {
-  it('is true only when every socket on the port is TIME-WAIT', () => {
-    expect(onlyTimeWait(20001, fakeProc(HEAD + row(0, '0100007F:4E21', '06', 0, 0)))).toBe(true);
-    expect(onlyTimeWait(20001, fakeProc(HEAD + row(0, '0100007F:4E21', '06', 0, 0) + row(1, '0100007F:4E21', '0A', 1000, 5)))).toBe(false);
-    expect(onlyTimeWait(20001, fakeProc(HEAD))).toBe(false);
+describe('onlyClosing', () => {
+  it('is true only when every socket on the port is closing', () => {
+    expect(onlyClosing(20001, fakeProc(HEAD + row(0, '0100007F:4E21', '06', 0, 0)))).toBe(true);
+    expect(onlyClosing(20001, fakeProc(HEAD + row(0, '0100007F:4E21', '06', 0, 0) + row(1, '0100007F:4E21', '0A', 1000, 5)))).toBe(false);
+    expect(onlyClosing(20001, fakeProc(HEAD))).toBe(false);
+  });
+
+  it('counts FIN-WAIT and the other closing states too (they also block a new bind)', () => {
+    expect(onlyClosing(20001, fakeProc(HEAD + row(0, '0100007F:4E21', '06', 0, 0) + row(1, '0100007F:4E21', '05', 0, 0)))).toBe(true);
+    expect(onlyClosing(20001, fakeProc(HEAD + row(0, '0100007F:4E21', '01', 1000, 7)))).toBe(false); // ESTABLISHED: still in use
   });
 });
 
