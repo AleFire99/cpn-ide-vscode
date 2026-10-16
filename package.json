@@ -2,7 +2,7 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Coloured Petri Nets editor and simulator (CPN IDE) inside VS Code, with nothing to install.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
