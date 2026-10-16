@@ -27,6 +27,10 @@
         "title": "CPN IDE: Open"
       },
       {
+        "command": "cpnIde.runSimulation",
+        "title": "CPN IDE: Run Simulation (No UI)"
+      },
+      {
         "command": "cpnIde.newNet",
         "title": "CPN IDE: New Net"
       },
@@ -74,6 +78,22 @@
           "type": "number",
           "default": 0,
           "markdownDescription": "Port for the local backend. `0` picks a free port automatically."
+        },
+        "cpnIde.simulation.stepDelayMs": {
+          "type": "number",
+          "default": 100,
+          "minimum": 0,
+          "markdownDescription": "Delay in milliseconds between steps of a multi-step simulation in the CPN IDE UI (upstream: 500). Applies when an editor is (re)opened."
+        },
+        "cpnIde.simulation.animate": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Animate token movement during simulation in the CPN IDE UI. Turn off for faster simulation. Applies when an editor is (re)opened."
+        },
+        "cpnIde.debug": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Keep the CPN IDE UI's verbose `console.log` output (full request/response payloads) in the webview developer tools."
         }
       }
     },
@@ -142,6 +162,11 @@
         {
           "command": "cpnIde.convertToText",
           "when": "resourceExtname =~ /^\\.cpn$/i",
+          "group": "navigation"
+        },
+        {
+          "command": "cpnIde.runSimulation",
+          "when": "resourceExtname =~ /^\\.cpn$/i || resourceFilename =~ /\\.petri\\.json$/i",
           "group": "navigation"
         }
       ],

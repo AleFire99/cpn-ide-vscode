@@ -7,6 +7,9 @@
 - **CPN IDE: Convert to Text Model** turns a `.cpn` into `.petri.json` + `.sml`, dropping graphics (monitors are dropped with a warning). Round-tripped models validate with the same initial marking. New `realtime` spec option for real-valued model time.
 - `*.petri.json` opens in the CPN IDE canvas. Saving there updates the JSON and leaves the `.sml` alone unless declarations changed. **CPN IDE: Export .cpn** writes the compiled model.
 - Text models reload when their `.petri.json` or `.sml` changes on disk. Compile errors appear as diagnostics; with the backend running and no CPN IDE panel open, the backend's type check is reported too.
+- Faster simulation (#46): the UI no longer waits a fixed 500 ms between multi-step steps. New settings `cpnIde.simulation.stepDelayMs` (default 100) and `cpnIde.simulation.animate`; the bundled UI is patched at build time (`scripts/patch-ui.mjs`). Re-run `scripts/fetch-cpn.sh` to apply it to existing resources.
+- The UI's verbose `console.log` output is silenced unless `cpnIde.debug` is on.
+- Command "CPN IDE: Run Simulation (No UI)" simulates a `.cpn` file straight on the backend and prints step count, time and final markings to the "CPN IDE" output channel.
 
 ## 0.2.0 — 2026-10-16
 

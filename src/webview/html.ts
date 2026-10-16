@@ -11,6 +11,12 @@ export interface CpnConfig {
   filePath?: string;
   /** XML returned for the UI's startup request of assets/cpn/mynet.cpn. */
   initialXml?: string;
+  /** Delay between steps of multi-step simulation, in ms (UI default: 500). */
+  stepDelayMs?: number;
+  /** Animate token movement in the UI. */
+  animate?: boolean;
+  /** Keep the UI's verbose console.log output. */
+  debug?: boolean;
 }
 
 export interface BuildHtmlOptions {
@@ -85,7 +91,7 @@ function bootstrapScript(backendUrl: string, config: CpnConfig): string {
   var cfg = ${safeJson(config)};
   var backend = ${safeJson(backendUrl)};
   var defaults = ${safeJson(DEFAULT_SETTINGS)};
-  window.__CPN__ = { mode: cfg.mode, fileName: cfg.fileName, filePath: cfg.filePath, initialXml: cfg.initialXml, backendUrl: backend };
+  window.__CPN__ = { mode: cfg.mode, fileName: cfg.fileName, filePath: cfg.filePath, initialXml: cfg.initialXml, stepDelayMs: cfg.stepDelayMs, animate: cfg.animate, debug: cfg.debug, backendUrl: backend };
   try {
     var stored = localStorage.getItem('applicationSettings');
     var s = stored ? JSON.parse(stored) : {};
