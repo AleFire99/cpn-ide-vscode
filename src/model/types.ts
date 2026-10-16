@@ -55,6 +55,8 @@ export interface PetriSpec {
   version: 1;
   /** Declarations file, relative to the spec file. */
   declarations?: string;
+  /** Real-valued model time (CPN Tools option "realtimestamp"), e.g. for `@+ 1.5`. */
+  realtime?: boolean;
   pages: PageSpec[];
 }
 

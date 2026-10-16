@@ -10,6 +10,8 @@ import {
   waitForPortRelease,
   type RunningBackend,
 } from '../../src/runtime/backend-core';
+import { compile } from '../../src/model/compile';
+import { decompile } from '../../src/model/decompile';
 
 interface SimState {
   enableTrans: string[];
@@ -104,5 +106,21 @@ describe.skipIf(!process.env.CPN_IT)('examples', () => {
     const r = await run('04-hierarchy.cpn', 10);
     expect(r.steps).toBe(3);
     expect(r.final).toEqual(['empty', '1`(1,false)++1`(2,true)++1`(3,false)', '1`3', '1`3', 'empty', '1`(1,false)++1`(2,true)++1`(3,false)']);
+  }, 120000);
+  // Converting to the text model and back must not change what the simulator sees.
+  it.each(['sample.cpn', 'fuelstation-no-mon.cpn'])('%s: validates with the same initial marking after a text round trip', async (file) => {
+    const xml = fs.readFileSync(path.resolve(__dirname, '../fixtures', file), 'latin1');
+    const { spec, sml } = decompile(xml);
+    const initial = async (x: string, session: string) => {
+      const check = await api<{ success: boolean; issues: Record<string, unknown> }>(session, 'init', {
+        xml: x,
+        complex_verify: true,
+        need_sim_restart: true,
+      });
+      expect(check.issues).toEqual({});
+      const s = await api<SimState>(session, 'sim/init', {});
+      return s.tokensAndMark.map((t) => t.marking.replace(/\s+/g, '')).sort();
+    };
+    expect(await initial(compile(spec, sml).xml, `rt-${file}`)).toEqual(await initial(xml, `orig-${file}`));
   }, 120000);
 });
