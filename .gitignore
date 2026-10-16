@@ -1,0 +1,10 @@
+node_modules/
+dist/
+out/
+*.vsix
+.vscode-test/
+# CPN IDE binaries are downloaded by scripts/fetch-cpn.sh, never committed
+resources/
+.cache/
+.venv/
+*.log
