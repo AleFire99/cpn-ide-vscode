@@ -6,6 +6,12 @@ Run [CPN IDE](https://cpnide.org/) — the editor and simulator for Coloured Pet
 beforehand. The extension ships the CPN IDE backend and UI, downloads a portable Java 17 runtime on first use, and opens
 `.cpn` models, or text models (`.petri.json`), in an editor tab.
 
+## Install
+
+Install **CPN IDE** from the VS Code Marketplace (Extensions view, search "CPN IDE"), or download the VSIX for your
+platform from the [GitHub releases](https://github.com/AleFire99/cpn-ide-vscode/releases) and run
+**Extensions: Install from VSIX…**.
+
 ## Examples
 
 [`examples/`](examples/) has four small models that validate cleanly and are simulated in CI:

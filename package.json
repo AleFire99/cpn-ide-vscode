@@ -2,18 +2,41 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Coloured Petri Nets editor and simulator (CPN IDE) inside VS Code, with nothing to install.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/AleFire99/cpn-ide-vscode.git"
   },
+  "homepage": "https://github.com/AleFire99/cpn-ide-vscode#readme",
+  "bugs": {
+    "url": "https://github.com/AleFire99/cpn-ide-vscode/issues"
+  },
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1f3a5f",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
+    "Visualization",
+    "Education",
     "Other"
+  ],
+  "keywords": [
+    "petri net",
+    "petri nets",
+    "coloured petri nets",
+    "colored petri nets",
+    "cpn",
+    "cpn tools",
+    "cpn ide",
+    "simulation",
+    "modeling",
+    "formal methods"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [

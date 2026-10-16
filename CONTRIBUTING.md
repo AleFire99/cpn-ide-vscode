@@ -33,8 +33,15 @@ Branches:
 
 Pushing the tag triggers the `release` workflow. It fails unless the tag equals `v` plus the `version` in
 `package.json`; otherwise it runs lint and tests, builds the `linux-x64` and `win32-x64` VSIX files, and
-publishes a GitHub Release with generated notes and the VSIX files attached. Marketplace publishing is
-prepared but disabled in the workflow (it needs a `VSCE_PAT` secret).
+publishes a GitHub Release with generated notes and the VSIX files attached. The `publish` job then uploads
+the same VSIX files to each store that is switched on:
+
+| Store | Repository variable | Secret |
+|---|---|---|
+| VS Code Marketplace | `PUBLISH_MARKETPLACE=true` | `VSCE_PAT`: Azure DevOps PAT, organization *All accessible organizations*, scope *Marketplace → Manage* |
+| Open VSX | `PUBLISH_OPENVSX=true` | `OVSX_PAT`: open-vsx.org access token (namespace `AleFire99` must exist) |
+
+Re-running the workflow for a version that is already published skips it instead of failing.
 
 ## Hotfixes
 
