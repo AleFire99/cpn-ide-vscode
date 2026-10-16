@@ -136,8 +136,8 @@ export type FetchLike = (
 /**
  * Ask a running backend to check a model. Throws on transport / HTTP errors and after `timeoutMs`.
  * The simulator must be restarted: without it, declarations of the previously loaded model leak in
- * and produce bogus issues. Callers must not run two of these (or a UI validation) at once: two
- * concurrent first inits on the backend reliably leave one of them hanging.
+ * and produce bogus issues. Send it through BackendManager's InitProxy (currentUrl does): two concurrent
+ * first inits on the backend leave one of them hanging (#50), and the proxy queues them.
  */
 export async function validateRemote(fetchFn: FetchLike, baseUrl: string, xml: string, sessionId: string, timeoutMs = 60000): Promise<InitResponse> {
   const res = await fetchFn(`${baseUrl.replace(/\/+$/, '')}/api/v2/cpn/init`, {
