@@ -80,6 +80,16 @@ describe('compileSpecText', () => {
     const sml = fs.readFileSync(path.join(examples, '01-simple-flow.sml'), 'utf8');
     expect(compileSpecText(spec, sml).xml).toContain('<workspaceElements>');
   });
+  it('reports a bad colset as a declarations issue', () => {
+    const spec = fs.readFileSync(path.join(examples, '01-simple-flow.petri.json'), 'utf8');
+    try {
+      compileSpecText(spec, 'colset BROKEN = nonsense of of;\n');
+      expect.unreachable();
+    } catch (e) {
+      expect(e).toBeInstanceOf(ModelError);
+      expect((e as ModelError).issues.some((i) => i.source?.file === 'sml' && i.source.line === 1)).toBe(true);
+    }
+  });
   it('reports invalid JSON as a ModelError', () => {
     expect(() => compileSpecText('{ nope', '')).toThrow(ModelError);
   });

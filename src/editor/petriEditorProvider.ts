@@ -5,6 +5,7 @@ import { declarationsChanged, mergeSpec, parseSpecText, serializeSpec, specBaseN
 import { BackendManager } from '../runtime/backend';
 import { mountEditor } from './cpnEditorProvider';
 import { loadModel, PETRI_VIEW_TYPE, readText, smlUriFor, writeText } from './petriModel';
+import { PetriSync } from './petriSync';
 
 /**
  * Custom text editor for *.petri.json. The spec and its .sml are compiled to CPN Tools XML for the UI;
@@ -21,6 +22,7 @@ export class PetriEditorProvider implements vscode.CustomTextEditorProvider {
   }
 
   async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel): Promise<void> {
+    const sync = PetriSync.get();
     const out = BackendManager.get().output;
     const specUri = document.uri;
     const mounted = await mountEditor(this.ctx, panel, {
@@ -41,18 +43,24 @@ export class PetriEditorProvider implements vscode.CustomTextEditorProvider {
           const smlUri = smlUriFor(specUri, text);
           const oldSml = (await readText(smlUri)) ?? '';
           if (declarationsChanged(oldSml, sml)) {
+            sync.noteWrite(smlUri, sml);
             await writeText(smlUri, sml);
             out.appendLine(`[save] declarations written to ${smlUri.fsPath}`);
           }
           if (text !== document.getText()) {
+            sync.noteWrite(specUri, text);
             const edit = new vscode.WorkspaceEdit();
             edit.replace(specUri, new vscode.Range(0, 0, document.lineCount, 0), text);
             await vscode.workspace.applyEdit(edit);
           }
           await document.save();
+          sync.schedule(specUri, false);
         },
       },
     });
     if (!mounted) return;
+    const reg = sync.register({ specUri, reload: mounted.reload });
+    panel.onDidDispose(() => reg.dispose());
+    sync.schedule(specUri, false);
   }
 }
