@@ -14,9 +14,12 @@ CACHE_DIR="${CACHE_DIR:-$ROOT/.cache}"
 INSTALLER="$CACHE_DIR/$(basename "$CPN_INSTALLER_URL")"
 STAMP="$OUT_DIR/.installer-sha256"
 
+DOWNLOAD_ONLY=0
+[[ "${1:-}" == "--download-only" ]] && DOWNLOAD_ONLY=1
+
 mkdir -p "$CACHE_DIR" "$OUT_DIR"
 
-if [[ -f "$STAMP" && "$(cat "$STAMP")" == "$CPN_INSTALLER_SHA256" \
+if [[ $DOWNLOAD_ONLY == 0 && -f "$STAMP" && "$(cat "$STAMP")" == "$CPN_INSTALLER_SHA256" \
       && -d "$OUT_DIR/backend" && -f "$OUT_DIR/ui/index.html" ]]; then
   echo "fetch-cpn: $OUT_DIR already up to date"
   exit 0
@@ -26,7 +29,14 @@ check_sha() { echo "$CPN_INSTALLER_SHA256  $1" | sha256sum -c --status; }
 
 if [[ ! -f "$INSTALLER" ]] || ! check_sha "$INSTALLER"; then
   echo "fetch-cpn: downloading $CPN_INSTALLER_URL"
-  curl -fsSL --retry 3 -o "$INSTALLER.part" "$CPN_INSTALLER_URL"
+  # cpnide.org sometimes resets long transfers: retry and resume the partial file.
+  for attempt in 1 2 3 4 5; do
+    curl -fsSL --connect-timeout 30 --retry 5 --retry-all-errors --retry-delay 10 \
+      -C - -o "$INSTALLER.part" "$CPN_INSTALLER_URL" && break
+    [[ $attempt == 5 ]] && { echo "fetch-cpn: download failed" >&2; exit 1; }
+    echo "fetch-cpn: download interrupted (attempt $attempt), resuming in 15s" >&2
+    sleep 15
+  done
   mv "$INSTALLER.part" "$INSTALLER"
 fi
 if ! check_sha "$INSTALLER"; then
@@ -34,6 +44,10 @@ if ! check_sha "$INSTALLER"; then
   echo "  expected $CPN_INSTALLER_SHA256" >&2
   echo "  actual   $(sha256sum "$INSTALLER" | cut -d' ' -f1)" >&2
   exit 1
+fi
+if [[ $DOWNLOAD_ONLY == 1 ]]; then
+  echo "fetch-cpn: installer ready at $INSTALLER"
+  exit 0
 fi
 
 WORK="$(mktemp -d "$CACHE_DIR/extract.XXXXXX")"

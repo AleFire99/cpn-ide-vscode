@@ -39,7 +39,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: cpn-installer-${{ hashFiles('scripts/fetch-cpn.sh') }}
+          key: cpn-installer-19084e923258681b809e80b5a5c1944da6b7f072397d1194a26689b46a9b879a
 
       - name: Install innoextract
         run: |
