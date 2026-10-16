@@ -8,6 +8,7 @@ Thanks for helping out. This project uses Git Flow and every change starts from 
 2. **Create a branch from `develop`:**
    - `feature/<issue#>-slug` for new functionality
    - `bugfix/<issue#>-slug` for bug fixes
+   - `chore/<slug>` for cleanup and tooling
 3. **Open a PR into `develop`.** Fill in the PR template and reference the issue with `Closes #<issue#>`.
 4. **Get review and resolve all conversations**, then merge once CI is green.
 
@@ -19,6 +20,7 @@ Branches:
 | `develop` | Integration branch, default branch | — | — |
 | `feature/<issue#>-slug` | New functionality | `develop` | `develop` |
 | `bugfix/<issue#>-slug` | Bug fixes | `develop` | `develop` |
+| `chore/<slug>` | Cleanup, tooling | `develop` | `develop` |
 | `release/X.Y.Z` | Release preparation | `develop` | `main` |
 | `hotfix/X.Y.Z` | Urgent fix to a released version | `main` | `main` |
 
@@ -61,6 +63,19 @@ scripts/fetch-cpn.sh   # downloads CPN IDE binaries into resources/
 The binaries in `resources/` are downloaded, never committed. Do not add them to git.
 
 To run the extension, open the repository in VS Code and press **F5** to launch an Extension Development Host.
+
+## Testing
+
+```sh
+npm run lint && npm run typecheck
+npm test                                 # unit tests
+node scripts/gen-examples.mjs --check    # examples/*.cpn match their text sources
+CPN_IT=1 npm test                        # also runs the real-backend tests (needs resources/ and Java 17)
+npm run test:integration                 # VS Code integration suite (CPN_IT=1 adds the backend-dependent tests)
+```
+
+The simulator daemon uses the fixed port 20001, so real-backend tests need it free (and run one file at a time). To run
+them next to a running CPN IDE, use a network namespace: `unshare -rn sh -c 'ip link set lo up; CPN_IT=1 npx vitest run'`.
 
 If you use Python tooling, manage it with `uv`: create environments with `uv venv` and run commands with `uv run`.
 
