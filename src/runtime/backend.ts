@@ -24,6 +24,7 @@ export class BackendManager implements vscode.Disposable {
   private running: RunningBackend | undefined;
   private starting: Promise<string> | undefined;
   private failureShown = false;
+  private initWatchdog: NodeJS.Timeout | undefined;
   private retrying = false;
   readonly output = vscode.window.createOutputChannel('CPN IDE');
 
@@ -85,6 +86,7 @@ export class BackendManager implements vscode.Disposable {
             onOutput: (s) => {
               this.output.append(s);
               if (s.includes('Error starting simulator')) void this.reportSimulatorFailure();
+              this.watchInit(s);
             },
             onExit: (code, signal) => {
               this.output.appendLine(`[backend] exited (code=${code}, signal=${signal})`);
@@ -102,6 +104,20 @@ export class BackendManager implements vscode.Disposable {
         if (c === 'Show Log') this.showLog();
       });
       throw e;
+    }
+  }
+
+  /** Watchdog: a net creation that never leaves the lock (hung simulator handshake) is treated like a start failure. */
+  private watchInit(chunk: string): void {
+    if (chunk.includes('After Lock: CreateNewNet')) {
+      clearTimeout(this.initWatchdog);
+      this.initWatchdog = undefined;
+    } else if (chunk.includes('Before Lock: CreateNewNet') && !this.initWatchdog) {
+      this.initWatchdog = setTimeout(() => {
+        this.initWatchdog = undefined;
+        this.output.appendLine('[error] net creation has not finished after 60 s; the simulator is probably hung');
+        void this.reportSimulatorFailure();
+      }, 60000);
     }
   }
 
@@ -207,6 +223,8 @@ export class BackendManager implements vscode.Disposable {
   }
 
   stop(): void {
+    clearTimeout(this.initWatchdog);
+    this.initWatchdog = undefined;
     if (this.running) {
       killTree(this.running.child);
       this.running = undefined;

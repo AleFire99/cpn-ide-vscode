@@ -137,4 +137,53 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
       fs.rmSync(foreignDir, { recursive: true, force: true });
     }
   }, 180000);
+
+  it('survives overlapping first inits and a stop/start cycle (simulator pre-started)', async () => {
+    expect(await waitForPortRelease(SIMULATOR_PORT, 70000)).toBe(true);
+    if (await isPortListening(SIMULATOR_PORT)) throw new Error(`port ${SIMULATOR_PORT} is already in use`);
+    const root = path.resolve(__dirname, '../../resources');
+    const userHome = fs.mkdtempSync(path.join(os.tmpdir(), 'cpn-it-'));
+    const tmpDir = path.join(userHome, 'tmp');
+    const xml = fs.readFileSync(path.join(root, 'ui/assets/cpn/fuelstation-no-mon.cpn'), 'utf8');
+    const init = async (baseUrl: string, session: string) => {
+      const res = await fetch(`${baseUrl}/api/v2/cpn/init`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-SessionId': session },
+        body: JSON.stringify({ xml, complex_verify: true, need_sim_restart: true }),
+        signal: AbortSignal.timeout(60000),
+      });
+      return ((await res.json()) as { success: boolean }).success;
+    };
+    const start = async (log: string[]) =>
+      startBackendProcess({
+        javaPath: process.env.JAVA_BIN ?? 'java',
+        backendDir: path.join(root, 'backend'),
+        userHome,
+        tmpDir,
+        onOutput: (s) => log.push(s),
+      });
+    const log: string[] = [];
+    let r: Awaited<ReturnType<typeof startBackendProcess>> | undefined;
+    try {
+      r = await start(log);
+      expect(log.join('')).toContain('simulator daemon pid');
+      // Truly simultaneous inits can deadlock inside the upstream backend (checkDeclaration waits for the
+      // simulator forever, independent of the daemon). Overlapping requests a few seconds apart are fine.
+      const first = init(r.baseUrl, 'a');
+      await new Promise((res) => setTimeout(res, 3000));
+      expect(await Promise.all([first, init(r.baseUrl, 'b')])).toEqual([true, true]);
+      expect(log.join('')).not.toContain('Error starting simulator');
+      killTree(r.child);
+      expect(await waitFor(() => !r!.isAlive() && findSimulatorPids(tmpDir).length === 0, 10000)).toBe(true);
+      expect(await waitForPortRelease(SIMULATOR_PORT, 70000)).toBe(true);
+      r = await start(log);
+      expect(await init(r.baseUrl, 'c')).toBe(true);
+    } finally {
+      if (r) killTree(r.child);
+      await waitFor(() => findSimulatorPids(tmpDir).length === 0, 10000);
+      for (const pid of findSimulatorPids(tmpDir)) process.kill(pid, 'SIGKILL');
+      if (process.env.CI) process.stderr.write(log.join(''));
+      fs.rmSync(userHome, { recursive: true, force: true });
+    }
+  }, 240000);
 });

@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as net from 'node:net';
 import * as path from 'node:path';
+import { portTaken, prestartSimulator, type PrestartedSimulator } from './simulator-prestart';
 
 export const BACKEND_JAR = 'cpn-ide-back-1.28-SNAPSHOT.jar';
 
@@ -201,15 +202,36 @@ export interface RunningBackend {
 
 /** Spawn the backend and wait until it answers HTTP. Kills it if startup fails. */
 export async function startBackendProcess(
-  o: Omit<SpawnOptions, 'port' | 'onExit'> & { port?: number; timeoutMs?: number; onExit?: SpawnOptions['onExit'] },
+  o: Omit<SpawnOptions, 'port' | 'onExit'> & {
+    port?: number;
+    timeoutMs?: number;
+    onExit?: SpawnOptions['onExit'];
+    /** Start the simulator daemon ourselves before java (default true; see simulator-prestart.ts). */
+    prestartSimulator?: boolean;
+  },
 ): Promise<RunningBackend> {
   const port = o.port || (await pickFreePort());
+  let daemon: PrestartedSimulator | undefined;
+  if (o.prestartSimulator !== false && (process.platform === 'linux' || process.platform === 'win32')) {
+    if (await portTaken(SIMULATOR_PORT)) {
+      o.onOutput(`[backend] port ${SIMULATOR_PORT} is in use; not starting a simulator daemon\n`);
+    } else {
+      try {
+        daemon = await prestartSimulator(path.join(o.backendDir, BACKEND_JAR), o.tmpDir, o.onOutput);
+      } catch (e) {
+        // Fall back to Access/CPN's lazy start.
+        o.onOutput(`[backend] simulator pre-start failed: ${e instanceof Error ? e.message : String(e)}\n`);
+      }
+    }
+  }
   let alive = true;
   const child = spawnBackend({
     ...o,
     port,
     onExit: (c, s) => {
       alive = false;
+      daemon?.kill();
+      reapSimulators(o.tmpDir);
       o.onExit?.(c, s);
     },
   });
