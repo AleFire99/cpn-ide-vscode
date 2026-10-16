@@ -1,0 +1,10 @@
+.git
+.github
+.cache
+.venv
+node_modules
+dist
+out
+resources
+*.vsix
+*.log
