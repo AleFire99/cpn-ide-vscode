@@ -6,7 +6,11 @@ test/**
 node_modules/**
 scripts/**
 docker/**
+examples/**
 .cache/**
+.venv/**
+.dockerignore
+.gitignore
 **/*.ts
 **/*.map
 tsconfig.json
@@ -15,4 +19,5 @@ eslint.config.mjs
 vitest.config.mts
 !resources/**
 .vscode-test/**
+.vscode-test
 out/**
