@@ -3,9 +3,10 @@ import * as vscode from 'vscode';
 import { CpnEditorProvider, VIEW_TYPE } from './editor/cpnEditorProvider';
 import { exportCpn } from './editor/exportCpn';
 import { PetriEditorProvider } from './editor/petriEditorProvider';
-import { PETRI_VIEW_TYPE } from './editor/petriModel';
+import { loadModel, PETRI_VIEW_TYPE } from './editor/petriModel';
 import { PetriSync } from './editor/petriSync';
 import { decompile } from './model/decompile';
+import { formatIssue } from './model/types';
 import { isSpecFile, serializeSpec, textModelPaths } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { formatResult, runHeadless } from './runtime/headless-sim';
@@ -75,28 +76,39 @@ export function activate(ctx: vscode.ExtensionContext): void {
   };
 
   const runSimulation = async (uri?: vscode.Uri) => {
-    const target = uri ?? vscode.window.activeTextEditor?.document.uri;
-    if (!target || !/\.cpn$/i.test(target.path)) {
-      void vscode.window.showErrorMessage('CPN IDE: open or select a .cpn file to simulate.');
+    const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+    const target = uri ?? (input instanceof vscode.TabInputCustom ? input.uri : vscode.window.activeTextEditor?.document.uri);
+    if (!target || !(/\.cpn$/i.test(target.path) || isSpecFile(target.path))) {
+      void vscode.window.showErrorMessage('CPN IDE: open or select a .cpn or .petri.json file to simulate.');
       return;
     }
-    const input = await vscode.window.showInputBox({
+    const steps = await vscode.window.showInputBox({
       prompt: 'Number of simulation steps',
       value: '100',
       validateInput: (v) => (/^[1-9]\d*$/.test(v.trim()) ? undefined : 'Enter a positive integer'),
     });
-    if (input === undefined) return;
+    if (steps === undefined) return;
     const out = backend.output;
     out.show(true);
     try {
+      let xml: string;
+      if (isSpecFile(target.path)) {
+        const model = await loadModel(target);
+        if (!model.compiled) {
+          for (const i of model.issues ?? []) out.appendLine(`[sim] ${formatIssue(i)}`);
+          return;
+        }
+        xml = model.compiled.xml;
+      } else {
+        xml = decodeBytes(await vscode.workspace.fs.readFile(target)).text;
+      }
       const base = await backend.ensureStarted();
-      const xml = decodeBytes(await vscode.workspace.fs.readFile(target)).text;
-      out.appendLine(`[sim] ${target.fsPath}: up to ${input.trim()} step(s)`);
+      out.appendLine(`[sim] ${target.fsPath}: up to ${steps.trim()} step(s)`);
       const r = await runHeadless({
         fetch: (url, init) => fetch(url, init),
         baseUrl: base,
         xml,
-        maxSteps: Number(input),
+        maxSteps: Number(steps),
         sessionId: `headless-${randomUUID()}`,
       });
       for (const l of formatResult(r)) out.appendLine(l);

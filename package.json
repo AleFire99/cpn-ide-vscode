@@ -166,7 +166,7 @@
         },
         {
           "command": "cpnIde.runSimulation",
-          "when": "resourceExtname =~ /^\\.cpn$/i",
+          "when": "resourceExtname =~ /^\\.cpn$/i || resourceFilename =~ /\\.petri\\.json$/i",
           "group": "navigation"
         }
       ],
