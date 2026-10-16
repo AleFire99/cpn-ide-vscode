@@ -16,7 +16,9 @@
     "Other"
   ],
   "main": "./dist/extension.js",
-  "activationEvents": [],
+  "activationEvents": [
+    "onCustomEditor:cpnIde.editor"
+  ],
   "contributes": {
     "commands": [
       {
@@ -26,6 +28,10 @@
       {
         "command": "cpnIde.newNet",
         "title": "CPN IDE: New Net"
+      },
+      {
+        "command": "cpnIde.openInCpnIde",
+        "title": "CPN IDE: Open in CPN IDE"
       },
       {
         "command": "cpnIde.stopBackend",
@@ -55,6 +61,34 @@
           "markdownDescription": "Port for the local backend. `0` picks a free port automatically."
         }
       }
+    },
+    "customEditors": [
+      {
+        "viewType": "cpnIde.editor",
+        "displayName": "CPN IDE",
+        "selector": [
+          {
+            "filenamePattern": "*.cpn"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "cpnIde.openInCpnIde",
+          "when": "resourceExtname == .cpn",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "cpnIde.openInCpnIde",
+          "when": "resourceExtname == .cpn",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
@@ -63,7 +97,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "compile:test": "tsc -p test/integration/tsconfig.json",
+    "test:integration": "node esbuild.mjs && tsc -p test/integration/tsconfig.json && node out/test/integration/run.js"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
@@ -73,6 +109,9 @@
     "eslint": "^9.39.5",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "@vscode/test-electron": "^2.5.2",
+    "mocha": "^11.7.1",
+    "@types/mocha": "^10.0.10"
   }
 }

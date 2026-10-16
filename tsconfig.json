@@ -10,5 +10,6 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src", "test", "vitest.config.mts"]
+  "include": ["src", "test", "vitest.config.mts"],
+  "exclude": ["test/integration"]
 }
