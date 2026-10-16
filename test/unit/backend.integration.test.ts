@@ -24,6 +24,7 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
         body: JSON.stringify({ xml, complex_verify: true, need_sim_restart: true }),
       });
       const body = (await res.json()) as { success: boolean };
+      if (!body.success) console.error(res.status, JSON.stringify(body).slice(0, 2000));
       expect(body.success).toBe(true);
     } finally {
       killTree(r.child);
