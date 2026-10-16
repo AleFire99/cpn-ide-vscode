@@ -16,6 +16,15 @@ beforehand. The extension ships the CPN IDE backend and UI, downloads a portable
 | Windows x64 | yes | |
 | macOS | no | the CPN simulator is a 32-bit binary; point `cpnIde.backendUrl` at the Docker backend |
 
+## Simulator daemon and security
+
+The CPN simulator runs as a separate daemon (`cpnmld`, fixed port 20001) that executes the SML code of a model. The
+extension patches the bundled daemon to listen on `127.0.0.1` only, starts it in a private per-user temp directory
+(`<globalStorage>/tmp/<pid>`), and stops it, with its workers, when the backend stops or exits. Because the port is
+fixed, only one daemon can run per machine: a second VS Code window (or another local user) reuses the daemon already
+listening on 20001, and the "CPN IDE" output channel warns when that happens. Daemons left by a crashed VS Code are
+cleaned up on the next start.
+
 ## Docker backend
 
 ```sh

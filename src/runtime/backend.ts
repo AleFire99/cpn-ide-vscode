@@ -1,6 +1,15 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { killTree, preflight, probeHttp, startBackendProcess, type RunningBackend } from './backend-core';
+import {
+  SIMULATOR_PORT,
+  isPortListening,
+  killTree,
+  preflight,
+  probeHttp,
+  reapStaleSimulators,
+  startBackendProcess,
+  type RunningBackend,
+} from './backend-core';
 import { resolveJava } from './jre';
 
 export class BackendManager implements vscode.Disposable {
@@ -46,6 +55,18 @@ export class BackendManager implements vscode.Disposable {
       const port = vscode.workspace.getConfiguration('cpnIde').get<number>('port', 0);
       const backendDir = path.join(this.ctx.extensionPath, 'resources', 'backend');
 
+      // One java.io.tmpdir per extension host (named by PID) so windows never clean up each other's simulator.
+      const tmpRoot = path.join(this.ctx.globalStorageUri.fsPath, 'tmp');
+      const tmpDir = path.join(tmpRoot, String(process.pid));
+      const reaped = reapStaleSimulators(tmpRoot);
+      if (reaped.length) this.output.appendLine(`[backend] stopped ${reaped.length} leftover simulator process(es) from a previous session`);
+      if (await isPortListening(SIMULATOR_PORT)) {
+        this.output.appendLine(
+          `[warning] 127.0.0.1:${SIMULATOR_PORT} is already in use. The CPN simulator port is fixed, so this backend will ` +
+            'connect to that existing simulator daemon (e.g. another VS Code window or user). If you do not recognise it, stop it first.',
+        );
+      }
+
       return await vscode.window.withProgress(
         { location: vscode.ProgressLocation.Notification, title: 'CPN IDE: starting backend...' },
         async () => {
@@ -54,6 +75,7 @@ export class BackendManager implements vscode.Disposable {
             javaPath,
             backendDir,
             userHome: path.join(this.ctx.globalStorageUri.fsPath, 'data'),
+            tmpDir,
             port,
             onOutput: (s) => this.output.append(s),
             onExit: (code, signal) => {

@@ -1,7 +1,19 @@
 import * as http from 'node:http';
+import * as fs from 'node:fs';
 import * as net from 'node:net';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildBackendArgs, pickFreePort, preflightError, probeHttp, waitForHttp } from '../../src/runtime/backend-core';
+import {
+  buildBackendArgs,
+  findSimulatorPids,
+  isPortListening,
+  pickFreePort,
+  preflightError,
+  probeHttp,
+  reapStaleSimulators,
+  waitForHttp,
+} from '../../src/runtime/backend-core';
 
 describe('pickFreePort', () => {
   it('returns a bindable port', async () => {
@@ -15,8 +27,9 @@ describe('pickFreePort', () => {
 
 describe('buildBackendArgs', () => {
   it('binds to loopback only', () => {
-    const args = buildBackendArgs({ userHome: '/h', port: 1234, backendDir: '/b' });
+    const args = buildBackendArgs({ userHome: '/h', tmpDir: '/t', port: 1234, backendDir: '/b' });
     expect(args).toContain('-Dserver.address=127.0.0.1');
+    expect(args).toContain('-Djava.io.tmpdir=/t');
     expect(args).toContain('-Dserver.port=1234');
   });
 });
@@ -50,5 +63,50 @@ describe('waitForHttp', () => {
   it('times out', async () => {
     const port = await pickFreePort();
     await expect(waitForHttp(`http://127.0.0.1:${port}/`, 600, () => true, 100)).rejects.toThrow(/did not respond/);
+  });
+});
+
+describe('isPortListening', () => {
+  it('detects a listener on loopback', async () => {
+    const srv = net.createServer().listen(0, '127.0.0.1');
+    await new Promise((r) => srv.once('listening', r));
+    const port = (srv.address() as net.AddressInfo).port;
+    expect(await isPortListening(port)).toBe(true);
+    srv.close();
+    expect(await isPortListening(port)).toBe(false);
+  });
+});
+
+describe('simulator process discovery', () => {
+  // Fake /proc: <pid>/cwd symlinks.
+  function fakeProc(cwds: Record<string, string>): string {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fakeproc-'));
+    for (const [pid, cwd] of Object.entries(cwds)) {
+      fs.mkdirSync(path.join(root, pid));
+      fs.symlinkSync(cwd, path.join(root, pid, 'cwd'));
+    }
+    fs.mkdirSync(path.join(root, 'not-a-pid'));
+    return root;
+  }
+
+  it('finds only processes running under <tmp>/accesscpn', () => {
+    const proc = fakeProc({
+      '10': '/x/tmp/accesscpn/simulator',
+      '11': '/x/tmp/accesscpn',
+      '12': '/x/tmp/accesscpn-other',
+      '13': '/elsewhere',
+    });
+    expect(findSimulatorPids('/x/tmp', proc).sort()).toEqual([10, 11]);
+    fs.rmSync(proc, { recursive: true, force: true });
+  });
+
+  it('only cleans directories of dead owners', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tmproot-'));
+    fs.mkdirSync(path.join(root, '111'));
+    fs.mkdirSync(path.join(root, '222'));
+    fs.mkdirSync(path.join(root, 'keep-me'));
+    reapStaleSimulators(root, (pid) => pid === 222);
+    expect(fs.readdirSync(root).sort()).toEqual(['222', 'keep-me']);
+    fs.rmSync(root, { recursive: true, force: true });
   });
 });
