@@ -54,7 +54,7 @@ const posOf = (n: XNode): Pos | undefined => {
 };
 
 /** Structured <color> contents -> Colset; undefined if the shape is not one the text model supports. */
-export function colsetFromXml(color: XNode): Colset | undefined {
+function colsetFromXml(color: XNode): Colset | undefined {
   const timed = color.kids.some((k) => k.tag === 'timed');
   const body = color.kids.find((k) => !['id', 'timed', 'layout'].includes(k.tag));
   if (!body) return undefined;

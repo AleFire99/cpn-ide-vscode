@@ -340,7 +340,7 @@ colset STRING = string;
 `;
 
 /** The name a declaration binds, used to let the user override a standard declaration. */
-export function declName(d: Decl): string | undefined {
+function declName(d: Decl): string | undefined {
   if (d.kind === 'color' || d.kind === 'globref') return d.name;
   if (d.kind === 'ml') return new RegExp(`^val (${ID})`).exec(stripComments(d.text).trim().replace(/\s+/g, ' '))?.[1];
   return undefined;

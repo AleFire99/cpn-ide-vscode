@@ -76,9 +76,8 @@ export class BackendManager implements vscode.Disposable {
       const backendDir = path.join(this.ctx.extensionPath, 'resources', 'backend');
 
       // One java.io.tmpdir per extension host (named by PID) so windows never clean up each other's simulator.
-      const tmpRoot = path.join(this.ctx.globalStorageUri.fsPath, 'tmp');
-      const tmpDir = path.join(tmpRoot, String(process.pid));
-      const reaped = reapStaleSimulators(tmpRoot);
+      const tmpDir = path.join(this.tmpRoot, String(process.pid));
+      const reaped = reapStaleSimulators(this.tmpRoot);
       if (reaped.length) this.output.appendLine(`[backend] stopped ${reaped.length} leftover simulator process(es) from a previous session`);
       await this.prepareSimulatorPort();
 

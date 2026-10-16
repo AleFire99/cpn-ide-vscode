@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { formatIssue } from '../model/types';
-import { isSpecFile, specBaseName } from '../model/workspace';
+import { baseFileName, isSpecFile, specBaseName } from '../model/workspace';
 import { BackendManager } from '../runtime/backend';
 import { encodeText } from '../webview/host-core';
 import { loadModel } from './petriModel';
@@ -34,9 +34,9 @@ export async function exportCpn(uri?: vscode.Uri): Promise<void> {
     exists = false;
   }
   if (exists) {
-    const pick = await vscode.window.showWarningMessage(`${dest.path.split('/').pop()} already exists. Overwrite it?`, { modal: true }, 'Overwrite');
+    const pick = await vscode.window.showWarningMessage(`${baseFileName(dest.path)} already exists. Overwrite it?`, { modal: true }, 'Overwrite');
     if (pick !== 'Overwrite') return;
   }
   await vscode.workspace.fs.writeFile(dest, encodeText(model.compiled.xml, 'latin1'));
-  void vscode.window.showInformationMessage(`CPN IDE: exported ${dest.path.split('/').pop()}`);
+  void vscode.window.showInformationMessage(`CPN IDE: exported ${baseFileName(dest.path)}`);
 }

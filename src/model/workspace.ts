@@ -4,7 +4,7 @@ import { compile, type CompileResult } from './compile';
 import { normalizeDecl, parseSml } from './sml';
 import { ModelError, type PetriSpec } from './types';
 
-export const SPEC_SUFFIX = '.petri.json';
+const SPEC_SUFFIX = '.petri.json';
 
 export const isSpecFile = (p: string): boolean => p.toLowerCase().endsWith(SPEC_SUFFIX);
 
@@ -23,21 +23,6 @@ export function specBaseName(p: string): string {
 export function smlRelativePath(specPath: string, spec?: Pick<PetriSpec, 'declarations'>): string {
   const d = spec?.declarations;
   return typeof d === 'string' && d.trim() ? d.trim() : `${specBaseName(specPath)}.sml`;
-}
-
-/** Resolve a relative path against the directory of `specPath` (works on plain paths and URI strings). */
-export function resolveSibling(specPath: string, rel: string): string {
-  if (/^([\\/]|[a-z]:[\\/]|[a-z][a-z0-9+.-]*:\/\/)/i.test(rel)) return rel;
-  const slash = Math.max(specPath.lastIndexOf('/'), specPath.lastIndexOf('\\'));
-  const dir = slash >= 0 ? specPath.slice(0, slash) : '';
-  const out: string[] = dir ? dir.split(/[\\/]/) : [];
-  for (const seg of rel.split(/[\\/]/)) {
-    if (seg === '' || seg === '.') continue;
-    if (seg === '..') {
-      if (out.length > 1) out.pop();
-    } else out.push(seg);
-  }
-  return out.join('/');
 }
 
 /** Merge a decompiled spec into the existing one: keeps `$schema` and `declarations`, takes `realtime` and the pages. */

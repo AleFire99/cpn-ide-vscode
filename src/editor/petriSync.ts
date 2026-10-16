@@ -27,7 +27,7 @@ export class PetriSync implements vscode.Disposable {
   private readonly written = new Map<string, string>();
   private readonly pending = new Map<string, { timer: NodeJS.Timeout; reload: boolean; uri: vscode.Uri }>();
   private readonly subs: vscode.Disposable[] = [];
-  /** Backend validations run one at a time (see validateRemote). */
+  /** Backend validations run one after another (InitProxy also serializes the inits). */
   private queue: Promise<unknown> = Promise.resolve();
 
   static init(): PetriSync {

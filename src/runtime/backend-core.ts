@@ -21,7 +21,7 @@ export async function pickFreePort(): Promise<number> {
   });
 }
 
-export const LINUX_LOADER = '/lib/ld-linux.so.2';
+const LINUX_LOADER = '/lib/ld-linux.so.2';
 
 /** Returns an error message if the local backend cannot run on this platform, else undefined. */
 export function preflightError(platform: string, loaderExists: boolean): string | undefined {
@@ -101,7 +101,7 @@ export function buildBackendArgs(o: Pick<SpawnOptions, 'userHome' | 'tmpDir' | '
   ];
 }
 
-export function spawnBackend(o: SpawnOptions): ChildProcess {
+function spawnBackend(o: SpawnOptions): ChildProcess {
   fs.mkdirSync(o.userHome, { recursive: true });
   fs.mkdirSync(o.tmpDir, { recursive: true });
   const args = buildBackendArgs(o);
@@ -175,7 +175,7 @@ export function findSimulatorPids(tmpDir: string, procRoot = '/proc'): number[] 
 }
 
 /** Kill simulator processes left behind in tmpDir by a backend that was killed hard. Returns the PIDs signalled. */
-export function reapSimulators(tmpDir: string): number[] {
+function reapSimulators(tmpDir: string): number[] {
   const pids = findSimulatorPids(tmpDir);
   for (const pid of pids) {
     try {
@@ -188,7 +188,7 @@ export function reapSimulators(tmpDir: string): number[] {
 }
 
 /** Kill the process and its children, synchronously (nothing is left to a timer that an exiting host would never run). */
-export function killTree(child: ChildProcess): void {
+function killTree(child: ChildProcess): void {
   if (child.exitCode !== null || child.pid === undefined) return;
   if (process.platform === 'win32') {
     spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });

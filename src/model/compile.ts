@@ -22,7 +22,7 @@ export interface CompileResult {
 }
 
 /** Escape for XML text and single-quoted attributes; non-Latin-1 characters become char references. */
-export function esc(s: string): string {
+function esc(s: string): string {
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

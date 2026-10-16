@@ -1,5 +1,7 @@
 /** Pure helpers for the extension-host side of the webview bridge. */
 
+import { baseFileName } from '../model/workspace';
+
 export interface Decoded {
   text: string;
   encoding: 'utf8' | 'latin1';
@@ -22,9 +24,9 @@ export function encodeText(text: string, encoding: 'utf8' | 'latin1' = 'utf8'): 
   return encoding === 'latin1' ? Buffer.from(text, 'latin1') : Buffer.from(text, 'utf8');
 }
 
+/** File name of a path or URI string, URI-decoded; 'mynet.cpn' when there is none. */
 export function fileName(p: string): string {
-  const clean = p.split(/[?#]/)[0];
-  const last = clean.split(/[\\/]/).filter(Boolean).pop() ?? 'mynet.cpn';
+  const last = baseFileName(p) || 'mynet.cpn';
   try {
     return decodeURIComponent(last);
   } catch {
@@ -32,7 +34,7 @@ export function fileName(p: string): string {
   }
 }
 
-export function escapeHtml(s: string): string {
+function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
