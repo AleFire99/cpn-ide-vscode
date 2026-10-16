@@ -16,6 +16,7 @@ import {
   startBackendProcess,
   type RunningBackend,
 } from './backend-core';
+import { InitProxy } from './init-proxy';
 import { resolveJava } from './jre';
 import { reloadAllWebviews } from '../webview/panel';
 
@@ -26,6 +27,8 @@ export class BackendManager implements vscode.Disposable {
   private failureShown = false;
   private initWatchdog: NodeJS.Timeout | undefined;
   private retrying = false;
+  // Stable URL in front of the backend (also across restarts) that serializes net creation; see InitProxy.
+  private readonly proxy = new InitProxy();
   readonly output = vscode.window.createOutputChannel('CPN IDE');
 
   private constructor(private readonly ctx: vscode.ExtensionContext) {}
@@ -61,9 +64,9 @@ export class BackendManager implements vscode.Disposable {
       if (external) {
         const url = external.replace(/\/+$/, '');
         if (!(await probeHttp(url, 5000))) throw new Error(`No CPN IDE backend reachable at ${url} (cpnIde.backendUrl)`);
-        return url;
+        return await this.proxy.start(url);
       }
-      if (this.running?.isAlive()) return this.running.baseUrl;
+      if (this.running?.isAlive()) return await this.proxy.start(this.running.baseUrl);
 
       const problem = preflight(process.platform);
       if (problem) throw new Error(problem);
@@ -101,7 +104,7 @@ export class BackendManager implements vscode.Disposable {
           });
           this.running = r;
           this.output.appendLine(`[backend] ready at ${r.baseUrl}`);
-          return r.baseUrl;
+          return await this.proxy.start(r.baseUrl);
         },
       );
     } catch (e) {
@@ -245,6 +248,7 @@ export class BackendManager implements vscode.Disposable {
 
   dispose(): void {
     this.stop();
+    this.proxy.stop();
     this.output.dispose();
     BackendManager.instance = undefined;
   }
