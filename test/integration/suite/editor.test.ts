@@ -13,6 +13,10 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 suite('CPN IDE webview editor', () => {
   test('opens a .cpn in the custom editor, boots the UI and the backend answers', async () => {
     const uri = vscode.Uri.file(process.env.CPN_TEST_FILE as string);
+    // openWith triggers activation asynchronously; wait for it so our commands exist.
+    const ext = vscode.extensions.getExtension('AleFire99.cpn-ide-vscode');
+    assert.ok(ext, 'extension not found');
+    await ext.activate();
     await vscode.commands.executeCommand('vscode.openWith', uri, 'cpnIde.editor');
 
     let state: UiState | undefined;
