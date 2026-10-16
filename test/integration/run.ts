@@ -26,7 +26,7 @@ async function main(): Promise<void> {
       vscodeExecutablePath: process.env.VSCODE_EXECUTABLE || undefined,
       extensionDevelopmentPath: root,
       extensionTestsPath: path.join(__dirname, 'suite/index'),
-      extensionTestsEnv: { CPN_TEST_FILE: path.join(work, 'sample.cpn') },
+      extensionTestsEnv: { CPN_TEST_FILE: path.join(work, 'sample.cpn'), CPN_IT: process.env.CPN_IT },
       launchArgs: [work, '--disable-extensions', '--user-data-dir', path.join(work, 'user-data'), '--no-sandbox'],
     });
   } finally {

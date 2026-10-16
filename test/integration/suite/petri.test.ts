@@ -65,7 +65,9 @@ suite('CPN IDE petri model editor', () => {
     });
   });
 
-  test('with no CPN IDE panel open, the backend checks a saved model and reports type errors', async () => {
+  // Needs a working simulator, which the 32-bit binary lacks on GitHub-hosted runners. Run: CPN_IT=1 npm run test:integration
+  test('with no CPN IDE panel open, the backend checks a saved model and reports type errors', async function () {
+    if (!process.env.CPN_IT) this.skip();
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
     await waitFor('panels to close', async () => ((await state())?.panels === 0 ? true : undefined), 30000);
     const specPath = path.join(dir, 'bad.petri.json');
