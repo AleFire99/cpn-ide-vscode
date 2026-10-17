@@ -158,28 +158,32 @@ describe('InitProxy', () => {
     await a;
   });
 
-  it('holds the lock from init to the releasing sim/init, without leaking the header', async () => {
-    await fetch(`${url}${INIT}`, { method: 'POST', headers: { [LOCK_HEADER]: 'hold' }, body: '{}' });
-    const other = fetch(`${url}${INIT}`, { method: 'POST', body: '{}' });
+  it('keeps a held lock for its session until release, without leaking the header', async () => {
+    const as = (session: string, lock?: string) => ({
+      method: 'POST',
+      headers: { 'X-SessionId': session, ...(lock && { [LOCK_HEADER]: lock }) },
+      body: '{}',
+    });
+    await fetch(`${url}${INIT}`, as('h', 'hold'));
+    const other = fetch(`${url}${INIT}`, as('ui'));
     await sleep(60);
-    expect(events).toEqual(['start1', 'end1']);
-    const sim = await fetch(`${url}${SIM_INIT}`, { method: 'POST', headers: { [LOCK_HEADER]: 'release' }, body: '{}' });
-    expect(sim.status).toBe(200);
+    expect((await fetch(`${url}${SIM_INIT}`, as('h', 'hold'))).status).toBe(200);
     expect(seenLockHeader).toBe(false);
+    expect((await fetch(`${url}/api/v2/cpn/sim/step`, as('h', 'hold'))).status).toBe(201);
+    // Another session cannot release it.
+    await fetch(`${url}/api/v2/cpn/`, { headers: { 'X-SessionId': 'ui', [LOCK_HEADER]: 'release' } });
+    await sleep(60);
+    expect(events).toEqual(['start1', 'end1', 'simInit']);
+    await fetch(`${url}/api/v2/cpn/`, { headers: { 'X-SessionId': 'h', [LOCK_HEADER]: 'release' } });
     expect((await other).status).toBe(200);
     expect(events).toEqual(['start1', 'end1', 'simInit', 'start2', 'end2']);
   });
 
-  it('lets go of a held lock on any release request or after the hold timeout', async () => {
-    const hold = { method: 'POST', headers: { [LOCK_HEADER]: 'hold' }, body: '{}' };
-    await fetch(`${url}${INIT}`, hold);
-    await fetch(`${url}/api/v2/cpn/`, { headers: { [LOCK_HEADER]: 'release' } });
-    expect((await fetch(`${url}${INIT}`, { method: 'POST', body: '{}' })).status).toBe(200);
-
+  it('lets go of a held lock after the hold timeout', async () => {
     proxy.stop();
     proxy = new InitProxy(1000, 100);
     url = await proxy.start(`http://127.0.0.1:${(upstream.address() as AddressInfo).port}`);
-    await fetch(`${url}${INIT}`, hold);
+    await fetch(`${url}${INIT}`, { method: 'POST', headers: { 'X-SessionId': 'h', [LOCK_HEADER]: 'hold' }, body: '{}' });
     expect((await fetch(`${url}${INIT}`, { method: 'POST', body: '{}' })).status).toBe(200);
   });
 });

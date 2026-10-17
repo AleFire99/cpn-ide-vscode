@@ -6,9 +6,9 @@ const SIM_INIT_ROUTE = '/api/v2/cpn/sim/init';
 const SERIALIZED = new Set([INIT_ROUTE, SIM_INIT_ROUTE]);
 
 /**
- * Proxy-only request header (never forwarded). On a successful `init`, `hold` keeps the lock after the response so the
- * caller's `sim/init` can follow without another session's init in between; `release` makes the request run under that
- * held lock and frees it when done (any route, so a caller that stops early can let go with a cheap GET).
+ * Proxy-only request header (never forwarded). `hold` runs the request under a lock owned by its session (X-SessionId)
+ * and keeps the lock afterwards, so a caller can run init → sim/init → steps without another session's init in
+ * between; `release` runs the request under that lock and then frees it (any route, so a cheap GET can let go).
  */
 export const LOCK_HEADER = 'x-cpn-lock';
 
@@ -16,14 +16,14 @@ export const LOCK_HEADER = 'x-cpn-lock';
  * Local reverse proxy in front of the backend. Two concurrent first `POST /api/v2/cpn/init` calls hang one of them
  * forever inside Access/CPN (Simulator.send), and a `POST /api/v2/cpn/sim/init` that arrives while another session's
  * CreateNewNet is still running fails with "Could not parse declaration" (single simulator daemon). Both routes go
- * through one FIFO mutex; everything else passes through. A held lock expires after `holdTimeoutMs`.
+ * through one FIFO mutex; everything else passes through. A held lock expires `holdTimeoutMs` after its last request.
  */
 export class InitProxy {
   private server: http.Server | undefined;
   private target = new URL('http://127.0.0.1');
   private tail: Promise<void> = Promise.resolve();
 
-  private held: { release: () => void; timer: NodeJS.Timeout } | undefined;
+  private held: { session: string; release: () => void; timer?: NodeJS.Timeout } | undefined;
 
   constructor(
     private readonly initTimeoutMs = 120000,
@@ -64,16 +64,19 @@ export class InitProxy {
     return turn;
   }
 
-  private drop(h: { release: () => void; timer: NodeJS.Timeout }): void {
+  private drop(h: NonNullable<InitProxy['held']>): void {
     if (this.held !== h) return;
+    clearTimeout(h.timer);
     this.held = undefined;
     h.release();
   }
 
   private async handle(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const route = (req.url ?? '').split('?')[0];
-    const serialize = req.method === 'POST' && SERIALIZED.has(route);
     const lock = req.headers[LOCK_HEADER];
+    const session = String(req.headers['x-sessionid'] ?? '');
+    const owner = (): boolean => !!lock && this.held?.session === session;
+    const serialize = (req.method === 'POST' && SERIALIZED.has(route)) || lock === 'hold';
     const headers = { ...req.headers };
     delete headers[LOCK_HEADER];
     let release = (): void => {};
@@ -81,17 +84,19 @@ export class InitProxy {
     // 'close' fires on normal end, client abort and destroy alike.
     res.on('close', () => {
       closed = true;
-      if (lock === 'hold' && route === INIT_ROUTE && res.writableFinished && res.statusCode === 200) {
-        const h = { release, timer: setTimeout(() => this.drop(h), this.holdTimeoutMs) };
-        this.held = h;
-      } else release();
+      release();
     });
-    if (lock === 'release' && this.held) {
-      release = this.held.release;
-      clearTimeout(this.held.timer);
-      this.held = undefined;
+    if (owner()) {
+      clearTimeout(this.held!.timer);
     } else if (serialize) {
-      release = await this.acquire();
+      const free = await this.acquire();
+      if (lock === 'hold') this.held = { session, release: free };
+      else release = free;
+    }
+    if (lock && owner()) {
+      const h = this.held!;
+      // Hold: keep the lock after this request (until release or idle expiry). Release: free it when done.
+      release = lock === 'hold' ? () => (h.timer = setTimeout(() => this.drop(h), this.holdTimeoutMs)) : () => this.drop(h);
     }
     if (closed) return release();
     const timeout = serialize ? this.initTimeoutMs : 0;

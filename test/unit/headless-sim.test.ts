@@ -35,8 +35,11 @@ describe('runHeadless', () => {
       'sim/step/multistep',
       'sim/step/multistep',
       'sim/step/multistep',
+      '',
     ]);
     expect(calls[0].headers?.['X-SessionId']).toBe('s1');
+    // The proxy lock is held from init to the last step, then released.
+    expect(calls.map((c) => c.headers?.['X-CPN-Lock'])).toEqual(['hold', 'hold', 'hold', 'hold', 'hold', 'release']);
     expect(JSON.parse(calls[0].body!)).toEqual({ xml: '<x/>', complex_verify: true, need_sim_restart: true });
     expect(calls[2].method).toBe('GET');
   });
