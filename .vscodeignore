@@ -6,7 +6,6 @@ test/**
 node_modules/**
 scripts/**
 docker/**
-examples/**
 images/**
 .cache/**
 .venv/**

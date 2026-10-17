@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Get Started with CPN IDE** walkthrough: open an example, simulate it, write a net, platform setup (Linux glibc, macOS Docker) and settings. New command **CPN IDE: Open Example** copies a bundled example into `cpn-examples/` (never overwriting) and opens it; the examples now ship in the VSIX. **Run Simulation (No UI)** also finds a model open in another tab (#60).
 - Marketplace listing: rewritten README with screenshots, a getting-started guide, simulation and text-model walkthroughs, command and settings tables, and troubleshooting; clearer extension description.
 
 ## 0.3.0 — 2026-10-17
