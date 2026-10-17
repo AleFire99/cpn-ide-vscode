@@ -26,9 +26,13 @@ downloaded on first use if you don't already have one.
 
 ## Getting started
 
+After installing, the **Get Started with CPN IDE** walkthrough opens on the Welcome page (also available via
+**Help → Welcome** or **Welcome: Open Walkthrough**). It opens an example, runs a simulation and creates your first
+net, step by step.
+
 1. Install **CPN IDE** from the Extensions view (search "CPN IDE").
-2. Open a folder that contains a `.cpn` or `.petri.json` file, or try the
-   [examples](https://github.com/AleFire99/cpn-ide-vscode/tree/develop/examples).
+2. Open a folder that contains a `.cpn` or `.petri.json` file, or run **CPN IDE: Open Example** to copy one of the
+   [examples](https://github.com/AleFire99/cpn-ide-vscode/tree/develop/examples) into `cpn-examples/` in your workspace.
 3. Open the model:
    - a `.petri.json` opens straight in the CPN IDE canvas;
    - a `.cpn` opens as XML text: click **▶** in the editor title bar (or right-click it in the Explorer →
@@ -140,6 +144,7 @@ open in CPN Tools or CPN IDE.
 
 | Command | Where | What it does |
 |---|---|---|
+| CPN IDE: Open Example | Command Palette, walkthrough | Copy a bundled example into `cpn-examples/` and open it |
 | CPN IDE: Open in CPN IDE | ▶ in the editor title, Explorer menu | Open a `.cpn` / `.petri.json` in the CPN IDE canvas |
 | CPN IDE: Reopen as XML Text | editor title | Show the file as text again |
 | CPN IDE: New Net | Command Palette, Explorer folder menu | Create `NAME.petri.json` + `NAME.sml` with a starter net and open it |

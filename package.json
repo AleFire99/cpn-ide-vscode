@@ -62,6 +62,10 @@
         "title": "CPN IDE: New Net"
       },
       {
+        "command": "cpnIde.openExample",
+        "title": "CPN IDE: Open Example"
+      },
+      {
         "command": "cpnIde.openInCpnIde",
         "title": "CPN IDE: Open in CPN IDE",
         "icon": "$(play)"
@@ -158,6 +162,55 @@
           }
         ],
         "priority": "default"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "gettingStarted",
+        "title": "Get Started with CPN IDE",
+        "description": "Open, simulate and write Coloured Petri Nets in VS Code.",
+        "steps": [
+          {
+            "id": "openExample",
+            "title": "Open an example",
+            "description": "Copy one of the bundled example models into your workspace and open it in the CPN IDE canvas. The first time, the backend starts (and Java 17 is downloaded if none is found); the project console then reports **Model is correct**.\n[Open an Example](command:cpnIde.openExample)",
+            "media": { "image": "media/walkthrough/open-example.png", "altText": "An example net open in the CPN IDE canvas" },
+            "completionEvents": ["onCommand:cpnIde.openExample"]
+          },
+          {
+            "id": "simulate",
+            "title": "Simulate it",
+            "description": "Click **Start simulation** in the CPN IDE toolbar. Enabled transitions turn green: click one to fire it, or use **Multi-Step** in the Simulation panel. Markings are shown next to each place.\nFor a quick check without the UI, simulate the open model for N steps and read the final marking:\n[Run Without the UI](command:cpnIde.runSimulation)",
+            "media": { "image": "media/walkthrough/simulate.png", "altText": "A simulation in progress, with enabled transitions highlighted" }
+          },
+          {
+            "id": "newNet",
+            "title": "Write your own net",
+            "description": "A net can be plain text: NAME.petri.json for places, transitions and arcs, NAME.sml for colour sets and variables. Edit the JSON (with completion from the schema) and the canvas follows; errors appear in the Problems panel.\n[Create a Net](command:cpnIde.newNet)",
+            "media": { "image": "media/walkthrough/text-model.png", "altText": "A text model next to its diagram" },
+            "completionEvents": ["onCommand:cpnIde.newNet"]
+          },
+          {
+            "id": "linux",
+            "title": "Linux: install 32-bit glibc",
+            "description": "The CPN simulator needs the 32-bit C library. Install it once, then reopen your model.\n[Show Backend Log](command:cpnIde.showLog)",
+            "media": { "markdown": "media/walkthrough/linux.md" },
+            "when": "isLinux"
+          },
+          {
+            "id": "macos",
+            "title": "macOS: use the Docker backend",
+            "description": "The simulator cannot run on macOS. Start the backend in Docker and point the extension at it.\n[Set the Backend URL](command:workbench.action.openSettings?%5B%22cpnIde.backendUrl%22%5D)",
+            "media": { "markdown": "media/walkthrough/macos.md" },
+            "when": "isMac"
+          },
+          {
+            "id": "settings",
+            "title": "Tune the settings",
+            "description": "Make multi-step runs faster, turn off the token animation, or choose which Java and backend to use.\n[Open CPN IDE Settings](command:workbench.action.openSettings?%5B%22cpnIde%22%5D)",
+            "media": { "markdown": "media/walkthrough/settings.md" }
+          }
+        ]
       }
     ],
     "menus": {

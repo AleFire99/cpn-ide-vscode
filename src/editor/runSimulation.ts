@@ -8,6 +8,18 @@ import { formatResult, runHeadless } from '../runtime/headless-sim';
 import { decodeBytes } from '../webview/host-core';
 import { loadModel } from './petriModel';
 
+const isModel = (u: vscode.Uri) => /\.cpn$/i.test(u.path) || isSpecFile(u.path);
+
+const tabUri = (t: vscode.Tab | undefined) =>
+  t?.input instanceof vscode.TabInputCustom || t?.input instanceof vscode.TabInputText ? t.input.uri : undefined;
+
+/** The model in the active tab, else in any other open tab (e.g. when run from the walkthrough). */
+function openModelUri(): vscode.Uri | undefined {
+  const { activeTabGroup, all } = vscode.window.tabGroups;
+  const tabs = [activeTabGroup.activeTab, ...all.map((g) => g.activeTab), ...all.flatMap((g) => g.tabs)];
+  return tabs.map(tabUri).find((u): u is vscode.Uri => !!u && isModel(u));
+}
+
 let simOutput: vscode.OutputChannel | undefined;
 
 /** Results of headless runs get their own channel, apart from the backend log. */
@@ -23,9 +35,8 @@ export const disposeSimulationOutput = (): void => {
 /** "CPN IDE: Run Simulation (No UI)": simulate a .cpn / .petri.json on the backend and print the final marking to its output channel. */
 export async function runSimulation(uri?: vscode.Uri): Promise<void> {
   const backend = BackendManager.get();
-  const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
-  const target = uri ?? (input instanceof vscode.TabInputCustom ? input.uri : vscode.window.activeTextEditor?.document.uri);
-  if (!target || !(/\.cpn$/i.test(target.path) || isSpecFile(target.path))) {
+  const target = uri ?? openModelUri();
+  if (!target || !isModel(target)) {
     void vscode.window.showErrorMessage('CPN IDE: open or select a .cpn or .petri.json file to simulate.');
     return;
   }
