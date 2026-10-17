@@ -60,10 +60,18 @@ export async function runHeadless(o: HeadlessOptions): Promise<SimResult> {
   return { ok: true, steps, elapsedMs: now() - start, final: state };
 }
 
-export function formatResult(r: SimResult): string[] {
-  if (!r.ok) return ['Validation failed:', ...Object.entries(r.issues).map(([k, v]) => `  ${k}: ${JSON.stringify(v)}`)];
+/** Result lines; `names` maps simulator ids to readable names (see nodeNames), unknown ids are printed as they are. */
+export function formatResult(r: SimResult, names: ReadonlyMap<string, string> = new Map()): string[] {
+  const name = (id: string) => names.get(id) ?? id;
+  if (!r.ok) return ['Validation failed:', ...Object.entries(r.issues).map(([k, v]) => `  ${name(k)}: ${JSON.stringify(v)}`)];
   const lines = [`Simulated ${r.steps} step(s) in ${r.elapsedMs} ms${r.final.enableTrans.length ? '' : ' (no transition enabled)'}`];
   lines.push('Final marking:');
-  for (const t of r.final.tokensAndMark) lines.push(`  ${t.id}: ${t.marking.replace(/\s+/g, ' ').trim()}`);
+  const rows = r.final.tokensAndMark.map((t) => [name(t.id), t.marking.replace(/\s+/g, ' ').trim() || 'empty'] as const);
+  const width = Math.max(0, ...rows.map(([n]) => n.length));
+  for (const [n, m] of rows) lines.push(`  ${n.padEnd(width)}  ${m}`);
+  if (r.final.enableTrans.length) lines.push(`Still enabled: ${r.final.enableTrans.map(name).join(', ')}`);
   return lines;
 }
+
+/** Remove ANSI colour/control sequences (the backend's logback output uses them). */
+export const stripAnsi = (s: string): string => s.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, '');

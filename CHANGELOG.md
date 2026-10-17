@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Run Simulation (No UI)** writes to its own "CPN IDE: Simulation" output channel, names places and transitions as `Page/Name` instead of internal ids, aligns the marking table and lists transitions still enabled. ANSI colour codes are stripped from the backend log (#62).
 - Marketplace listing: rewritten README with screenshots, a getting-started guide, simulation and text-model walkthroughs, command and settings tables, and troubleshooting; clearer extension description.
 
 ## 0.3.0 — 2026-10-17

@@ -16,6 +16,7 @@ import {
   type RunningBackend,
 } from './backend-core';
 import { InitProxy } from './init-proxy';
+import { stripAnsi } from './headless-sim';
 import { resolveJava } from './jre';
 import { reloadAllWebviews } from '../webview/panel';
 
@@ -93,7 +94,7 @@ export class BackendManager implements vscode.Disposable {
             tmpDir,
             port,
             onOutput: (s) => {
-              this.output.append(s);
+              this.output.append(stripAnsi(s));
               if (s.includes('Error starting simulator')) void this.reportSimulatorFailure();
               this.watchInit(s);
             },

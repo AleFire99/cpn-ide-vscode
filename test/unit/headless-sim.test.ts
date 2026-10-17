@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { formatResult, runHeadless, type FetchLike } from '../../src/runtime/headless-sim';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { nodeNames } from '../../src/model/decompile';
+import { formatResult, runHeadless, stripAnsi, type FetchLike, type SimResult } from '../../src/runtime/headless-sim';
 
 function fakeFetch(opts: { issues?: Record<string, unknown>; enabledSteps: number }) {
   const calls: { url: string; method?: string; headers?: Record<string, string>; body?: string }[] = [];
@@ -63,6 +66,52 @@ describe('runHeadless', () => {
     const r = await runHeadless({ ...base, fetch: f, maxSteps: 9, now: () => (t += 7) });
     const out = formatResult(r).join('\n');
     expect(out).toContain('1 step(s) in 7 ms');
-    expect(out).toContain('p1: 0`()');
+    expect(out).toContain('p1  0`()');
+  });
+});
+
+describe('formatResult names', () => {
+  const r: SimResult = {
+    ok: true,
+    steps: 2,
+    elapsedMs: 5,
+    final: { enableTrans: ['ID9'], tokensAndMark: [{ id: 'ID1', marking: '1`1++\n1`2' }, { id: 'ID22', marking: '' }, { id: 'X', marking: 'empty' }] },
+  };
+
+  it('prints places by name, aligned, and lists enabled transitions', () => {
+    const names = new Map([['ID1', 'Main/Idle'], ['ID22', 'Main/Critical'], ['ID9', 'Main/Enter']]);
+    expect(formatResult(r, names)).toEqual([
+      'Simulated 2 step(s) in 5 ms',
+      'Final marking:',
+      '  Main/Idle      1`1++ 1`2',
+      '  Main/Critical  empty',
+      '  X              empty',
+      'Still enabled: Main/Enter',
+    ]);
+  });
+
+  it('names validation issues', () => {
+    expect(formatResult({ ok: false, issues: { ID1: ['bad'] } }, new Map([['ID1', 'P/A']]))).toEqual(['Validation failed:', '  P/A: ["bad"]']);
+  });
+});
+
+describe('nodeNames', () => {
+  it('maps place and transition ids of a model to Page/Name', () => {
+    const xml = fs.readFileSync(path.resolve(__dirname, '../../examples/02-producer-consumer.cpn'), 'utf8');
+    const names = nodeNames(xml);
+    expect(names.get('ID16')).toBe('ProducerConsumer/Next');
+    expect([...names.values()]).toEqual(expect.arrayContaining(['ProducerConsumer/Buffer', 'ProducerConsumer/Produce', 'ProducerConsumer/Consume']));
+  });
+
+  it('is empty for text that is not a model', () => {
+    expect(nodeNames('not xml').size).toBe(0);
+    expect(nodeNames('<a/>').size).toBe(0);
+  });
+});
+
+describe('stripAnsi', () => {
+  it('removes colour codes', () => {
+    expect(stripAnsi('17:15 \u001b[35m[qtp-29]\u001b[0;39m \u001b[39mDEBUG\u001b[0;39m c.i.c.X - ok')).toBe('17:15 [qtp-29] DEBUG c.i.c.X - ok');
+    expect(stripAnsi('plain')).toBe('plain');
   });
 });

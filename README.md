@@ -60,8 +60,17 @@ Multi-step runs wait 100 ms between steps by default. Lower `cpnIde.simulation.s
 `cpnIde.simulation.animate`, to make them faster.
 
 For a quick check without the UI, right-click a `.cpn` or `.petri.json` file and choose **CPN IDE: Run Simulation (No
-UI)**. Enter the number of steps; the step count, model time and final marking are printed in the **CPN IDE** output
-channel.
+UI)**. Enter the number of steps. The **CPN IDE: Simulation** output channel shows how many steps ran, the final
+marking of each place (as `Page/Place`) and any transitions still enabled:
+
+```
+Simulated 100 step(s) in 1301 ms
+Final marking:
+  MutualExclusion/Idle      1`1++ 1`2
+  MutualExclusion/Lock      1`()
+  MutualExclusion/Critical  empty
+Still enabled: MutualExclusion/Enter
+```
 
 ## Text models
 
