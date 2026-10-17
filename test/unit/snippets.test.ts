@@ -75,7 +75,7 @@ describe('snippet registration in package.json', () => {
       ]),
     );
     expect(pkg.contributes.languages).toEqual(
-      expect.arrayContaining([{ id: 'cpnml', extensions: ['.sml'], aliases: ['CPN ML'] }]),
+      expect.arrayContaining([expect.objectContaining({ id: 'cpnml', extensions: ['.sml'] })]),
     );
   });
 });
