@@ -23,14 +23,6 @@ import { resolveJava } from './jre';
 import type { BackendStatus } from './status-core';
 import { reloadAllWebviews } from '../webview/panel';
 
-/** Where the "Use Docker backend" button leads until a command that starts the Docker backend exists. */
-const DOCKER_BACKEND_DOCS = 'https://github.com/AleFire99/cpn-ide-vscode#docker-backend';
-
-/** The "Use Docker backend" action; one place to rewire to a start-Docker command later. */
-async function useDockerBackend(): Promise<void> {
-  await vscode.env.openExternal(vscode.Uri.parse(DOCKER_BACKEND_DOCS));
-}
-
 /** Thrown after the missing-glibc problem was already reported, so the generic error dialog is skipped. */
 class ReportedError extends Error {}
 
@@ -185,7 +177,7 @@ export class BackendManager implements vscode.Disposable {
         await vscode.env.clipboard.writeText(p.command);
         void vscode.window.showInformationMessage('CPN IDE: install command copied to the clipboard.');
       } else if (c === 'Use Docker backend') {
-        await useDockerBackend();
+        await vscode.commands.executeCommand('cpnIde.startDockerBackend');
       }
     });
   }
