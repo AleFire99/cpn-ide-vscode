@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 — 2026-10-17
+
+This release is about writing models as text and working in VS Code's own style. `.sml` files get CPN ML highlighting and snippets, `.petri.json` gets completion, hover, go-to-definition and a one-click Simulate lens, and more compile errors show up without the backend. The canvas follows a dark theme, `.cpn` files can open in the canvas by default, Linux tells you exactly how to install 32-bit glibc, and macOS users can start the Docker backend with one command.
 
 ### New
 
@@ -21,6 +23,12 @@
 ### Fixed
 
 - **Headless run no longer fails with "Could not parse declaration".** Starting **CPN IDE: Run Simulation (No UI)** while the canvas was still validating could make the backend reject `sim/init`. The proxy now queues `sim/init` behind in-flight net creations, and a headless run holds that queue from its validation to its last step, so the canvas cannot restart the shared simulator in the middle of it. (#75)
+
+### Known issues
+
+- The `.petri.json` snippets also show up in other JSON files: VS Code cannot limit snippets to a file name pattern.
+- In the dark canvas, colours you picked yourself for arcs or nodes are not adjusted, so a dark colour can be hard to see.
+- **CPN IDE: Start Docker Backend** is new and has not yet been tested on macOS. If it fails, the manual steps in the README still work.
 
 ## 0.4.0 — 2026-10-17
 
