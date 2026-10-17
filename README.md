@@ -126,6 +126,9 @@ var p: INT;
   [`schema/petri.schema.json`](https://github.com/AleFire99/cpn-ide-vscode/blob/develop/schema/petri.schema.json), and
   VS Code completes and validates `.petri.json` files against it.
 - `(*! Block *)` or `(*! Outer / Inner *)` in the `.sml` starts a named block in the declarations tree.
+- Snippets help you type models: in a `.petri.json`, `petri` inserts a whole model skeleton, and `page`, `place`,
+  `transition`, `arc` and `subpage` insert one element each (Tab moves between the fields). In a `.sml` file (language
+  *CPN ML*), `colset`, `var`, `fun` and `block` insert declarations.
 
 Keep the JSON in one editor and the canvas in another (**CPN IDE: Reopen as XML Text** switches a canvas tab back to
 text). The canvas reloads when either file changes on disk.

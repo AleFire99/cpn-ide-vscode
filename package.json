@@ -161,6 +161,16 @@
         "url": "./schema/petri.schema.json"
       }
     ],
+    "snippets": [
+      {
+        "language": "json",
+        "path": "./snippets/petri.code-snippets"
+      },
+      {
+        "language": "cpnml",
+        "path": "./snippets/cpnml.json"
+      }
+    ],
     "customEditors": [
       {
         "viewType": "cpnIde.editor",

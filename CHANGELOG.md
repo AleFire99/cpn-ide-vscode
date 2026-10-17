@@ -4,6 +4,7 @@
 
 ### New
 
+- **Snippets for text models.** In a `.petri.json`, type `petri` for a whole model skeleton, or `page`, `place`, `transition`, `arc` or `subpage` for one element; Tab moves between the fields. In a `.sml` file (CPN ML), `colset`, `var`, `fun` and `block` insert declarations. (#67)
 - **CPN ML syntax highlighting.** `.sml` declaration files now get their own *CPN ML* language: nested comments, `(*! Block *)` markers, SML and CPN ML keywords (`colset`, `var`, `globref`, `product`, `timed`, ...), strings, numbers, multiset operators and standard colour sets are coloured, with bracket matching and comment toggling. (#63)
 
 ### Improved
