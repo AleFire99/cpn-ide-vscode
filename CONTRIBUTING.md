@@ -36,7 +36,9 @@ Branches:
 Pushing the tag triggers the `release` workflow. It fails unless the tag equals `v` plus the `version` in
 `package.json`; otherwise it runs lint and tests, builds the `linux-x64` and `win32-x64` VSIX files, and
 publishes a GitHub Release with the VSIX files attached. The release notes are the version's `CHANGELOG.md`
-section (`node scripts/changelog-section.mjs X.Y.Z` prints it), followed by GitHub's list of merged PRs. The
+section (`node scripts/changelog-section.mjs X.Y.Z` prints it), followed by GitHub's list of merged PRs. To
+rewrite the notes of releases that already exist (after editing their CHANGELOG sections), run the `release-notes`
+workflow from the Actions tab with the tags to update. The
 `publish` job then uploads the same VSIX files to each store that is switched on:
 
 | Store | Repository variable | Secret |
