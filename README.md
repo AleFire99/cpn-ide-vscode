@@ -21,6 +21,7 @@ downloaded on first use if you don't already have one.
   `NAME.sml`. Opening the JSON shows the net graphically; edits in the canvas are saved back to the JSON.
 - **Completion, hover and go-to-definition** in `.petri.json`: arc endpoints, colour sets, subpage names, ports and
   fusion names are suggested; hovering a place `type` shows its `colset` declaration and F12 jumps to it in the `.sml`.
+- **CPN ML highlighting**: `.sml` declaration files get syntax highlighting, bracket matching and comment toggling.
 - **Live diagnostics**: unknown nodes, bad references and type errors show up in the Problems panel as you edit.
 - **Convert both ways**: turn an existing `.cpn` into a text model, or export a text model to `.cpn`.
 - **Headless runs**: simulate a model for N steps without the UI and print the final marking.
@@ -127,6 +128,9 @@ var p: INT;
   [`schema/petri.schema.json`](https://github.com/AleFire99/cpn-ide-vscode/blob/develop/schema/petri.schema.json), and
   VS Code completes and validates `.petri.json` files against it.
 - `(*! Block *)` or `(*! Outer / Inner *)` in the `.sml` starts a named block in the declarations tree.
+- Snippets help you type models: in a `.petri.json`, `petri` inserts a whole model skeleton, and `page`, `place`,
+  `transition`, `arc` and `subpage` insert one element each (Tab moves between the fields). In a `.sml` file (language
+  *CPN ML*), `colset`, `var`, `fun` and `block` insert declarations.
 
 Keep the JSON in one editor and the canvas in another (**CPN IDE: Reopen as XML Text** switches a canvas tab back to
 text). The canvas reloads when either file changes on disk.
@@ -156,6 +160,8 @@ open in CPN Tools or CPN IDE.
 | CPN IDE: Run Simulation (No UI) | Explorer menu | Simulate N steps and print the final marking |
 | CPN IDE: Show Backend Log | Command Palette | Open the backend and simulator log |
 | CPN IDE: Stop Backend | Command Palette | Stop the backend and simulator |
+| CPN IDE: Start Docker Backend | Command Palette, macOS walkthrough | Run the Docker backend as container `cpn-ide-backend`, set `cpnIde.backendUrl` and reconnect open tabs |
+| CPN IDE: Stop Docker Backend | Command Palette | Stop the `cpn-ide-backend` container |
 | CPN IDE: Restart Backend | Command Palette, status bar | Restart the backend and reload open CPN IDE tabs |
 
 ## Settings
@@ -177,14 +183,19 @@ Simulation and debug settings apply when a CPN IDE tab is (re)opened.
 |---|---|---|
 | Windows x64 | yes | |
 | Linux x64 | yes | needs 32-bit glibc: `sudo apt install libc6:i386` (Debian/Ubuntu) or `sudo dnf install glibc.i686` (Fedora) |
-| macOS | no | the CPN simulator is a 32-bit binary; run the [Docker backend](#docker-backend) and set `cpnIde.backendUrl` |
+| macOS | no | the CPN simulator is a 32-bit binary; run **CPN IDE: Start Docker Backend** (see [Docker backend](#docker-backend)) |
 
 ## Troubleshooting
 
 The **CPN IDE** item in the status bar shows the backend state: ○ not running, spinning while it
 starts, ✓ ready, red when the backend or the simulator failed. Click it to show the log, restart or stop the backend.
 
-- **"The simulator could not start"**: on Linux, install the 32-bit glibc above. Otherwise click **Show Log** (or run
+- **"The CPN simulator needs 32-bit glibc"** (Linux): the extension checks for `/lib/ld-linux.so.2` before starting and
+  shows the install command for your distribution, with **Copy command** and **Use Docker backend** buttons. Debian/Ubuntu:
+  `sudo dpkg --add-architecture i386 && sudo apt update && sudo apt install libc6:i386`; Fedora:
+  `sudo dnf install glibc.i686`; openSUSE: `sudo zypper install glibc-32bit`; Arch: `sudo pacman -S lib32-glibc`
+  (needs multilib); Fedora Silverblue/Kinoite: `rpm-ostree install glibc.i686`, then reboot.
+- **"The simulator could not start"**: on Linux, check the 32-bit glibc above. Otherwise click **Show Log** (or run
   **CPN IDE: Show Backend Log**) to see why.
 - **A simulator is already running on port 20001**: the CPN simulator always uses this port, so only one can run per
   machine. A second VS Code window shares the first one's simulator. If a crashed window left one behind, the extension
@@ -216,7 +227,9 @@ time, because two at once can hang the upstream backend.
 
 ## Docker backend
 
-On macOS, or to keep the simulator off your machine:
+On macOS, or to keep the simulator off your machine, run **CPN IDE: Start Docker Backend**. It starts the image as the container `cpn-ide-backend` on a free local port, sets `cpnIde.backendUrl` (workspace or user) and reconnects open tabs. It offers once to stop the container when VS Code exits, and on macOS it is also offered the first time you open a model. Docker must be installed and running. **CPN IDE: Stop Docker Backend** stops the container.
+
+Manually:
 
 ```sh
 docker run -p 8080:8080 ghcr.io/alefire99/cpn-ide-backend:latest

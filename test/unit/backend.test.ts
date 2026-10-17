@@ -36,14 +36,13 @@ describe('buildBackendArgs', () => {
 
 describe('preflightError', () => {
   it('blocks macOS and mentions backendUrl', () => {
-    expect(preflightError('darwin', true)).toMatch(/cpnIde\.backendUrl/);
+    expect(preflightError('darwin')).toMatch(/cpnIde\.backendUrl/);
   });
-  it('requires 32-bit loader on linux', () => {
-    expect(preflightError('linux', false)).toMatch(/libc6:i386/);
-    expect(preflightError('linux', true)).toBeUndefined();
+  it('allows linux (32-bit glibc is checked separately)', () => {
+    expect(preflightError('linux')).toBeUndefined();
   });
   it('allows windows', () => {
-    expect(preflightError('win32', false)).toBeUndefined();
+    expect(preflightError('win32')).toBeUndefined();
   });
 });
 
