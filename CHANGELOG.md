@@ -6,6 +6,19 @@
 
 - **Missing 32-bit glibc is detected on Linux.** Before starting the simulator, the extension checks for the 32-bit loader and, if it is missing, shows the install command for your distribution (Debian/Ubuntu, Fedora, Fedora Atomic, openSUSE, Arch) with **Copy command** and **Use Docker backend** buttons, instead of a generic "the simulator could not start". The status bar turns red with the same hint. (#68)
 
+### New
+
+- **Snippets for text models.** In a `.petri.json`, type `petri` for a whole model skeleton, or `page`, `place`, `transition`, `arc` or `subpage` for one element; Tab moves between the fields. In a `.sml` file (CPN ML), `colset`, `var`, `fun` and `block` insert declarations. (#67)
+- **CPN ML syntax highlighting.** `.sml` declaration files now get their own *CPN ML* language: nested comments, `(*! Block *)` markers, SML and CPN ML keywords (`colset`, `var`, `globref`, `product`, `timed`, ...), strings, numbers, multiset operators and standard colour sets are coloured, with bracket matching and comment toggling. (#63)
+
+### Improved
+
+- **Compile errors without the backend.** An undeclared colour set on a place (for example `"type": "UNITS"`) is now reported on the `type` value as soon as you edit the `.petri.json`, next to the structural errors, instead of only after the simulator ran. Commented-out `colset` declarations do not count. (#66)
+
+### Fixed
+
+- **Headless run no longer fails with "Could not parse declaration".** Starting **CPN IDE: Run Simulation (No UI)** while the canvas was still validating could make the backend reject `sim/init`. The proxy now queues `sim/init` behind in-flight net creations, and a headless run holds that queue from its validation to its last step, so the canvas cannot restart the shared simulator in the middle of it. (#75)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.

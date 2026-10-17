@@ -48,6 +48,25 @@
     "workspaceContains:**/*.petri.json"
   ],
   "contributes": {
+    "languages": [
+      {
+        "id": "cpnml",
+        "aliases": [
+          "CPN ML"
+        ],
+        "extensions": [
+          ".sml"
+        ],
+        "configuration": "./language-configuration.cpnml.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "cpnml",
+        "scopeName": "source.cpnml",
+        "path": "./syntaxes/cpnml.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "cpnIde.open",
@@ -140,6 +159,16 @@
       {
         "fileMatch": "*.petri.json",
         "url": "./schema/petri.schema.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "json",
+        "path": "./snippets/petri.code-snippets"
+      },
+      {
+        "language": "cpnml",
+        "path": "./snippets/cpnml.json"
       }
     ],
     "customEditors": [
