@@ -31,7 +31,11 @@ async function maybeAsk(ctx: vscode.ExtensionContext, tab: vscode.Tab | undefine
     if (answer === 'Yes') {
       await cfg.update('editorAssociations', withCpnAssociation(associations, VIEW_TYPE), vscode.ConfigurationTarget.Global);
       await vscode.commands.executeCommand('vscode.openWith', info.uri, VIEW_TYPE);
-      if (tab) await vscode.window.tabGroups.close(tab);
+      // Close the text tab(s) of this file; the Tab object we got may be stale by now.
+      const stale = vscode.window.tabGroups.all
+        .flatMap((g) => g.tabs)
+        .filter((t) => t.input instanceof vscode.TabInputText && t.input.uri.toString() === info.uri.toString());
+      if (stale.length) await vscode.window.tabGroups.close(stale);
     } else if (answer === 'Never') {
       await ctx.globalState.update(NEVER_KEY, true);
     } else {
@@ -45,7 +49,7 @@ async function maybeAsk(ctx: vscode.ExtensionContext, tab: vscode.Tab | undefine
 /** Offer once to make the CPN IDE canvas the default editor for *.cpn files (#70). */
 export function registerDefaultEditorPrompt(ctx: vscode.ExtensionContext): vscode.Disposable {
   void maybeAsk(ctx, vscode.window.tabGroups.activeTabGroup.activeTab);
-  return vscode.window.tabGroups.onDidChangeTabs((e) => {
-    for (const tab of e.opened) if (tab.isActive) void maybeAsk(ctx, tab);
-  });
+  // Quick Open reuses the preview tab ("changed", not "opened") and may activate it after the event: look at the
+  // active tab instead of the event's tabs.
+  return vscode.window.tabGroups.onDidChangeTabs(() => void maybeAsk(ctx, vscode.window.tabGroups.activeTabGroup.activeTab));
 }
