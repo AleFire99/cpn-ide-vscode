@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **Snippets for text models.** In a `.petri.json`, type `petri` for a whole model skeleton, or `page`, `place`, `transition`, `arc` or `subpage` for one element; Tab moves between the fields. In a `.sml` file (CPN ML), `colset`, `var`, `fun` and `block` insert declarations. (#67)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.
