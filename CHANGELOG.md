@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Improved
+
+- **Missing 32-bit glibc is detected on Linux.** Before starting the simulator, the extension checks for the 32-bit loader and, if it is missing, shows the install command for your distribution (Debian/Ubuntu, Fedora, Fedora Atomic, openSUSE, Arch) with **Copy command** and **Use Docker backend** buttons, instead of a generic "the simulator could not start". The status bar turns red with the same hint. (#68)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.

@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
@@ -15,11 +16,23 @@ import {
   startBackendProcess,
   type RunningBackend,
 } from './backend-core';
+import { checkGlibc32, glibc32Message, type Glibc32Problem } from './glibc-core';
 import { InitProxy } from './init-proxy';
 import { stripAnsi } from './headless-sim';
 import { resolveJava } from './jre';
 import type { BackendStatus } from './status-core';
 import { reloadAllWebviews } from '../webview/panel';
+
+/** Where the "Use Docker backend" button leads until a command that starts the Docker backend exists. */
+const DOCKER_BACKEND_DOCS = 'https://github.com/AleFire99/cpn-ide-vscode#docker-backend';
+
+/** The "Use Docker backend" action; one place to rewire to a start-Docker command later. */
+async function useDockerBackend(): Promise<void> {
+  await vscode.env.openExternal(vscode.Uri.parse(DOCKER_BACKEND_DOCS));
+}
+
+/** Thrown after the missing-glibc problem was already reported, so the generic error dialog is skipped. */
+class ReportedError extends Error {}
 
 export class BackendManager implements vscode.Disposable {
   private static instance: BackendManager | undefined;
@@ -89,6 +102,22 @@ export class BackendManager implements vscode.Disposable {
 
       const problem = preflight(process.platform);
       if (problem) throw new Error(problem);
+      if (process.platform === 'linux') {
+        const glibc = checkGlibc32({
+          exists: fs.existsSync,
+          readOsRelease: () => {
+            try {
+              return fs.readFileSync('/etc/os-release', 'utf8');
+            } catch {
+              return undefined;
+            }
+          },
+        });
+        if (glibc) {
+          this.reportMissingGlibc(glibc);
+          throw new ReportedError(glibc32Message(glibc));
+        }
+      }
 
       const javaPath = await resolveJava(this.ctx, this.output);
       const port = vscode.workspace.getConfiguration('cpnIde').get<number>('port', 0);
@@ -136,12 +165,29 @@ export class BackendManager implements vscode.Disposable {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       this.output.appendLine(`[error] ${msg}`);
+      if (e instanceof ReportedError) throw e;
       this.setStatus({ kind: 'error', message: msg });
       void vscode.window.showErrorMessage(`CPN IDE: ${msg}`, 'Show Log').then((c) => {
         if (c === 'Show Log') this.showLog();
       });
       throw e;
     }
+  }
+
+  /** 32-bit glibc is missing: failed status with the command in the tooltip, and an error with Copy / Docker buttons. */
+  private reportMissingGlibc(p: Glibc32Problem): void {
+    const msg = glibc32Message(p);
+    this.output.appendLine(`[error] ${msg}`);
+    this.setStatus({ kind: 'error', message: msg });
+    const buttons = [...(p.command ? ['Copy command'] : []), 'Use Docker backend'];
+    void vscode.window.showErrorMessage(`CPN IDE: ${msg}`, ...buttons).then(async (c) => {
+      if (c === 'Copy command' && p.command) {
+        await vscode.env.clipboard.writeText(p.command);
+        void vscode.window.showInformationMessage('CPN IDE: install command copied to the clipboard.');
+      } else if (c === 'Use Docker backend') {
+        await useDockerBackend();
+      }
+    });
   }
 
   /** Watchdog: a net creation that never leaves the lock (hung simulator handshake) is treated like a start failure. */
