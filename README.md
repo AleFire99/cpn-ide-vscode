@@ -19,6 +19,8 @@ downloaded on first use if you don't already have one.
   markings shown on the diagram.
 - **Text models**: describe places, transitions and arcs in `NAME.petri.json` and the CPN ML declarations in
   `NAME.sml`. Opening the JSON shows the net graphically; edits in the canvas are saved back to the JSON.
+- **Completion, hover and go-to-definition** in `.petri.json`: arc endpoints, colour sets, subpage names, ports and
+  fusion names are suggested; hovering a place `type` shows its `colset` declaration and F12 jumps to it in the `.sml`.
 - **CPN ML highlighting**: `.sml` declaration files get syntax highlighting, bracket matching and comment toggling.
 - **Live diagnostics**: unknown nodes, bad references and type errors show up in the Problems panel as you edit.
 - **Convert both ways**: turn an existing `.cpn` into a text model, or export a text model to `.cpn`.
@@ -144,6 +146,13 @@ also type-checked by the simulator.
 dropped, with a warning). **CPN IDE: Export .cpn** writes the compiled model of a `.petri.json` as a `.cpn` file you can
 open in CPN Tools or CPN IDE.
 
+### Open `.cpn` in the canvas by default
+
+The first time a `.cpn` opens as XML text, CPN IDE asks whether to always open `.cpn` files in the canvas. **Yes** adds
+`"*.cpn": "cpnIde.editor"` to `workbench.editorAssociations`; **Not now** asks again next session; **Never** stops asking.
+To undo, remove that entry from `workbench.editorAssociations` in your user settings. **CPN IDE: Reopen as XML Text**
+opens a file as text without prompting. Diff views (for example the Git diff) always stay text.
+
 ## Commands
 
 | Command | Where | What it does |
@@ -156,6 +165,7 @@ open in CPN Tools or CPN IDE.
 | CPN IDE: Convert to Text Model | `.cpn` editor title, Explorer menu | Write `.petri.json` + `.sml` from a `.cpn` |
 | CPN IDE: Export .cpn | `.petri.json` editor title, Explorer menu | Write a `.cpn` from a text model |
 | CPN IDE: Run Simulation (No UI) | Explorer menu | Simulate N steps and print the final marking |
+| Simulate 100 steps (CodeLens) | top of a `.petri.json` | Run 100 headless steps and show each place's final marking inline until you edit the file; **Clear results** removes it. Also has **Open in CPN IDE** and **Export .cpn** lenses |
 | CPN IDE: Show Backend Log | Command Palette | Open the backend and simulator log |
 | CPN IDE: Stop Backend | Command Palette | Stop the backend and simulator |
 | CPN IDE: Start Docker Backend | Command Palette, macOS walkthrough | Run the Docker backend as container `cpn-ide-backend`, set `cpnIde.backendUrl` and reconnect open tabs |
@@ -169,6 +179,7 @@ open in CPN Tools or CPN IDE.
 | `cpnIde.simulation.stepDelayMs` | `100` | Delay between steps of a multi-step run, in ms (CPN IDE itself uses 500) |
 | `cpnIde.simulation.animate` | `true` | Animate tokens moving during simulation |
 | `cpnIde.theme` | `auto` | `auto` makes the canvas, panels and toolbar follow a dark or high-contrast VS Code theme; `light` always keeps the UI's own light look. Applies when an editor is (re)opened |
+| `cpnIde.codeLens.enabled` | `true` | Show the Simulate / Open in CPN IDE / Export .cpn CodeLenses at the top of `.petri.json` files |
 | `cpnIde.javaPath` | | Java 17+ executable. Empty: use `JAVA_HOME`, `java` on the PATH, or a downloaded runtime |
 | `cpnIde.backendUrl` | | URL of an external backend, e.g. the Docker image below. Empty: use the bundled one |
 | `cpnIde.port` | `0` | Port of the local backend (`0` = any free port) |

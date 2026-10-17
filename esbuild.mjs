@@ -8,6 +8,8 @@ const ctx = await esbuild.context({
   external: ['vscode'],
   format: 'cjs',
   platform: 'node',
+  // ESM entry first: jsonc-parser's UMD main loads its parts with a require() esbuild cannot follow.
+  mainFields: ['module', 'main'],
   target: 'node20',
   sourcemap: true,
   minify: !watch,
