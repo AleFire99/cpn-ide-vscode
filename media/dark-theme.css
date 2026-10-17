@@ -348,3 +348,27 @@ html.cpn-dark .djs-label text:not([style*="fill"]) {
 }
 html.cpn-dark .djs-resizer-visual { fill: var(--cpn-bg); stroke: var(--cpn-fg); }
 html.cpn-dark .djs-crosshair { stroke: var(--cpn-muted); }
+
+/* ---- found on screen: section headers, inline light backgrounds, dark text colours ---- */
+html.cpn-dark .blockHeader {
+  background: var(--cpn-header) !important;
+  color: var(--cpn-fg) !important;
+  border-color: var(--cpn-border) !important;
+}
+html.cpn-dark .headerTitle,
+html.cpn-dark .blockHeader .headerTitle {
+  color: var(--cpn-fg) !important;
+}
+html.cpn-dark div[style*='background-color: white'],
+html.cpn-dark div[style*='background: #ebebeb'] {
+  background: var(--cpn-bg) !important;
+  border-color: var(--cpn-border) !important;
+}
+/* Declaration keywords and console messages use plain green/red, too dark on a dark background. */
+html.cpn-dark span[style*='color:green'],
+html.cpn-dark .success {
+  color: var(--vscode-terminal-ansiGreen, #23d18b) !important;
+}
+html.cpn-dark span[style*='color:red'] {
+  color: var(--vscode-terminal-ansiRed, #f14c4c) !important;
+}
