@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **Simulate CodeLens on `.petri.json`.** The top of a text model now offers `▶ Simulate 100 steps`, `Open in CPN IDE` and `Export .cpn`. A simulation run shows each place's final marking after its line (`→ 1`1++1`2`, `→ empty`) until you edit the file or click `Clear results`. The lenses can be turned off with `cpnIde.codeLens.enabled`. (#72)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.

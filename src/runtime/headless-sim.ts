@@ -73,5 +73,19 @@ export function formatResult(r: SimResult, names: ReadonlyMap<string, string> = 
   return lines;
 }
 
+/** Marking text for inline display: whitespace collapsed, `empty` for no tokens. */
+export const markingText = (marking: string): string => ` → ${marking.replace(/\s+/g, ' ').trim().replace(/ ?\+\+ ?/g, '++') || 'empty'}`;
+
+/** Final marking text per `Page/Place` name (see nodeNames). Empty when the run failed validation. */
+export function finalMarkings(r: SimResult, names: ReadonlyMap<string, string>): Map<string, string> {
+  const out = new Map<string, string>();
+  if (!r.ok) return out;
+  for (const t of r.final.tokensAndMark) {
+    const n = names.get(t.id);
+    if (n) out.set(n, markingText(t.marking));
+  }
+  return out;
+}
+
 /** Remove ANSI colour/control sequences (the backend's logback output uses them). */
 export const stripAnsi = (s: string): string => s.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, '');
