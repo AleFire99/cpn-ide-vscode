@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 — 2026-10-17
+
+### Features
+
+- **CPN IDE: New Net** creates `NAME.petri.json` + `NAME.sml` with a starter net in the workspace (or the Explorer folder it was run on) and opens it in the canvas, instead of an unsaved demo net (#61). The old panel is still there as **CPN IDE: Open Blank Panel**.
+- **Run Simulation (No UI)** writes to its own "CPN IDE: Simulation" output channel, names places and transitions as `Page/Name` instead of internal ids, aligns the marking table and lists transitions still enabled. ANSI colour codes are stripped from the backend log (#62).
+- Status bar item with the backend state (not running, starting, ready, failed, simulator down); click it to show the log, restart, stop or start the backend. New command **CPN IDE: Restart Backend**. The extension now also activates in workspaces that contain `.cpn` or `.petri.json` files, without starting Java (#64).
+- **Get Started with CPN IDE** walkthrough: open an example, simulate it, write a net, platform setup (Linux glibc, macOS Docker) and settings. New command **CPN IDE: Open Example** copies a bundled example into `cpn-examples/` (never overwriting) and opens it; the examples now ship in the VSIX. **Run Simulation (No UI)** also finds a model open in another tab (#60).
+- Marketplace listing: rewritten README with screenshots, a getting-started guide, simulation and text-model walkthroughs, command and settings tables, and troubleshooting; clearer extension description.
+
+### Known issues
+
+- A headless run started while the canvas is still validating the same model can fail with "Could not parse declaration"; running it again works (#75).
+
 ## 0.3.0 — 2026-10-17
 
 ### Features
