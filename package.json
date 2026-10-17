@@ -43,7 +43,9 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onCustomEditor:cpnIde.editor",
-    "onCustomEditor:cpnIde.petriEditor"
+    "onCustomEditor:cpnIde.petriEditor",
+    "workspaceContains:**/*.cpn",
+    "workspaceContains:**/*.petri.json"
   ],
   "contributes": {
     "commands": [
@@ -76,6 +78,14 @@
       {
         "command": "cpnIde.stopBackend",
         "title": "CPN IDE: Stop Backend"
+      },
+      {
+        "command": "cpnIde.restartBackend",
+        "title": "CPN IDE: Restart Backend"
+      },
+      {
+        "command": "cpnIde.statusMenu",
+        "title": "CPN IDE: Backend Status"
       },
       {
         "command": "cpnIde.showLog",

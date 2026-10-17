@@ -18,6 +18,7 @@ import {
 import { InitProxy } from './init-proxy';
 import { stripAnsi } from './headless-sim';
 import { resolveJava } from './jre';
+import type { BackendStatus } from './status-core';
 import { reloadAllWebviews } from '../webview/panel';
 
 export class BackendManager implements vscode.Disposable {
@@ -30,6 +31,10 @@ export class BackendManager implements vscode.Disposable {
   // Stable URL in front of the backend (also across restarts) that serializes net creation; see InitProxy.
   private readonly proxy = new InitProxy();
   readonly output = vscode.window.createOutputChannel('CPN IDE');
+  private statusValue: BackendStatus = { kind: 'stopped' };
+  private readonly statusEmitter = new vscode.EventEmitter<BackendStatus>();
+  /** Fires when the backend starts, stops or fails (drives the status bar item). */
+  readonly onDidChangeStatus = this.statusEmitter.event;
 
   private constructor(private readonly ctx: vscode.ExtensionContext) {}
 
@@ -51,6 +56,15 @@ export class BackendManager implements vscode.Disposable {
     return this.running?.isAlive() ? this.proxy.url ?? this.running.baseUrl : undefined;
   }
 
+  get status(): BackendStatus {
+    return this.statusValue;
+  }
+
+  private setStatus(s: BackendStatus): void {
+    this.statusValue = s;
+    this.statusEmitter.fire(s);
+  }
+
   /** Start (or reuse) the backend and return its base URL. Shows an error message on failure. */
   ensureStarted(): Promise<string> {
     this.starting ??= this.doEnsureStarted().finally(() => {
@@ -64,10 +78,14 @@ export class BackendManager implements vscode.Disposable {
       const external = vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl', '').trim();
       if (external) {
         const url = external.replace(/\/+$/, '');
+        if (this.statusValue.kind !== 'ready') this.setStatus({ kind: 'starting' });
         if (!(await probeHttp(url, 5000))) throw new Error(`No CPN IDE backend reachable at ${url} (cpnIde.backendUrl)`);
-        return await this.proxy.start(url);
+        const proxied = await this.proxy.start(url);
+        if (this.statusValue.kind !== 'simulatorDown') this.setStatus({ kind: 'ready', url, external: true });
+        return proxied;
       }
       if (this.running?.isAlive()) return await this.proxy.start(this.running.baseUrl);
+      this.setStatus({ kind: 'starting' });
 
       const problem = preflight(process.platform);
       if (problem) throw new Error(problem);
@@ -100,16 +118,25 @@ export class BackendManager implements vscode.Disposable {
             },
             onExit: (code, signal) => {
               this.output.appendLine(`[backend] exited (code=${code}, signal=${signal})`);
+              // An exit we did not ask for (stop() clears `running` first).
+              if (this.running && !this.running.isAlive()) {
+                this.running = undefined;
+                this.setStatus({ kind: 'error', message: `backend exited (code ${code ?? signal})` });
+              }
             },
           });
           this.running = r;
           this.output.appendLine(`[backend] ready at ${r.baseUrl}`);
-          return await this.proxy.start(r.baseUrl);
+          const proxied = await this.proxy.start(r.baseUrl);
+          // A simulator failure reported while starting stays visible.
+          if (this.statusValue.kind === 'starting') this.setStatus({ kind: 'ready', url: r.baseUrl, java: javaPath, external: false });
+          return proxied;
         },
       );
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       this.output.appendLine(`[error] ${msg}`);
+      this.setStatus({ kind: 'error', message: msg });
       void vscode.window.showErrorMessage(`CPN IDE: ${msg}`, 'Show Log').then((c) => {
         if (c === 'Show Log') this.showLog();
       });
@@ -190,6 +217,7 @@ export class BackendManager implements vscode.Disposable {
   async reportSimulatorFailure(): Promise<void> {
     if (this.failureShown || this.retrying) return;
     this.failureShown = true;
+    this.setStatus({ kind: 'simulatorDown' });
     const foreign = this.findForeignOwner();
     this.output.appendLine('[error] the simulator could not start');
     const buttons = [...(foreign ? ['Stop stale simulator'] : []), 'Retry', 'Show Log'];
@@ -236,10 +264,12 @@ export class BackendManager implements vscode.Disposable {
     clearTimeout(this.initWatchdog);
     this.initWatchdog = undefined;
     if (this.running) {
-      this.running.stop();
+      const r = this.running;
       this.running = undefined;
+      r.stop();
       this.output.appendLine('[backend] stopped');
     }
+    this.setStatus({ kind: 'stopped' });
   }
 
   showLog(): void {
@@ -250,6 +280,7 @@ export class BackendManager implements vscode.Disposable {
     this.stop();
     this.proxy.stop();
     this.output.dispose();
+    this.statusEmitter.dispose();
     BackendManager.instance = undefined;
   }
 }
