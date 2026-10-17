@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { markOpenedAsText, registerDefaultEditorPrompt } from './editor/cpnDefault';
 import { convertToText } from './editor/convertToText';
 import { CpnEditorProvider, VIEW_TYPE } from './editor/cpnEditorProvider';
 import { exportCpn } from './editor/exportCpn';
@@ -26,6 +27,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     PetriEditorProvider.register(ctx),
     { dispose: disposeSimulationOutput },
     createStatusBar(backend),
+    registerDefaultEditorPrompt(ctx),
   );
 
   const openUi = async () => {
@@ -46,6 +48,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
   const openAsText = async (uri?: vscode.Uri) => {
     const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
     const target = uri ?? (input instanceof vscode.TabInputCustom ? input.uri : undefined);
+    if (target) markOpenedAsText(target);
     if (target) await vscode.commands.executeCommand('vscode.openWith', target, 'default');
   };
 

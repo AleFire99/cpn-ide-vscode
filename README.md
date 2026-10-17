@@ -146,6 +146,13 @@ also type-checked by the simulator.
 dropped, with a warning). **CPN IDE: Export .cpn** writes the compiled model of a `.petri.json` as a `.cpn` file you can
 open in CPN Tools or CPN IDE.
 
+### Open `.cpn` in the canvas by default
+
+The first time a `.cpn` opens as XML text, CPN IDE asks whether to always open `.cpn` files in the canvas. **Yes** adds
+`"*.cpn": "cpnIde.editor"` to `workbench.editorAssociations`; **Not now** asks again next session; **Never** stops asking.
+To undo, remove that entry from `workbench.editorAssociations` in your user settings. **CPN IDE: Reopen as XML Text**
+opens a file as text without prompting. Diff views (for example the Git diff) always stay text.
+
 ## Commands
 
 | Command | Where | What it does |
