@@ -30,10 +30,12 @@ export interface HeadlessOptions {
 /** Validate the model, initialise the simulator and step until nothing is enabled or maxSteps is reached. */
 export async function runHeadless(o: HeadlessOptions): Promise<SimResult> {
   const now = o.now ?? Date.now;
-  const api = async <T>(route: string, body?: unknown): Promise<T> => {
+  // The extension's proxy honours X-CPN-Lock: the lock taken by `init` is kept until the `release` request, so a UI
+  // init cannot run between our init and sim/init. Other backends simply ignore it.
+  const api = async <T>(route: string, body?: unknown, lock?: 'hold' | 'release'): Promise<T> => {
     const res = await o.fetch(`${o.baseUrl}/api/v2/cpn/${route}`, {
       method: body === undefined ? 'GET' : 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-SessionId': o.sessionId },
+      headers: { 'Content-Type': 'application/json', 'X-SessionId': o.sessionId, ...(lock && { 'X-CPN-Lock': lock }) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const text = await res.text();
@@ -41,15 +43,18 @@ export async function runHeadless(o: HeadlessOptions): Promise<SimResult> {
     return JSON.parse(text) as T;
   };
 
-  const check = await api<{ success: boolean; issues?: Record<string, unknown> }>('init', {
-    xml: o.xml,
-    complex_verify: true,
-    need_sim_restart: true,
-  });
+  const check = await api<{ success: boolean; issues?: Record<string, unknown> }>(
+    'init',
+    { xml: o.xml, complex_verify: true, need_sim_restart: true },
+    'hold',
+  );
   const issues = check.issues ?? {};
-  if (!check.success || Object.keys(issues).length > 0) return { ok: false, issues };
+  if (!check.success || Object.keys(issues).length > 0) {
+    await api('', undefined, 'release').catch(() => undefined);
+    return { ok: false, issues };
+  }
 
-  let state = await api<SimState>('sim/init', {});
+  let state = await api<SimState>('sim/init', {}, 'release');
   const start = now();
   let steps = 0;
   while (steps < o.maxSteps && state.enableTrans.length > 0) {

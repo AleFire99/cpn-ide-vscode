@@ -1,9 +1,10 @@
 import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { InitProxy } from '../../src/runtime/init-proxy';
+import { InitProxy, LOCK_HEADER } from '../../src/runtime/init-proxy';
 
 const INIT = '/api/v2/cpn/init';
+const SIM_INIT = '/api/v2/cpn/sim/init';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 describe('InitProxy', () => {
@@ -14,6 +15,7 @@ describe('InitProxy', () => {
   let events: string[];
   let initHandler: (req: http.IncomingMessage, res: http.ServerResponse, n: number) => void;
   let inits: number;
+  let seenLockHeader = false;
 
   const startProxy = async (timeoutMs?: number) => {
     proxy = new InitProxy(timeoutMs);
@@ -32,6 +34,11 @@ describe('InitProxy', () => {
     };
     upstream = http.createServer((req, res) => {
       if (req.method === 'POST' && req.url === INIT) return initHandler(req, res, ++inits);
+      if (req.method === 'POST' && req.url === SIM_INIT) {
+        events.push('simInit');
+        seenLockHeader = req.headers[LOCK_HEADER] !== undefined;
+        return void res.end('{}');
+      }
       const chunks: Buffer[] = [];
       req.on('data', (c: Buffer) => chunks.push(c));
       req.on('end', () => {
@@ -120,5 +127,59 @@ describe('InitProxy', () => {
     expect(ra.status).toBe(504);
     expect(await ra.text()).toContain('did not answer');
     expect((await b).status).toBe(200);
+  });
+
+  it('makes sim/init wait for an in-flight init', async () => {
+    const a = fetch(`${url}${INIT}`, { method: 'POST', body: '{}' });
+    await sleep(30);
+    const b = fetch(`${url}${SIM_INIT}`, { method: 'POST', body: '{}' });
+    await sleep(30);
+    expect(events).toEqual(['start1']);
+    expect((await b).status).toBe(200);
+    expect((await a).status).toBe(200);
+    expect(events).toEqual(['start1', 'end1', 'simInit']);
+  });
+
+  it('names the route in the 504 when sim/init hangs', async () => {
+    proxy.stop();
+    await startProxy(150);
+    upstream.removeAllListeners('request');
+    upstream.on('request', () => {}); // never answers
+    const res = await fetch(`${url}${SIM_INIT}`, { method: 'POST', body: '{}' });
+    expect(res.status).toBe(504);
+    expect(await res.text()).toContain(SIM_INIT);
+  });
+
+  it('keeps passing other routes through while an init is in flight', async () => {
+    const a = fetch(`${url}${INIT}`, { method: 'POST', body: '{}' });
+    await sleep(30);
+    expect((await fetch(`${url}/api/v2/cpn/sim/step`, { method: 'POST', body: '{}' })).status).toBe(201);
+    expect((await fetch(`${url}${SIM_INIT}`, { method: 'GET' })).status).toBe(201);
+    await a;
+  });
+
+  it('holds the lock from init to the releasing sim/init, without leaking the header', async () => {
+    await fetch(`${url}${INIT}`, { method: 'POST', headers: { [LOCK_HEADER]: 'hold' }, body: '{}' });
+    const other = fetch(`${url}${INIT}`, { method: 'POST', body: '{}' });
+    await sleep(60);
+    expect(events).toEqual(['start1', 'end1']);
+    const sim = await fetch(`${url}${SIM_INIT}`, { method: 'POST', headers: { [LOCK_HEADER]: 'release' }, body: '{}' });
+    expect(sim.status).toBe(200);
+    expect(seenLockHeader).toBe(false);
+    expect((await other).status).toBe(200);
+    expect(events).toEqual(['start1', 'end1', 'simInit', 'start2', 'end2']);
+  });
+
+  it('lets go of a held lock on any release request or after the hold timeout', async () => {
+    const hold = { method: 'POST', headers: { [LOCK_HEADER]: 'hold' }, body: '{}' };
+    await fetch(`${url}${INIT}`, hold);
+    await fetch(`${url}/api/v2/cpn/`, { headers: { [LOCK_HEADER]: 'release' } });
+    expect((await fetch(`${url}${INIT}`, { method: 'POST', body: '{}' })).status).toBe(200);
+
+    proxy.stop();
+    proxy = new InitProxy(1000, 100);
+    url = await proxy.start(`http://127.0.0.1:${(upstream.address() as AddressInfo).port}`);
+    await fetch(`${url}${INIT}`, hold);
+    expect((await fetch(`${url}${INIT}`, { method: 'POST', body: '{}' })).status).toBe(200);
   });
 });

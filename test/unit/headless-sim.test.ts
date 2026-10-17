@@ -51,7 +51,8 @@ describe('runHeadless', () => {
     const { f, calls } = fakeFetch({ issues: { p1: ['bad'] }, enabledSteps: 3 });
     const r = await runHeadless({ ...base, fetch: f, maxSteps: 5 });
     expect(r).toEqual({ ok: false, issues: { p1: ['bad'] } });
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(2); // init + the lock release, no sim/init
+    expect(calls[1].headers?.['X-CPN-Lock']).toBe('release');
     expect(formatResult(r).join('\n')).toContain('p1');
   });
 
