@@ -45,9 +45,29 @@
     "onCustomEditor:cpnIde.editor",
     "onCustomEditor:cpnIde.petriEditor",
     "workspaceContains:**/*.cpn",
-    "workspaceContains:**/*.petri.json"
+    "workspaceContains:**/*.petri.json",
+    "onStartupFinished"
   ],
   "contributes": {
+    "languages": [
+      {
+        "id": "cpnml",
+        "aliases": [
+          "CPN ML"
+        ],
+        "extensions": [
+          ".sml"
+        ],
+        "configuration": "./language-configuration.cpnml.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "cpnml",
+        "scopeName": "source.cpnml",
+        "path": "./syntaxes/cpnml.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "cpnIde.open",
@@ -94,6 +114,14 @@
       {
         "command": "cpnIde.restartBackend",
         "title": "CPN IDE: Restart Backend"
+      },
+      {
+        "command": "cpnIde.startDockerBackend",
+        "title": "CPN IDE: Start Docker Backend"
+      },
+      {
+        "command": "cpnIde.stopDockerBackend",
+        "title": "CPN IDE: Stop Docker Backend"
       },
       {
         "command": "cpnIde.statusMenu",
@@ -153,6 +181,16 @@
       {
         "fileMatch": "*.petri.json",
         "url": "./schema/petri.schema.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "json",
+        "path": "./snippets/petri.code-snippets"
+      },
+      {
+        "language": "cpnml",
+        "path": "./snippets/cpnml.json"
       }
     ],
     "customEditors": [
@@ -228,7 +266,7 @@
           {
             "id": "macos",
             "title": "macOS: use the Docker backend",
-            "description": "The simulator cannot run on macOS. Start the backend in Docker and point the extension at it.\n[Set the Backend URL](command:workbench.action.openSettings?%5B%22cpnIde.backendUrl%22%5D)",
+            "description": "The simulator cannot run on macOS. Start the backend in Docker (Docker must be installed and running); the extension points itself at it.\n[Start Docker Backend](command:cpnIde.startDockerBackend)\nOr set the URL of a backend you started yourself:\n[Set the Backend URL](command:workbench.action.openSettings?%5B%22cpnIde.backendUrl%22%5D)",
             "media": {
               "markdown": "media/walkthrough/macos.md"
             },
@@ -338,5 +376,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
   }
 }

@@ -141,6 +141,32 @@ describe('ModelError', () => {
     ]);
   });
 
+  it('reports undeclared place colour sets without the backend, next to structural errors', () => {
+    const spec = base();
+    spec.pages[0].places![0].type = 'UNITS';
+    spec.pages[0].arcs!.push({ from: 'Nope', to: 'T' });
+    const is = issues(spec);
+    expect(is.map((i) => [i.message, (i.source as { path: string }).path])).toEqual([
+      ['unknown color set "UNITS" (declare it with "colset UNITS = ...;" in the .sml file)', '/pages/0/places/0/type'],
+      ['unknown node "Nope" on page "Main"', '/pages/0/arcs/2/from'],
+    ]);
+  });
+
+  it('accepts standard, declared and timed colour sets but not commented-out ones', () => {
+    const spec = base();
+    spec.pages[0].places![0].type = 'Token timed';
+    spec.pages[0].places![1].type = 'STRING';
+    expect(() => compile(spec, 'colset Token = unit;\n')).not.toThrow();
+    expect(issues(spec, '(* colset Token = unit; *)\n')).toHaveLength(1);
+  });
+
+  it('survives null nodes and still reports other errors', () => {
+    const spec = base();
+    (spec.pages[0].places as unknown[]).push(null);
+    spec.pages[0].arcs!.push({ from: 'Nope', to: 'T' });
+    expect(issues(spec).length).toBeGreaterThan(0);
+  });
+
   it('rejects place-place and transition-transition arcs', () => {
     const spec = base();
     spec.pages[0].transitions!.push({ name: 'U' });
