@@ -1,0 +1,43 @@
+name: release-notes
+
+# Rewrites the notes of existing GitHub Releases from CHANGELOG.md (scripts/changelog-section.mjs).
+# GitHub's generated part ("What's Changed", "New Contributors", "Full Changelog") is kept below the
+# CHANGELOG section, so running it again for the same tag gives the same result.
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: Release tags to update, separated by spaces
+        required: true
+        default: v0.1.0 v0.2.0 v0.3.0
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    name: notes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Update release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAGS: ${{ inputs.tags }}
+        run: |
+          set -euo pipefail
+          for tag in $TAGS; do
+            node scripts/changelog-section.mjs "${tag#v}" > notes.md
+            gh release view "$tag" --json body -q .body > old.md
+            # Keep GitHub's generated part: from "## What's Changed" (or "**Full Changelog**") to the end.
+            generated="$(awk '/^## What.s Changed/ || /^\*\*Full Changelog\*\*/ { keep = 1 } keep' old.md)"
+            if [[ -n "$generated" ]]; then printf '\n%s\n' "$generated" >> notes.md; fi
+            gh release edit "$tag" --notes-file notes.md
+            echo "updated $tag"
+          done

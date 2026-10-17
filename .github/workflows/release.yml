@@ -63,9 +63,14 @@ jobs:
           path: dist-vsix/*.vsix
           if-no-files-found: error
 
+      # The release notes are this version's CHANGELOG.md section; GitHub appends the list of merged PRs.
+      - name: Release notes from CHANGELOG.md
+        run: node scripts/changelog-section.mjs "${GITHUB_REF_NAME#v}" > release-notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          body_path: release-notes.md
           generate_release_notes: true
           files: dist-vsix/*.vsix
           fail_on_unmatched_files: true
