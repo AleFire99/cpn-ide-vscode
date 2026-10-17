@@ -3,6 +3,7 @@ import {
   DEFAULT_BLOCK,
   STANDARD_SML,
   colsetToSml,
+  declaredColsets,
   isStandardDecl,
   normalizeDecl,
   parseColset,
@@ -208,5 +209,19 @@ describe('normalizeDecl / isStandardDecl', () => {
     expect(isStandardDecl(custom)).toBe(false);
     expect(isStandardDecl(plain)).toBe(true);
     expect(isStandardDecl(other)).toBe(false);
+  });
+});
+
+describe('declaredColsets', () => {
+  it('lists colset names with the offset of the name', () => {
+    const src = 'colset A = int;\nvar x: A;\n  colset B_1 = A * A timed;';
+    const r = declaredColsets(src);
+    expect(r.map((c) => c.name)).toEqual(['A', 'B_1']);
+    for (const c of r) expect(src.startsWith(c.name, c.offset)).toBe(true);
+  });
+
+  it('ignores nested comments, strings and longer words', () => {
+    const src = '(* colset X = int; (* colset Y = int; *) colset Z = int; *)\nval s = "colset W = int";\nmycolset V = int;\ncolset Q = int;';
+    expect(declaredColsets(src).map((c) => c.name)).toEqual(['Q']);
   });
 });

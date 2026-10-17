@@ -80,6 +80,26 @@ function skipString(s: string, i: number): number {
   return i;
 }
 
+/**
+ * Names of the colour sets a declarations file declares (`colset NAME`), with the offset of the name.
+ * Commented-out declarations (comments nest) and text inside strings are ignored. A plain scan: it
+ * does not check that the declaration parses.
+ */
+export function declaredColsets(sml: string): { name: string; offset: number }[] {
+  const out: { name: string; offset: number }[] = [];
+  const re = new RegExp(String.raw`^colset\s+(${ID})(?![A-Za-z0-9_'])`);
+  for (let i = 0; i < sml.length; ) {
+    if (sml.startsWith('(*', i)) i = skipComment(sml, i);
+    else if (sml[i] === '"') i = skipString(sml, i);
+    else {
+      const m = !/[A-Za-z0-9_']/.test(sml[i - 1] ?? ' ') ? re.exec(sml.slice(i, i + 300)) : null;
+      if (m) out.push({ name: m[1], offset: i + m[0].length - m[1].length });
+      i += m ? m[0].length : 1;
+    }
+  }
+  return out;
+}
+
 const lineAt = (s: string, i: number) => s.slice(0, i).split('\n').length;
 
 /** Split a declarations file into declarations and classify each one. */

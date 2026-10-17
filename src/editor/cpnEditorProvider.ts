@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { ModelError, formatIssue } from '../model/types';
 import { BackendManager } from '../runtime/backend';
+import { canMountScheme, placeholderHtml } from './cpn-default-core';
+import { offerDockerBackend } from '../runtime/docker';
 import { errorPageHtml, fileName } from '../webview/host-core';
 import { attachBridge, registerReloader, renderHtml, uiState, uriToPath, webviewOptions } from '../webview/panel';
 
@@ -35,8 +37,18 @@ export async function mountEditor(
   o: MountOptions,
 ): Promise<MountedEditor | undefined> {
   panel.webview.options = webviewOptions(ctx);
+  if (!canMountScheme(o.uri.scheme)) {
+    // Diff sides (git:, vscode-scm:, ...) inherit editorAssociations in some VS Code versions: no backend for them.
+    panel.webview.options = { ...panel.webview.options, enableScripts: true };
+    panel.webview.html = placeholderHtml(fileName(o.uri.path), o.uri.scheme);
+    panel.webview.onDidReceiveMessage((m: { type?: string }) => {
+      if (m?.type === 'openAsText') void vscode.commands.executeCommand('vscode.openWith', o.uri, 'default');
+    });
+    return undefined;
+  }
   let baseUrl: string;
   try {
+    await offerDockerBackend();
     baseUrl = await BackendManager.get().ensureStarted();
   } catch {
     panel.webview.html =

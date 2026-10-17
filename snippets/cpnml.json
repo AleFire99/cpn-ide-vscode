@@ -1,0 +1,31 @@
+{
+	"Colour set": {
+		"prefix": "colset",
+		"description": "CPN ML colour set declaration",
+		"body": [
+			"colset ${1:NAME} = ${2:INT};$0"
+		]
+	},
+	"Variable": {
+		"prefix": "var",
+		"description": "CPN ML variable declaration",
+		"body": [
+			"var ${1:x}: ${2:INT};$0"
+		]
+	},
+	"Function": {
+		"prefix": "fun",
+		"description": "CPN ML function declaration",
+		"body": [
+			"fun ${1:name} (${2:arg}: ${3:INT}) = $0;"
+		]
+	},
+	"Declaration block": {
+		"prefix": "block",
+		"description": "Named block marker; the declarations tree groups what follows under it",
+		"body": [
+			"(*! ${1:Name} *)",
+			"$0"
+		]
+	}
+}
