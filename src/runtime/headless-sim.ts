@@ -30,10 +30,12 @@ export interface HeadlessOptions {
 /** Validate the model, initialise the simulator and step until nothing is enabled or maxSteps is reached. */
 export async function runHeadless(o: HeadlessOptions): Promise<SimResult> {
   const now = o.now ?? Date.now;
-  const api = async <T>(route: string, body?: unknown): Promise<T> => {
+  // The extension's proxy honours X-CPN-Lock: our session keeps the init lock from init to the last step, so the
+  // canvas cannot create a net (and restart the shared simulator) in between. Other backends simply ignore it.
+  const api = async <T>(route: string, body?: unknown, lock: 'hold' | 'release' = 'hold'): Promise<T> => {
     const res = await o.fetch(`${o.baseUrl}/api/v2/cpn/${route}`, {
       method: body === undefined ? 'GET' : 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-SessionId': o.sessionId },
+      headers: { 'Content-Type': 'application/json', 'X-SessionId': o.sessionId, 'X-CPN-Lock': lock },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const text = await res.text();
@@ -41,23 +43,27 @@ export async function runHeadless(o: HeadlessOptions): Promise<SimResult> {
     return JSON.parse(text) as T;
   };
 
-  const check = await api<{ success: boolean; issues?: Record<string, unknown> }>('init', {
-    xml: o.xml,
-    complex_verify: true,
-    need_sim_restart: true,
-  });
-  const issues = check.issues ?? {};
-  if (!check.success || Object.keys(issues).length > 0) return { ok: false, issues };
+  try {
+    const check = await api<{ success: boolean; issues?: Record<string, unknown> }>('init', {
+      xml: o.xml,
+      complex_verify: true,
+      need_sim_restart: true,
+    });
+    const issues = check.issues ?? {};
+    if (!check.success || Object.keys(issues).length > 0) return { ok: false, issues };
 
-  let state = await api<SimState>('sim/init', {});
-  const start = now();
-  let steps = 0;
-  while (steps < o.maxSteps && state.enableTrans.length > 0) {
-    state = await api<SimState>('sim/step/multistep');
-    steps++;
-    o.onStep?.(steps);
+    let state = await api<SimState>('sim/init', {});
+    const start = now();
+    let steps = 0;
+    while (steps < o.maxSteps && state.enableTrans.length > 0) {
+      state = await api<SimState>('sim/step/multistep');
+      steps++;
+      o.onStep?.(steps);
+    }
+    return { ok: true, steps, elapsedMs: now() - start, final: state };
+  } finally {
+    await api('', undefined, 'release').catch(() => undefined);
   }
-  return { ok: true, steps, elapsedMs: now() - start, final: state };
 }
 
 /** Result lines; `names` maps simulator ids to readable names (see nodeNames), unknown ids are printed as they are. */
@@ -71,6 +77,20 @@ export function formatResult(r: SimResult, names: ReadonlyMap<string, string> = 
   for (const [n, m] of rows) lines.push(`  ${n.padEnd(width)}  ${m}`);
   if (r.final.enableTrans.length) lines.push(`Still enabled: ${r.final.enableTrans.map(name).join(', ')}`);
   return lines;
+}
+
+/** Marking text for inline display: whitespace collapsed, `empty` for no tokens. */
+export const markingText = (marking: string): string => ` → ${marking.replace(/\s+/g, ' ').trim().replace(/ ?\+\+ ?/g, '++') || 'empty'}`;
+
+/** Final marking text per `Page/Place` name (see nodeNames). Empty when the run failed validation. */
+export function finalMarkings(r: SimResult, names: ReadonlyMap<string, string>): Map<string, string> {
+  const out = new Map<string, string>();
+  if (!r.ok) return out;
+  for (const t of r.final.tokensAndMark) {
+    const n = names.get(t.id);
+    if (n) out.set(n, markingText(t.marking));
+  }
+  return out;
 }
 
 /** Remove ANSI colour/control sequences (the backend's logback output uses them). */

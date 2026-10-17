@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { BackendManager } from '../runtime/backend';
 import { decodeBytes, encodeText, PathAllowlist, toVsCodeFilters } from './host-core';
-import { buildWebviewHtml, makeNonce, type CpnConfig } from './html';
+import { buildWebviewHtml, makeNonce, normalizeTheme, type CpnConfig } from './html';
 
 /** Observable by the integration tests through the `cpnIde._lastReady` command. */
 export const uiState = { ready: 0, errors: [] as string[], panels: 0, backendUrl: '' };
@@ -27,13 +27,14 @@ export function webviewOptions(ctx: vscode.ExtensionContext): vscode.WebviewOpti
   };
 }
 
-/** The cpnIde.simulation.* / cpnIde.debug settings, passed to the webview. Read on every render. */
-function readUiSettings(): Pick<CpnConfig, 'stepDelayMs' | 'animate' | 'debug'> {
+/** The cpnIde.simulation.* / cpnIde.theme / cpnIde.debug settings, passed to the webview. Read on every render. */
+function readUiSettings(): Pick<CpnConfig, 'stepDelayMs' | 'animate' | 'debug' | 'theme'> {
   const c = vscode.workspace.getConfiguration('cpnIde');
   return {
     stepDelayMs: Math.max(0, c.get<number>('simulation.stepDelayMs', 100)),
     animate: c.get<boolean>('simulation.animate', true),
     debug: c.get<boolean>('debug', false),
+    theme: normalizeTheme(c.get<string>('theme', 'auto')),
   };
 }
 
@@ -46,6 +47,7 @@ export function renderHtml(ctx: vscode.ExtensionContext, webview: vscode.Webview
     mapUri: (rel) => webview.asWebviewUri(vscode.Uri.joinPath(uiDir, ...rel.split('/'))).toString(),
     baseUri: webview.asWebviewUri(uiDir).toString(),
     shimUri: webview.asWebviewUri(vscode.Uri.joinPath(ctx.extensionUri, 'media', 'shim.js')).toString(),
+    darkThemeUri: webview.asWebviewUri(vscode.Uri.joinPath(ctx.extensionUri, 'media', 'dark-theme.css')).toString(),
     cspSource: webview.cspSource,
     nonce: makeNonce(),
     backendUrl,

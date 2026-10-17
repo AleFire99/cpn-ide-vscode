@@ -1,8 +1,8 @@
 {
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
-  "description": "Edit, validate and simulate Coloured Petri Nets (CPN Tools .cpn models or plain-text .petri.json) with the bundled CPN IDE editor and simulator. Nothing else to install.",
-  "version": "0.4.0",
+  "description": "Edit, validate and simulate Coloured Petri Nets (CPN Tools .cpn models or plain-text .petri.json) with the bundled CPN IDE editor and simulator.",
+  "version": "0.5.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
@@ -45,9 +45,29 @@
     "onCustomEditor:cpnIde.editor",
     "onCustomEditor:cpnIde.petriEditor",
     "workspaceContains:**/*.cpn",
-    "workspaceContains:**/*.petri.json"
+    "workspaceContains:**/*.petri.json",
+    "onStartupFinished"
   ],
   "contributes": {
+    "languages": [
+      {
+        "id": "cpnml",
+        "aliases": [
+          "CPN ML"
+        ],
+        "extensions": [
+          ".sml"
+        ],
+        "configuration": "./language-configuration.cpnml.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "cpnml",
+        "scopeName": "source.cpnml",
+        "path": "./syntaxes/cpnml.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "cpnIde.open",
@@ -56,6 +76,14 @@
       {
         "command": "cpnIde.runSimulation",
         "title": "CPN IDE: Run Simulation (No UI)"
+      },
+      {
+        "command": "cpnIde.simulateLens",
+        "title": "CPN IDE: Simulate 100 Steps"
+      },
+      {
+        "command": "cpnIde.clearSimulationResults",
+        "title": "CPN IDE: Clear Simulation Results"
       },
       {
         "command": "cpnIde.newNet",
@@ -88,6 +116,14 @@
         "title": "CPN IDE: Restart Backend"
       },
       {
+        "command": "cpnIde.startDockerBackend",
+        "title": "CPN IDE: Start Docker Backend"
+      },
+      {
+        "command": "cpnIde.stopDockerBackend",
+        "title": "CPN IDE: Stop Docker Backend"
+      },
+      {
         "command": "cpnIde.statusMenu",
         "title": "CPN IDE: Backend Status"
       },
@@ -103,6 +139,11 @@
     "configuration": {
       "title": "CPN IDE",
       "properties": {
+        "cpnIde.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the **Simulate**, **Open in CPN IDE** and **Export .cpn** CodeLenses at the top of `*.petri.json` files."
+        },
         "cpnIde.backendUrl": {
           "type": "string",
           "default": "",
@@ -129,6 +170,19 @@
           "default": true,
           "markdownDescription": "Animate token movement during simulation in the CPN IDE UI. Turn off for faster simulation. Applies when an editor is (re)opened."
         },
+        "cpnIde.theme": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "light"
+          ],
+          "enumDescriptions": [
+            "Follow the VS Code colour theme: dark and high-contrast themes get a dark canvas, panels and toolbar.",
+            "Always use the CPN IDE's own light look, even in a dark VS Code theme."
+          ],
+          "default": "auto",
+          "markdownDescription": "Colour theme of the CPN IDE UI. Applies when an editor is (re)opened."
+        },
         "cpnIde.debug": {
           "type": "boolean",
           "default": false,
@@ -140,6 +194,16 @@
       {
         "fileMatch": "*.petri.json",
         "url": "./schema/petri.schema.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "json",
+        "path": "./snippets/petri.code-snippets"
+      },
+      {
+        "language": "cpnml",
+        "path": "./snippets/cpnml.json"
       }
     ],
     "customEditors": [
@@ -215,7 +279,7 @@
           {
             "id": "macos",
             "title": "macOS: use the Docker backend",
-            "description": "The simulator cannot run on macOS. Start the backend in Docker and point the extension at it.\n[Set the Backend URL](command:workbench.action.openSettings?%5B%22cpnIde.backendUrl%22%5D)",
+            "description": "The simulator cannot run on macOS. Start the backend in Docker (Docker must be installed and running); the extension points itself at it.\n[Start Docker Backend](command:cpnIde.startDockerBackend)\nOr set the URL of a backend you started yourself:\n[Set the Backend URL](command:workbench.action.openSettings?%5B%22cpnIde.backendUrl%22%5D)",
             "media": {
               "markdown": "media/walkthrough/macos.md"
             },
@@ -284,6 +348,14 @@
       ],
       "commandPalette": [
         {
+          "command": "cpnIde.simulateLens",
+          "when": "false"
+        },
+        {
+          "command": "cpnIde.clearSimulationResults",
+          "when": "false"
+        },
+        {
           "command": "cpnIde.openAsText",
           "when": "activeCustomEditorId == cpnIde.editor || activeCustomEditorId == cpnIde.petriEditor"
         },
@@ -317,5 +389,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
   }
 }

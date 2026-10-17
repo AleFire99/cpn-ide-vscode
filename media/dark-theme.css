@@ -1,0 +1,374 @@
+/* CPN IDE dark theme for the webview.
+ * Injected by src/webview/html.ts unless cpnIde.theme is "light". Every rule is scoped to
+ * html.cpn-dark, a class the bootstrap script sets while the webview body carries VS Code's
+ * vscode-dark / vscode-high-contrast class, so it follows theme switches without a reload.
+ * The UI is Bootstrap 4 + Angular Material + Golden Layout + angular-tree-component + diagram-js;
+ * its component styles use !important in places, hence the !important here.
+ * Token, enabled-transition, selection and error highlight colours are deliberately left alone.
+ */
+html.cpn-dark {
+  color-scheme: dark;
+  --cpn-bg: var(--vscode-editor-background, #1e1e1e);
+  --cpn-fg: var(--vscode-foreground, #cccccc);
+  --cpn-muted: var(--vscode-descriptionForeground, #9d9d9d);
+  --cpn-panel: var(--vscode-sideBar-background, var(--cpn-bg));
+  --cpn-header: var(--vscode-editorGroupHeader-tabsBackground, var(--cpn-panel));
+  --cpn-border: var(--vscode-panel-border, #454545);
+  --cpn-input-bg: var(--vscode-input-background, #3c3c3c);
+  --cpn-input-fg: var(--vscode-input-foreground, #cccccc);
+  --cpn-input-border: var(--vscode-input-border, var(--cpn-border));
+  --cpn-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+  --cpn-active: var(--vscode-list-activeSelectionBackground, #094771);
+  --cpn-active-fg: var(--vscode-list-activeSelectionForeground, #ffffff);
+  --cpn-menu-bg: var(--vscode-menu-background, var(--vscode-editorWidget-background, #252526));
+  --cpn-link: var(--vscode-textLink-foreground, #3794ff);
+  --cpn-focus: var(--vscode-focusBorder, #007fd4);
+  --cpn-diagram-line: var(--vscode-editor-foreground, #d4d4d4);
+}
+
+/* ---- page, layout, panels ---- */
+html.cpn-dark,
+html.cpn-dark body {
+  background: var(--cpn-bg) !important;
+  color: var(--cpn-fg);
+}
+html.cpn-dark .lm_goldenlayout,
+html.cpn-dark .lm_content,
+html.cpn-dark .tabs__panel,
+html.cpn-dark cpn-tabs .tabs__panel,
+html.cpn-dark .cpn-tabs .tabs__panel,
+html.cpn-dark .tab-container,
+html.cpn-dark .tab-container-with-toolbar,
+html.cpn-dark .scroll-container,
+html.cpn-dark .mat-tree,
+html.cpn-dark .mat-table,
+html.cpn-dark .mat-card,
+html.cpn-dark .mat-drawer,
+html.cpn-dark .mat-expansion-panel {
+  background: var(--cpn-bg) !important;
+  color: var(--cpn-fg);
+}
+html.cpn-dark .cpn-tabs {
+  background: var(--cpn-panel) !important;
+}
+html.cpn-dark .lm_content {
+  border-color: var(--cpn-border);
+}
+html.cpn-dark .overlay {
+  background: var(--cpn-bg);
+}
+html.cpn-dark .as-split-gutter {
+  background-color: var(--cpn-border) !important;
+}
+html.cpn-dark .loading {
+  background: color-mix(in srgb, var(--cpn-bg) 70%, transparent);
+}
+
+/* ---- toolbar, navbar ---- */
+html.cpn-dark .navbar,
+html.cpn-dark .navbar-sm,
+html.cpn-dark .bg-light {
+  background: var(--cpn-header) !important;
+  border-color: var(--cpn-border) !important;
+  color: var(--cpn-fg);
+}
+html.cpn-dark .navbar-light .navbar-brand,
+html.cpn-dark .navbar-light .navbar-nav .nav-link,
+html.cpn-dark .navbar-sm .nav-link,
+html.cpn-dark .navbar .nav-link {
+  color: var(--cpn-fg);
+}
+html.cpn-dark .navbar .nav-link:hover,
+html.cpn-dark .navbar-sm .nav-link:hover {
+  background: var(--cpn-hover);
+}
+html.cpn-dark .navbar-sm .btn-close i,
+html.cpn-dark a.tableButton,
+html.cpn-dark i.arrow {
+  color: var(--cpn-muted);
+}
+html.cpn-dark .shadow,
+html.cpn-dark .shadow-sm {
+  box-shadow: none !important;
+}
+
+/* ---- tab bars (project tree / console / property panes) ---- */
+html.cpn-dark cpn-tabs .tabs__tab-bar,
+html.cpn-dark .cpn-tabs .tabs__tab-bar {
+  background: var(--cpn-header) !important;
+  border-bottom-color: var(--cpn-border) !important;
+}
+html.cpn-dark cpn-tabs .tabs__tab,
+html.cpn-dark .cpn-tabs .tabs__tab {
+  color: var(--cpn-muted) !important;
+  border-right-color: var(--cpn-border);
+}
+html.cpn-dark cpn-tabs .tabs__tab.active,
+html.cpn-dark .cpn-tabs .tabs__tab.active,
+html.cpn-dark cpn-tabs .tabs__tab.active.error,
+html.cpn-dark cpn-tabs .tabs__tab.active.ready {
+  background-color: var(--cpn-bg) !important;
+  color: var(--cpn-fg) !important;
+  border-left-color: var(--cpn-border);
+  border-right-color: var(--cpn-border);
+  box-shadow: none;
+}
+html.cpn-dark cpn-tabs .tabs__tab.error { background-color: #5a1d1d !important; color: #f48771 !important; }
+html.cpn-dark cpn-tabs .tabs__tab.ready { background-color: #1e4620 !important; color: #89d185 !important; }
+
+/* Golden Layout */
+html.cpn-dark .lm_header .lm_tab {
+  background: var(--cpn-header);
+  color: var(--cpn-muted);
+  border-color: var(--cpn-border);
+}
+html.cpn-dark .lm_tab:hover,
+html.cpn-dark .lm_tab.lm_active,
+html.cpn-dark .lm_header .lm_tab.lm_active {
+  background: var(--cpn-bg);
+  color: var(--cpn-fg);
+}
+html.cpn-dark .lm_maximised .lm_header { background-color: var(--cpn-bg); }
+html.cpn-dark .lm_header .lm_close_tab,
+html.cpn-dark .lm_controls > li { filter: invert(1); }
+
+/* ---- project tree, declarations tree ---- */
+html.cpn-dark .node-content-wrapper:hover,
+html.cpn-dark .node-content-wrapper-focused {
+  background: var(--cpn-hover);
+}
+html.cpn-dark .node-content-wrapper-active,
+html.cpn-dark .node-content-wrapper-active.node-content-wrapper-focused,
+html.cpn-dark .node-content-wrapper.node-content-wrapper-active:hover,
+html.cpn-dark .node.selected {
+  background: var(--cpn-active);
+  color: var(--cpn-active-fg);
+}
+html.cpn-dark .node-content-wrapper-active,
+html.cpn-dark .node-content-wrapper-focused,
+html.cpn-dark .node-content-wrapper:hover {
+  box-shadow: none;
+}
+html.cpn-dark .toggle-children { filter: invert(1); }
+html.cpn-dark .node.over { border-top-color: var(--cpn-fg); }
+html.cpn-dark .icon { color: var(--cpn-muted); }
+html.cpn-dark .disabled,
+html.cpn-dark .grey { color: var(--cpn-muted); }
+html.cpn-dark div.valueRow:hover,
+html.cpn-dark .panel .note {
+  background: var(--cpn-hover);
+}
+html.cpn-dark div.bordered,
+html.cpn-dark div.valueName {
+  border-color: var(--cpn-border);
+}
+html.cpn-dark div.valueName,
+html.cpn-dark div.value-readonly {
+  color: var(--cpn-muted);
+}
+html.cpn-dark .typeSelector,
+html.cpn-dark .colorSelector {
+  background: var(--cpn-input-bg);
+}
+html.cpn-dark div.editablenode,
+html.cpn-dark td.editablenode,
+html.cpn-dark [contenteditable] {
+  color: var(--cpn-fg);
+}
+html.cpn-dark td.node-highlight-error,
+html.cpn-dark .errorPane {
+  background: #5a1d1d;
+  color: #f48771;
+}
+
+/* ---- console, report ---- */
+html.cpn-dark .logConsole,
+html.cpn-dark .report {
+  background: var(--cpn-bg);
+  color: var(--cpn-fg);
+}
+html.cpn-dark .logConsole .normal { color: var(--cpn-muted); }
+html.cpn-dark .logConsole .error { color: var(--vscode-errorForeground, #f48771); }
+html.cpn-dark .logConsole .success { color: #89d185; }
+html.cpn-dark .idLink { color: var(--cpn-link); }
+html.cpn-dark .readyPopup { background: #1e4620; color: #89d185; }
+html.cpn-dark .warningPopup { background: #4d3b00; color: #e5c07b; }
+html.cpn-dark .errorPopup { background: #5a1d1d; color: #f48771; }
+
+/* ---- inputs, selects, buttons ---- */
+html.cpn-dark input,
+html.cpn-dark select,
+html.cpn-dark textarea,
+html.cpn-dark .form-control,
+html.cpn-dark .custom-select,
+html.cpn-dark .input-group-text {
+  background-color: var(--cpn-input-bg);
+  color: var(--cpn-input-fg);
+  border-color: var(--cpn-input-border);
+}
+html.cpn-dark input:focus,
+html.cpn-dark select:focus,
+html.cpn-dark textarea:focus,
+html.cpn-dark .form-control:focus {
+  background-color: var(--cpn-input-bg);
+  color: var(--cpn-input-fg);
+  border-color: var(--cpn-focus);
+}
+html.cpn-dark input:disabled,
+html.cpn-dark input[readonly],
+html.cpn-dark .form-control:disabled,
+html.cpn-dark .form-control[readonly] {
+  background-color: var(--cpn-panel);
+  color: var(--cpn-muted);
+}
+html.cpn-dark ::placeholder { color: var(--cpn-muted); }
+html.cpn-dark .btn-light,
+html.cpn-dark .btn-outline-secondary,
+html.cpn-dark .btn-secondary {
+  background: var(--vscode-button-secondaryBackground, #3a3d41);
+  border-color: var(--cpn-border);
+  color: var(--vscode-button-secondaryForeground, #ffffff);
+}
+html.cpn-dark .btn-primary {
+  background: var(--vscode-button-background, #0e639c);
+  border-color: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #ffffff);
+}
+html.cpn-dark .btn-light:hover,
+html.cpn-dark .btn-secondary:hover {
+  background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+html.cpn-dark a { color: var(--cpn-link); }
+html.cpn-dark .mat-form-field-label,
+html.cpn-dark .mat-hint,
+html.cpn-dark .mat-form-field-prefix,
+html.cpn-dark .mat-form-field-suffix { color: var(--cpn-muted); }
+html.cpn-dark .mat-form-field-underline { background-color: var(--cpn-border); }
+html.cpn-dark .mat-input-element { color: var(--cpn-input-fg); caret-color: var(--cpn-fg); }
+
+/* ---- tables ---- */
+html.cpn-dark .table,
+html.cpn-dark .table td,
+html.cpn-dark .table th {
+  color: var(--cpn-fg);
+  border-color: var(--cpn-border);
+}
+html.cpn-dark .table-hover tbody tr:hover { background: var(--cpn-hover); color: var(--cpn-fg); }
+html.cpn-dark .table-bordered,
+html.cpn-dark .table-bordered td,
+html.cpn-dark .table-bordered th { border-color: var(--cpn-border); }
+
+/* ---- menus, dialogs, popups ---- */
+html.cpn-dark .contextmenu,
+html.cpn-dark .dropdown-menu,
+html.cpn-dark .mat-menu-panel,
+html.cpn-dark .mat-select-panel,
+html.cpn-dark .mat-autocomplete-panel,
+html.cpn-dark .mat-dialog-container,
+html.cpn-dark .modal-content,
+html.cpn-dark .popover,
+html.cpn-dark .autocomplete-items div,
+html.cpn-dark .djs-popup,
+html.cpn-dark .djs-popup-body,
+html.cpn-dark .djs-palette,
+html.cpn-dark .djs-search-container,
+html.cpn-dark .djs-search-result,
+html.cpn-dark .djs-context-pad {
+  background: var(--cpn-menu-bg) !important;
+  color: var(--cpn-fg);
+  border-color: var(--cpn-border);
+}
+html.cpn-dark .djs-context-pad .entry {
+  background-color: var(--cpn-menu-bg);
+  box-shadow: 0 0 2px 1px var(--cpn-menu-bg);
+  color: var(--cpn-fg);
+}
+html.cpn-dark .dropdown-item { color: var(--cpn-fg); }
+html.cpn-dark .dropdown-item:hover,
+html.cpn-dark .dropdown-item:focus,
+html.cpn-dark .mat-option:hover:not(.mat-option-disabled),
+html.cpn-dark .mat-option.mat-active,
+html.cpn-dark .autocomplete-items div:hover,
+html.cpn-dark .djs-popup .entry:hover,
+html.cpn-dark .djs-context-pad .entry:hover,
+html.cpn-dark .djs-search-result:hover,
+html.cpn-dark .djs-search-result-selected {
+  background: var(--cpn-hover) !important;
+  color: var(--cpn-fg);
+}
+html.cpn-dark .dropdown-item.active,
+html.cpn-dark .dropdown-item:active {
+  background: var(--cpn-active) !important;
+  color: var(--cpn-active-fg);
+}
+html.cpn-dark .dropdown-divider,
+html.cpn-dark .djs-popup-header { border-color: var(--cpn-border); }
+html.cpn-dark .mat-option,
+html.cpn-dark .mat-select-value,
+html.cpn-dark .mat-select-arrow,
+html.cpn-dark .mat-dialog-title { color: var(--cpn-fg); }
+html.cpn-dark .mat-option.mat-selected:not(.mat-option-multiple):not(.mat-option-disabled) { background: var(--cpn-active); }
+html.cpn-dark .djs-palette .entry,
+html.cpn-dark .djs-palette .djs-palette-toggle { color: var(--cpn-fg); }
+html.cpn-dark .djs-palette .separator { border-bottom-color: var(--cpn-border); }
+html.cpn-dark .djs-search-highlight { color: var(--cpn-fg); }
+html.cpn-dark .djs-popup .djs-popup-header .entry.active { background-color: var(--cpn-hover); }
+html.cpn-dark .modal-header,
+html.cpn-dark .modal-footer { border-color: var(--cpn-border); }
+
+/* ---- diagram ---- */
+/* diagram-js sets stroke/fill through inline styles ("stroke: black"), so these use attribute
+ * selectors on style plus !important. Browsers serialise hex colours as rgb(...), so both
+ * spellings of black and white are matched. Colours chosen in the model (red, blue, ...)
+ * are untouched; only the near-invisible default black and white are remapped. */
+html.cpn-dark .djs-container {
+  background: var(--cpn-bg);
+}
+html.cpn-dark :is(.djs-visual, marker) :is([style*="stroke: black" i], [style*="stroke: #000" i], [style*="stroke: rgb(0, 0, 0)" i]) {
+  stroke: var(--cpn-diagram-line) !important;
+}
+html.cpn-dark :is(.djs-visual, marker) :is([style*="fill: black" i], [style*="fill: #000" i], [style*="fill: rgb(0, 0, 0)" i]) {
+  fill: var(--cpn-diagram-line) !important;
+}
+html.cpn-dark :is(.djs-visual, marker) :is([style*="fill: white" i], [style*="fill: #fff" i], [style*="fill: rgb(255, 255, 255)" i]) {
+  fill: var(--cpn-bg) !important;
+}
+html.cpn-dark :is(.djs-visual, marker) :is([style*="stroke: white" i], [style*="stroke: #fff" i], [style*="stroke: rgb(255, 255, 255)" i]) {
+  stroke: var(--cpn-bg) !important;
+}
+/* The text on a token / marking bubble sits on a light green box (#00dd00 / #99ff99), so it
+ * has to stay black. */
+html.cpn-dark .djs-visual:has(> rect[style*="rgb(0, 221, 0)" i], > rect[style*="#00dd00" i], > rect[style*="rgb(153, 255, 153)" i], > rect[style*="#99ff99" i]) :is(text, tspan) {
+  fill: #000 !important;
+}
+/* Text labels with no explicit colour inherit the page foreground. */
+html.cpn-dark .djs-visual text:not([style*="fill"]),
+html.cpn-dark .djs-label text:not([style*="fill"]) {
+  fill: var(--cpn-fg);
+}
+html.cpn-dark .djs-resizer-visual { fill: var(--cpn-bg); stroke: var(--cpn-fg); }
+html.cpn-dark .djs-crosshair { stroke: var(--cpn-muted); }
+
+/* ---- found on screen: section headers, inline light backgrounds, dark text colours ---- */
+html.cpn-dark .blockHeader {
+  background: var(--cpn-header) !important;
+  color: var(--cpn-fg) !important;
+  border-color: var(--cpn-border) !important;
+}
+html.cpn-dark .headerTitle,
+html.cpn-dark .blockHeader .headerTitle {
+  color: var(--cpn-fg) !important;
+}
+html.cpn-dark div[style*='background-color: white'],
+html.cpn-dark div[style*='background: #ebebeb'] {
+  background: var(--cpn-bg) !important;
+  border-color: var(--cpn-border) !important;
+}
+/* Declaration keywords and console messages use plain green/red, too dark on a dark background. */
+html.cpn-dark span[style*='color:green'],
+html.cpn-dark .success {
+  color: var(--vscode-terminal-ansiGreen, #23d18b) !important;
+}
+html.cpn-dark span[style*='color:red'] {
+  color: var(--vscode-terminal-ansiRed, #f14c4c) !important;
+}
