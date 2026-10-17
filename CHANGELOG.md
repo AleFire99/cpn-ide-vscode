@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+### Improved
+
+- **Compile errors without the backend.** An undeclared colour set on a place (for example `"type": "UNITS"`) is now reported on the `type` value as soon as you edit the `.petri.json`, next to the structural errors, instead of only after the simulator ran. Commented-out `colset` declarations do not count. (#66)
+
 ### Fixed
 
-- **Headless run no longer fails with "Could not parse declaration".** Starting **CPN IDE: Run Simulation (No UI)** while the canvas was still validating could make the backend reject `sim/init`. The proxy now queues `sim/init` behind in-flight net creations, and a headless run keeps its place in the queue between its own validation and `sim/init`. (#75)
+- **Headless run no longer fails with "Could not parse declaration".** Starting **CPN IDE: Run Simulation (No UI)** while the canvas was still validating could make the backend reject `sim/init`. The proxy now queues `sim/init` behind in-flight net creations, and a headless run holds that queue from its validation to its last step, so the canvas cannot restart the shared simulator in the middle of it. (#75)
 
 ## 0.4.0 — 2026-10-17
 
