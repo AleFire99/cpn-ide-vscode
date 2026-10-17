@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Improved
+
+- **Compile errors without the backend.** An undeclared colour set on a place (for example `"type": "UNITS"`) is now reported on the `type` value as soon as you edit the `.petri.json`, next to the structural errors, instead of only after the simulator ran. Commented-out `colset` declarations do not count. (#66)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.
