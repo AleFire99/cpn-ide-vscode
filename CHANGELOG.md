@@ -9,6 +9,7 @@
 
 ### Improved
 
+- **Missing 32-bit glibc is detected on Linux.** Before starting the simulator, the extension checks for the 32-bit loader and, if it is missing, shows the install command for your distribution (Debian/Ubuntu, Fedora, Fedora Atomic, openSUSE, Arch) with **Copy command** and **Use Docker backend** buttons, instead of a generic "the simulator could not start". The status bar turns red with the same hint. (#68)
 - **Compile errors without the backend.** An undeclared colour set on a place (for example `"type": "UNITS"`) is now reported on the `type` value as soon as you edit the `.petri.json`, next to the structural errors, instead of only after the simulator ran. Commented-out `colset` declarations do not count. (#66)
 
 ### Fixed

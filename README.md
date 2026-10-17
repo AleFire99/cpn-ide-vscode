@@ -186,7 +186,12 @@ Simulation and debug settings apply when a CPN IDE tab is (re)opened.
 The **CPN IDE** item in the status bar shows the backend state: ○ not running, spinning while it
 starts, ✓ ready, red when the backend or the simulator failed. Click it to show the log, restart or stop the backend.
 
-- **"The simulator could not start"**: on Linux, install the 32-bit glibc above. Otherwise click **Show Log** (or run
+- **"The CPN simulator needs 32-bit glibc"** (Linux): the extension checks for `/lib/ld-linux.so.2` before starting and
+  shows the install command for your distribution, with **Copy command** and **Use Docker backend** buttons. Debian/Ubuntu:
+  `sudo dpkg --add-architecture i386 && sudo apt update && sudo apt install libc6:i386`; Fedora:
+  `sudo dnf install glibc.i686`; openSUSE: `sudo zypper install glibc-32bit`; Arch: `sudo pacman -S lib32-glibc`
+  (needs multilib); Fedora Silverblue/Kinoite: `rpm-ostree install glibc.i686`, then reboot.
+- **"The simulator could not start"**: on Linux, check the 32-bit glibc above. Otherwise click **Show Log** (or run
   **CPN IDE: Show Backend Log**) to see why.
 - **A simulator is already running on port 20001**: the CPN simulator always uses this port, so only one can run per
   machine. A second VS Code window shares the first one's simulator. If a crashed window left one behind, the extension

@@ -16,4 +16,22 @@ sudo apt install libc6:i386
 sudo dnf install glibc.i686
 ```
 
-Without it the canvas opens, but validation fails with *"the simulator could not start"*.
+**openSUSE**
+
+```sh
+sudo zypper install glibc-32bit
+```
+
+**Arch** (needs the multilib repository)
+
+```sh
+sudo pacman -S lib32-glibc
+```
+
+**Fedora Silverblue / Kinoite** (reboot afterwards)
+
+```sh
+rpm-ostree install glibc.i686
+```
+
+If it is missing, the extension shows the right command for your distribution with a **Copy command** button. Without it the canvas opens, but validation fails with *"the simulator could not start"*.
