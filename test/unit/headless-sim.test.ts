@@ -35,8 +35,11 @@ describe('runHeadless', () => {
       'sim/step/multistep',
       'sim/step/multistep',
       'sim/step/multistep',
+      '',
     ]);
     expect(calls[0].headers?.['X-SessionId']).toBe('s1');
+    // The proxy lock is held from init to the last step, then released.
+    expect(calls.map((c) => c.headers?.['X-CPN-Lock'])).toEqual(['hold', 'hold', 'hold', 'hold', 'hold', 'release']);
     expect(JSON.parse(calls[0].body!)).toEqual({ xml: '<x/>', complex_verify: true, need_sim_restart: true });
     expect(calls[2].method).toBe('GET');
   });
@@ -51,7 +54,8 @@ describe('runHeadless', () => {
     const { f, calls } = fakeFetch({ issues: { p1: ['bad'] }, enabledSteps: 3 });
     const r = await runHeadless({ ...base, fetch: f, maxSteps: 5 });
     expect(r).toEqual({ ok: false, issues: { p1: ['bad'] } });
-    expect(calls).toHaveLength(1);
+    expect(calls).toHaveLength(2); // init + the lock release, no sim/init
+    expect(calls[1].headers?.['X-CPN-Lock']).toBe('release');
     expect(formatResult(r).join('\n')).toContain('p1');
   });
 
