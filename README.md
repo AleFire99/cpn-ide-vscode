@@ -36,7 +36,9 @@ downloaded on first use if you don't already have one.
 4. The first time, the extension starts its local backend (and downloads Java if needed). This takes a few seconds; the
    project console at the bottom of the canvas reports **"Model is correct"** once the model has been validated.
 
-To start from scratch, run **CPN IDE: New Net** from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+To start from scratch, run **CPN IDE: New Net** from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`), or
+right-click a folder in the Explorer. It asks for a name, writes `NAME.petri.json` and `NAME.sml` with a small starter
+net, and opens it in the canvas.
 
 ## Simulating a model
 
@@ -60,8 +62,17 @@ Multi-step runs wait 100 ms between steps by default. Lower `cpnIde.simulation.s
 `cpnIde.simulation.animate`, to make them faster.
 
 For a quick check without the UI, right-click a `.cpn` or `.petri.json` file and choose **CPN IDE: Run Simulation (No
-UI)**. Enter the number of steps; the step count, model time and final marking are printed in the **CPN IDE** output
-channel.
+UI)**. Enter the number of steps. The **CPN IDE: Simulation** output channel shows how many steps ran, the final
+marking of each place (as `Page/Place`) and any transitions still enabled:
+
+```
+Simulated 100 step(s) in 1301 ms
+Final marking:
+  MutualExclusion/Idle      1`1++ 1`2
+  MutualExclusion/Lock      1`()
+  MutualExclusion/Critical  empty
+Still enabled: MutualExclusion/Enter
+```
 
 ## Text models
 
@@ -131,7 +142,8 @@ open in CPN Tools or CPN IDE.
 |---|---|---|
 | CPN IDE: Open in CPN IDE | ▶ in the editor title, Explorer menu | Open a `.cpn` / `.petri.json` in the CPN IDE canvas |
 | CPN IDE: Reopen as XML Text | editor title | Show the file as text again |
-| CPN IDE: New Net / CPN IDE: Open | Command Palette | Open CPN IDE in a panel with a new net |
+| CPN IDE: New Net | Command Palette, Explorer folder menu | Create `NAME.petri.json` + `NAME.sml` with a starter net and open it |
+| CPN IDE: Open Blank Panel | Command Palette | Open CPN IDE in a panel that is not tied to a file |
 | CPN IDE: Convert to Text Model | `.cpn` editor title, Explorer menu | Write `.petri.json` + `.sml` from a `.cpn` |
 | CPN IDE: Export .cpn | `.petri.json` editor title, Explorer menu | Write a `.cpn` from a text model |
 | CPN IDE: Run Simulation (No UI) | Explorer menu | Simulate N steps and print the final marking |

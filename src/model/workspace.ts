@@ -93,3 +93,42 @@ export function parseSpecText(text: string): PetriSpec | undefined {
     return undefined;
   }
 }
+
+/** Validate a model name typed by the user; returns an error message, or undefined when it is usable. */
+export function validateModelName(name: string): string | undefined {
+  const n = stripSpecSuffix(name.trim());
+  if (!n) return 'Enter a name';
+  if (!/^[\w.-]+$/.test(n)) return 'Use letters, digits, ".", "-" or "_" only';
+  return undefined;
+}
+
+/** `net`, `net.petri.json` and `net.json` all name the model `net`. */
+export function stripSpecSuffix(name: string): string {
+  return isSpecFile(name) ? name.slice(0, -SPEC_SUFFIX.length) : name.replace(/\.json$/i, '');
+}
+
+/** Starter text model for "New Net": one place-transition-place page and a declarations file. */
+export function starterModel(base: string): { json: string; sml: string; jsonName: string; smlName: string } {
+  const smlName = `${base}.sml`;
+  const spec: PetriSpec = {
+    version: 1,
+    pages: [
+      {
+        name: 'Main',
+        places: [
+          { name: 'Start', type: 'UNIT', init: '1`()', pos: [-200, 0] },
+          { name: 'End', type: 'UNIT', pos: [200, 0] },
+        ],
+        transitions: [{ name: 'Go', pos: [0, 0] }],
+        arcs: [
+          { from: 'Start', to: 'Go', inscription: '()' },
+          { from: 'Go', to: 'End', inscription: '()' },
+        ],
+      },
+    ],
+  };
+  const sml =
+    `(* Declarations for ${base}.petri.json: colour sets, variables and functions.\n` +
+    '   The standard ones (UNIT, BOOL, INT, STRING, ...) are added automatically. *)\n';
+  return { json: serializeSpec(spec, smlName), sml, jsonName: `${base}${SPEC_SUFFIX}`, smlName };
+}

@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 import { convertToText } from './editor/convertToText';
 import { CpnEditorProvider, VIEW_TYPE } from './editor/cpnEditorProvider';
 import { exportCpn } from './editor/exportCpn';
+import { newNet } from './editor/newNet';
 import { PetriEditorProvider } from './editor/petriEditorProvider';
 import { PETRI_VIEW_TYPE } from './editor/petriModel';
 import { PetriSync } from './editor/petriSync';
-import { runSimulation } from './editor/runSimulation';
+import { disposeSimulationOutput, runSimulation } from './editor/runSimulation';
 import { isSpecFile } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { createStatusBar } from './runtime/statusBar';
@@ -13,7 +14,14 @@ import { openStandalonePanel, uiState } from './webview/panel';
 
 export function activate(ctx: vscode.ExtensionContext): void {
   const backend = BackendManager.init(ctx);
-  ctx.subscriptions.push(backend, PetriSync.init(), CpnEditorProvider.register(ctx), PetriEditorProvider.register(ctx), createStatusBar(backend));
+  ctx.subscriptions.push(
+    backend,
+    PetriSync.init(),
+    CpnEditorProvider.register(ctx),
+    PetriEditorProvider.register(ctx),
+    { dispose: disposeSimulationOutput },
+    createStatusBar(backend),
+  );
 
   const openUi = async () => {
     try {
@@ -38,7 +46,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
 
   ctx.subscriptions.push(
     vscode.commands.registerCommand('cpnIde.open', openUi),
-    vscode.commands.registerCommand('cpnIde.newNet', openUi),
+    vscode.commands.registerCommand('cpnIde.newNet', newNet),
     vscode.commands.registerCommand('cpnIde.openInCpnIde', openInCpnIde),
     vscode.commands.registerCommand('cpnIde.openAsText', openAsText),
     vscode.commands.registerCommand('cpnIde.convertToText', convertToText),

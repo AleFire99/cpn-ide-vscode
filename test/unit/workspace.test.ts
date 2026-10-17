@@ -11,6 +11,9 @@ import {
   serializeSpec,
   smlRelativePath,
   specBaseName,
+  starterModel,
+  stripSpecSuffix,
+  validateModelName,
 } from '../../src/model/workspace';
 import { errorPageHtml } from '../../src/webview/host-core';
 
@@ -91,5 +94,29 @@ describe('errorPageHtml', () => {
     const h = errorPageHtml('Cannot open <x>', ['a < b & "c"']);
     expect(h).toContain('Cannot open &lt;x&gt;');
     expect(h).toContain('a &lt; b &amp; &quot;c&quot;');
+  });
+});
+
+describe('new net', () => {
+  it('validates names and strips the suffix', () => {
+    expect(validateModelName('my-net_1.v2')).toBeUndefined();
+    expect(validateModelName('net.petri.json')).toBeUndefined();
+    expect(validateModelName('  ')).toBe('Enter a name');
+    expect(validateModelName('.petri.json')).toBe('Enter a name');
+    expect(validateModelName('a/b')).toMatch(/letters/);
+    expect(validateModelName('my net')).toMatch(/letters/);
+    expect(stripSpecSuffix('net.PETRI.JSON')).toBe('net');
+    expect(stripSpecSuffix('net.json')).toBe('net');
+    expect(stripSpecSuffix('net')).toBe('net');
+  });
+
+  it('writes a starter model that compiles', () => {
+    const m = starterModel('demo');
+    expect(m.jsonName).toBe('demo.petri.json');
+    expect(m.smlName).toBe('demo.sml');
+    expect(parseSpecText(m.json)?.declarations).toBe('demo.sml');
+    const r = compileSpecText(m.json, m.sml);
+    expect(r.xml).toContain('Start');
+    expect(r.xml).toContain('Go');
   });
 });

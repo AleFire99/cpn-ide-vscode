@@ -51,7 +51,7 @@
     "commands": [
       {
         "command": "cpnIde.open",
-        "title": "CPN IDE: Open"
+        "title": "CPN IDE: Open Blank Panel"
       },
       {
         "command": "cpnIde.runSimulation",
@@ -184,6 +184,11 @@
         }
       ],
       "explorer/context": [
+        {
+          "command": "cpnIde.newNet",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@9"
+        },
         {
           "command": "cpnIde.openInCpnIde",
           "when": "resourceExtname =~ /^\\.cpn$/i || resourceFilename =~ /\\.petri\\.json$/i",
