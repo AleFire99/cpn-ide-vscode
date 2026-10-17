@@ -156,6 +156,16 @@
           "default": true,
           "markdownDescription": "Animate token movement during simulation in the CPN IDE UI. Turn off for faster simulation. Applies when an editor is (re)opened."
         },
+        "cpnIde.theme": {
+          "type": "string",
+          "enum": ["auto", "light"],
+          "enumDescriptions": [
+            "Follow the VS Code colour theme: dark and high-contrast themes get a dark canvas, panels and toolbar.",
+            "Always use the CPN IDE's own light look, even in a dark VS Code theme."
+          ],
+          "default": "auto",
+          "markdownDescription": "Colour theme of the CPN IDE UI. Applies when an editor is (re)opened."
+        },
         "cpnIde.debug": {
           "type": "boolean",
           "default": false,

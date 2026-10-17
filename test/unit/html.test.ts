@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decodeBytes, encodeText, fileName, PathAllowlist, toVsCodeFilters } from '../../src/webview/host-core';
-import { buildCsp, buildWebviewHtml, safeJson } from '../../src/webview/html';
+import { buildCsp, buildWebviewHtml, darkThemeScript, isDarkBodyClass, normalizeTheme, safeJson, useDarkTheme } from '../../src/webview/html';
 
 const INDEX = `<!doctype html>
 <html><head>
@@ -118,5 +118,81 @@ describe('PathAllowlist', () => {
     expect(() => a.assert('/etc/passwd')).toThrow(/Access denied/);
     a.add('/b/other.cpn');
     expect(() => a.assert('/b/other.cpn')).not.toThrow();
+  });
+});
+
+describe('dark theme', () => {
+  const darkOpts = { ...opts, darkThemeUri: 'https://wv.test/media/dark-theme.css' };
+
+  it('normalizes the setting and defaults to auto', () => {
+    expect(normalizeTheme('light')).toBe('light');
+    expect(normalizeTheme('auto')).toBe('auto');
+    expect(normalizeTheme(undefined)).toBe('auto');
+    expect(normalizeTheme('dark')).toBe('auto');
+    expect(useDarkTheme(undefined)).toBe(true);
+    expect(useDarkTheme('light')).toBe(false);
+  });
+
+  it('recognises dark and high-contrast body classes, but not light ones', () => {
+    expect(isDarkBodyClass('vscode-dark')).toBe(true);
+    expect(isDarkBodyClass('vscode-body vscode-dark vscode-reduce-motion')).toBe(true);
+    expect(isDarkBodyClass('vscode-high-contrast')).toBe(true);
+    expect(isDarkBodyClass('vscode-light')).toBe(false);
+    expect(isDarkBodyClass('vscode-high-contrast vscode-high-contrast-light')).toBe(false);
+    expect(isDarkBodyClass('')).toBe(false);
+  });
+
+  it('injects the stylesheet last in <head> and the watcher script with a nonce when auto', () => {
+    const html = buildWebviewHtml({ ...darkOpts, config: { ...opts.config, theme: 'auto' } });
+    expect(html).toContain('<link rel="stylesheet" href="https://wv.test/media/dark-theme.css"></head>');
+    expect(html).toContain('<script nonce="NONCE123">(function(){');
+    expect(html).toContain('cpn-dark');
+    expect(html.indexOf('dark-theme.css')).toBeGreaterThan(html.indexOf('styles.abc.css'));
+    expect(buildWebviewHtml(darkOpts)).toContain('dark-theme.css');
+  });
+
+  it('injects nothing when the theme is light or no stylesheet URI is given', () => {
+    const light = buildWebviewHtml({ ...darkOpts, config: { ...opts.config, theme: 'light' } });
+    expect(light).not.toContain('dark-theme.css');
+    expect(light).not.toContain('cpn-dark');
+    expect(buildWebviewHtml(opts)).not.toContain('cpn-dark');
+  });
+
+  describe('watcher script', () => {
+    function run(bodyClasses: string[]) {
+      const rootClasses = new Set<string>();
+      const body = { classList: { contains: (c: string) => bodyClasses.includes(c) } };
+      const observers: Array<() => void> = [];
+      const doc = {
+        documentElement: {
+          classList: { toggle: (c: string, on: boolean) => void (on ? rootClasses.add(c) : rootClasses.delete(c)) },
+        },
+        body,
+        addEventListener: () => undefined,
+      };
+      class FakeObserver {
+        constructor(cb: () => void) {
+          observers.push(cb);
+        }
+        observe() {}
+      }
+      new Function('document', 'MutationObserver', darkThemeScript())(doc, FakeObserver);
+      return { rootClasses, bodyClasses, observers };
+    }
+
+    it('marks <html> dark for dark themes and follows later class changes', () => {
+      const r = run(['vscode-dark']);
+      expect(r.rootClasses.has('cpn-dark')).toBe(true);
+      expect(r.observers).toHaveLength(1);
+      r.bodyClasses.splice(0, 1, 'vscode-light');
+      r.observers[0]();
+      expect(r.rootClasses.has('cpn-dark')).toBe(false);
+    });
+
+    it('stays light for light and high-contrast-light themes', () => {
+      expect(run(['vscode-light']).rootClasses.has('cpn-dark')).toBe(false);
+      expect(run(['vscode-high-contrast', 'vscode-high-contrast-light']).rootClasses.has('cpn-dark')).toBe(false);
+      expect(run(['vscode-high-contrast']).rootClasses.has('cpn-dark')).toBe(true);
+    });
   });
 });
