@@ -1,0 +1,90 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "CPN ML",
+  "scopeName": "source.cpnml",
+  "patterns": [
+    { "include": "#block-marker" },
+    { "include": "#comment" },
+    { "include": "#colset-decl" },
+    { "include": "#string" },
+    { "include": "#char" },
+    { "include": "#number" },
+    { "include": "#keyword" },
+    { "include": "#standard-colset" },
+    { "include": "#operator" }
+  ],
+  "repository": {
+    "block-marker": {
+      "name": "entity.name.section.cpnml",
+      "match": "\\(\\*!.*?\\*\\)"
+    },
+    "comment": {
+      "name": "comment.block.cpnml",
+      "begin": "\\(\\*",
+      "end": "\\*\\)",
+      "beginCaptures": { "0": { "name": "punctuation.definition.comment.begin.cpnml" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.comment.end.cpnml" } },
+      "patterns": [{ "include": "#comment" }]
+    },
+    "colset-decl": {
+      "match": "\\b(colset)\\s+([A-Za-z][A-Za-z0-9_']*)",
+      "captures": {
+        "1": { "name": "keyword.other.colset.cpnml" },
+        "2": { "name": "entity.name.type.cpnml" }
+      }
+    },
+    "string": {
+      "name": "string.quoted.double.cpnml",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.cpnml",
+          "match": "\\\\(?:[abtnvfr\\\\\"]|\\^[@-_]|[0-9]{3}|u[0-9a-fA-F]{4}|\\s+\\\\)"
+        }
+      ]
+    },
+    "char": {
+      "name": "string.quoted.single.char.cpnml",
+      "match": "#\"(?:[^\"\\\\]|\\\\.)\""
+    },
+    "number": {
+      "patterns": [
+        { "name": "constant.numeric.hex.cpnml", "match": "(?<![\\w'])~?0x[0-9a-fA-F]+\\b" },
+        {
+          "name": "constant.numeric.float.cpnml",
+          "match": "(?<![\\w'])~?[0-9]+(?:\\.[0-9]+(?:[eE]~?[0-9]+)?|[eE]~?[0-9]+)"
+        },
+        { "name": "constant.numeric.integer.cpnml", "match": "(?<![\\w'])~?[0-9]+\\b" }
+      ]
+    },
+    "keyword": {
+      "patterns": [
+        {
+          "name": "keyword.control.cpnml",
+          "match": "\\b(if|then|else|case|of|let|in|end|fn|handle|raise|while|do|andalso|orelse)\\b"
+        },
+        {
+          "name": "keyword.other.cpnml",
+          "match": "\\b(fun|val|var|colset|globref|and|with|product|record|list|timed|union|subset|index|by|datatype|type|local|open|structure|struct|sig|signature|functor|rec|op|nonfix|infix|infixr|abstype|exception|where|withtype|ref|declare|mod|div|not)\\b"
+        },
+        {
+          "name": "constant.language.cpnml",
+          "match": "\\b(true|false|nil|NONE|SOME|empty|all)\\b"
+        }
+      ]
+    },
+    "standard-colset": {
+      "name": "support.type.cpnml",
+      "match": "\\b(UNIT|BOOL|INT|INTINF|TIME|REAL|STRING|CHAR|LIST|int|bool|real|string|char|unit|time|intinf)\\b"
+    },
+    "operator": {
+      "patterns": [
+        { "name": "keyword.operator.multiset.cpnml", "match": "`|\\+\\+|--|@" },
+        { "name": "keyword.operator.arrow.cpnml", "match": "=>|->" },
+        { "name": "keyword.operator.comparison.cpnml", "match": "<>|<=|>=|=|<|>" },
+        { "name": "keyword.operator.arithmetic.cpnml", "match": "[-+*/^]" }
+      ]
+    }
+  }
+}

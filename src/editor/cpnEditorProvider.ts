@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ModelError, formatIssue } from '../model/types';
 import { BackendManager } from '../runtime/backend';
 import { canMountScheme, placeholderHtml } from './cpn-default-core';
+import { offerDockerBackend } from '../runtime/docker';
 import { errorPageHtml, fileName } from '../webview/host-core';
 import { attachBridge, registerReloader, renderHtml, uiState, uriToPath, webviewOptions } from '../webview/panel';
 
@@ -47,6 +48,7 @@ export async function mountEditor(
   }
   let baseUrl: string;
   try {
+    await offerDockerBackend();
     baseUrl = await BackendManager.get().ensureStarted();
   } catch {
     panel.webview.html =

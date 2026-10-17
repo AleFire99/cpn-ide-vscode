@@ -21,30 +21,19 @@ export async function pickFreePort(): Promise<number> {
   });
 }
 
-const LINUX_LOADER = '/lib/ld-linux.so.2';
-
 /** Returns an error message if the local backend cannot run on this platform, else undefined. */
-export function preflightError(platform: string, loaderExists: boolean): string | undefined {
+export function preflightError(platform: string): string | undefined {
   if (platform === 'darwin') {
     return (
       'The bundled CPN simulator is a 32-bit Linux/Windows binary and does not run on macOS. ' +
       'Run the backend in Docker (ghcr.io/alefire99/cpn-ide-backend) and set "cpnIde.backendUrl" to its URL, e.g. http://localhost:8080.'
     );
   }
-  if (platform === 'linux' && !loaderExists) {
-    return (
-      'The CPN simulator needs 32-bit glibc (/lib/ld-linux.so.2), which is missing. Install it:\n' +
-      '  Debian/Ubuntu: sudo dpkg --add-architecture i386 && sudo apt update && sudo apt install libc6:i386\n' +
-      '  Fedora: sudo dnf install glibc.i686\n' +
-      '  Arch: sudo pacman -S lib32-glibc\n' +
-      'Alternatively set "cpnIde.backendUrl" to a Docker backend (ghcr.io/alefire99/cpn-ide-backend).'
-    );
-  }
   return undefined;
 }
 
 export function preflight(platform: string): string | undefined {
-  return preflightError(platform, platform !== 'linux' || fs.existsSync(LINUX_LOADER));
+  return preflightError(platform);
 }
 
 /** Resolve once any HTTP response arrives from url; reject on timeout or if isAlive() turns false. */
