@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Marketplace listing: rewritten README with screenshots, a getting-started guide, simulation and text-model walkthroughs, command and settings tables, and troubleshooting; clearer extension description.
+
 ## 0.3.0 — 2026-10-17
 
 ### Features
