@@ -88,6 +88,14 @@
         "title": "CPN IDE: Restart Backend"
       },
       {
+        "command": "cpnIde.startDockerBackend",
+        "title": "CPN IDE: Start Docker Backend"
+      },
+      {
+        "command": "cpnIde.stopDockerBackend",
+        "title": "CPN IDE: Stop Docker Backend"
+      },
+      {
         "command": "cpnIde.statusMenu",
         "title": "CPN IDE: Backend Status"
       },
@@ -215,7 +223,7 @@
           {
             "id": "macos",
             "title": "macOS: use the Docker backend",
-            "description": "The simulator cannot run on macOS. Start the backend in Docker and point the extension at it.\n[Set the Backend URL](command:workbench.action.openSettings?%5B%22cpnIde.backendUrl%22%5D)",
+            "description": "The simulator cannot run on macOS. Start the backend in Docker (Docker must be installed and running); the extension points itself at it.\n[Start Docker Backend](command:cpnIde.startDockerBackend)\nOr set the URL of a backend you started yourself:\n[Set the Backend URL](command:workbench.action.openSettings?%5B%22cpnIde.backendUrl%22%5D)",
             "media": {
               "markdown": "media/walkthrough/macos.md"
             },

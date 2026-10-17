@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **CPN IDE: Start Docker Backend.** One command starts (or reuses) the `cpn-ide-backend` Docker container on a free local port, waits until it answers, sets `cpnIde.backendUrl` (workspace or user) and reconnects open tabs. On macOS it is offered the first time you open a model, and the walkthrough step runs it. It can stop the container when VS Code exits, and **CPN IDE: Stop Docker Backend** stops it any time. (#69)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.

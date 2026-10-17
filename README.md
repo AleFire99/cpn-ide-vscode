@@ -154,6 +154,8 @@ open in CPN Tools or CPN IDE.
 | CPN IDE: Run Simulation (No UI) | Explorer menu | Simulate N steps and print the final marking |
 | CPN IDE: Show Backend Log | Command Palette | Open the backend and simulator log |
 | CPN IDE: Stop Backend | Command Palette | Stop the backend and simulator |
+| CPN IDE: Start Docker Backend | Command Palette, macOS walkthrough | Run the Docker backend as container `cpn-ide-backend`, set `cpnIde.backendUrl` and reconnect open tabs |
+| CPN IDE: Stop Docker Backend | Command Palette | Stop the `cpn-ide-backend` container |
 | CPN IDE: Restart Backend | Command Palette, status bar | Restart the backend and reload open CPN IDE tabs |
 
 ## Settings
@@ -175,7 +177,7 @@ Simulation and debug settings apply when a CPN IDE tab is (re)opened.
 |---|---|---|
 | Windows x64 | yes | |
 | Linux x64 | yes | needs 32-bit glibc: `sudo apt install libc6:i386` (Debian/Ubuntu) or `sudo dnf install glibc.i686` (Fedora) |
-| macOS | no | the CPN simulator is a 32-bit binary; run the [Docker backend](#docker-backend) and set `cpnIde.backendUrl` |
+| macOS | no | the CPN simulator is a 32-bit binary; run **CPN IDE: Start Docker Backend** (see [Docker backend](#docker-backend)) |
 
 ## Troubleshooting
 
@@ -214,7 +216,9 @@ time, because two at once can hang the upstream backend.
 
 ## Docker backend
 
-On macOS, or to keep the simulator off your machine:
+On macOS, or to keep the simulator off your machine, run **CPN IDE: Start Docker Backend**. It starts the image as the container `cpn-ide-backend` on a free local port, sets `cpnIde.backendUrl` (workspace or user) and reconnects open tabs. It offers once to stop the container when VS Code exits, and on macOS it is also offered the first time you open a model. Docker must be installed and running. **CPN IDE: Stop Docker Backend** stops the container.
+
+Manually:
 
 ```sh
 docker run -p 8080:8080 ghcr.io/alefire99/cpn-ide-backend:latest
