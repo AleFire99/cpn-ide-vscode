@@ -19,6 +19,8 @@ downloaded on first use if you don't already have one.
   markings shown on the diagram.
 - **Text models**: describe places, transitions and arcs in `NAME.petri.json` and the CPN ML declarations in
   `NAME.sml`. Opening the JSON shows the net graphically; edits in the canvas are saved back to the JSON.
+- **Completion, hover and go-to-definition** in `.petri.json`: arc endpoints, colour sets, subpage names, ports and
+  fusion names are suggested; hovering a place `type` shows its `colset` declaration and F12 jumps to it in the `.sml`.
 - **CPN ML highlighting**: `.sml` declaration files get syntax highlighting, bracket matching and comment toggling.
 - **Live diagnostics**: unknown nodes, bad references and type errors show up in the Problems panel as you edit.
 - **Convert both ways**: turn an existing `.cpn` into a text model, or export a text model to `.cpn`.

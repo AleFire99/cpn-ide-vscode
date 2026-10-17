@@ -4,6 +4,7 @@ import { CpnEditorProvider, VIEW_TYPE } from './editor/cpnEditorProvider';
 import { exportCpn } from './editor/exportCpn';
 import { newNet } from './editor/newNet';
 import { openExample } from './editor/openExample';
+import { registerPetriLanguage } from './editor/petriLanguage';
 import { PetriEditorProvider } from './editor/petriEditorProvider';
 import { PETRI_VIEW_TYPE } from './editor/petriModel';
 import { PetriSync } from './editor/petriSync';
@@ -20,6 +21,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
   ctx.subscriptions.push(
     backend,
     PetriSync.init(),
+    registerPetriLanguage(),
     CpnEditorProvider.register(ctx),
     PetriEditorProvider.register(ctx),
     { dispose: disposeSimulationOutput },
