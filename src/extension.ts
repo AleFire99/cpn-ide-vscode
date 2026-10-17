@@ -15,6 +15,7 @@ import { isSpecFile } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { initDocker, startDockerBackend, stopDockerBackend, stopDockerOnExit } from './runtime/docker';
 import { createStatusBar } from './runtime/statusBar';
+import { registerSidebar } from './views/sidebar';
 import { openStandalonePanel, uiState } from './webview/panel';
 
 export function activate(ctx: vscode.ExtensionContext): void {
@@ -29,6 +30,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     { dispose: disposeSimulationOutput },
     SimulateLens.register(),
     createStatusBar(backend),
+    registerSidebar(backend),
     registerDefaultEditorPrompt(ctx),
   );
 
@@ -63,6 +65,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('cpnIde.convertToText', convertToText),
     vscode.commands.registerCommand('cpnIde.runSimulation', runSimulation),
     vscode.commands.registerCommand('cpnIde.exportCpn', exportCpn),
+    vscode.commands.registerCommand('cpnIde.startBackend', () => backend.ensureStarted().catch(() => undefined)),
     vscode.commands.registerCommand('cpnIde.stopBackend', () => backend.stop()),
     vscode.commands.registerCommand('cpnIde.restartBackend', () => backend.retry()),
     vscode.commands.registerCommand('cpnIde.startDockerBackend', () => startDockerBackend()),

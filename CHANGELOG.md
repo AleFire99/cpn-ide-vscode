@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **CPN IDE in the Activity Bar.** A new icon opens a sidebar with three views. **Models** lists every `.cpn` and `.petri.json` in the workspace; click one to open it in the canvas, or use the buttons next to it to run a headless simulation, convert a `.cpn` to text or export a text model to `.cpn`. With no models it offers **New Net** and **Open an Example**. **Backend** shows the same state as the status bar item with Start/Restart, Stop, Show Log, Docker and Settings. **Get Started** opens a bundled example in one click and links to the walkthrough and the docs. A new **CPN IDE: Start Backend** command starts the backend without opening a model. (#95)
+
 ## 0.5.0 — 2026-10-17
 
 This release is about writing models as text and working in VS Code's own style. `.sml` files get CPN ML highlighting and snippets, `.petri.json` gets completion, hover, go-to-definition and a one-click Simulate lens, and more compile errors show up without the backend. The canvas follows a dark theme, `.cpn` files can open in the canvas by default, Linux tells you exactly how to install 32-bit glibc, and macOS users can start the Docker backend with one command.

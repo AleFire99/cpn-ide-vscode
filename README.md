@@ -26,6 +26,8 @@ downloaded on first use if you don't already have one.
 - **Convert both ways**: turn an existing `.cpn` into a text model, or export a text model to `.cpn`.
 - **Headless runs**: simulate a model for N steps without the UI and print the final marking.
 - **Hierarchy**: subpages, substitution transitions with port/socket assignments, and fusion places.
+- **CPN IDE sidebar**: an Activity Bar icon lists the models in your workspace, shows the backend state with its
+  controls, and offers the bundled examples.
 
 ## Getting started
 
@@ -42,6 +44,13 @@ net, step by step.
      **CPN IDE: Open in CPN IDE**).
 4. The first time, the extension starts its local backend (and downloads Java if needed). This takes a few seconds; the
    project console at the bottom of the canvas reports **"Model is correct"** once the model has been validated.
+
+The **CPN IDE** icon in the Activity Bar opens a sidebar with three views:
+
+- **Models**: every `.cpn` and `.petri.json` in the workspace. Click one to open it in the canvas; the buttons next to
+  it run a headless simulation and convert (`.cpn` → text) or export (text → `.cpn`).
+- **Backend**: the backend state (as in the status bar) and Start/Restart, Stop, Show Log, Docker and Settings.
+- **Get Started**: the bundled examples, **New Net**, the walkthrough and this documentation.
 
 To start from scratch, run **CPN IDE: New Net** from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`), or
 right-click a folder in the Explorer. It asks for a name, writes `NAME.petri.json` and `NAME.sml` with a small starter
@@ -157,17 +166,18 @@ opens a file as text without prompting. Diff views (for example the Git diff) al
 
 | Command | Where | What it does |
 |---|---|---|
-| CPN IDE: Open Example | Command Palette, walkthrough | Copy a bundled example into `cpn-examples/` and open it |
-| CPN IDE: Open in CPN IDE | ▶ in the editor title, Explorer menu | Open a `.cpn` / `.petri.json` in the CPN IDE canvas |
+| CPN IDE: Open Example | Command Palette, walkthrough, sidebar | Copy a bundled example into `cpn-examples/` and open it |
+| CPN IDE: Open in CPN IDE | ▶ in the editor title, Explorer menu, sidebar | Open a `.cpn` / `.petri.json` in the CPN IDE canvas |
 | CPN IDE: Reopen as XML Text | editor title | Show the file as text again |
-| CPN IDE: New Net | Command Palette, Explorer folder menu | Create `NAME.petri.json` + `NAME.sml` with a starter net and open it |
+| CPN IDE: New Net | Command Palette, Explorer folder menu, sidebar | Create `NAME.petri.json` + `NAME.sml` with a starter net and open it |
 | CPN IDE: Open Blank Panel | Command Palette | Open CPN IDE in a panel that is not tied to a file |
 | CPN IDE: Convert to Text Model | `.cpn` editor title, Explorer menu | Write `.petri.json` + `.sml` from a `.cpn` |
 | CPN IDE: Export .cpn | `.petri.json` editor title, Explorer menu | Write a `.cpn` from a text model |
-| CPN IDE: Run Simulation (No UI) | Explorer menu | Simulate N steps and print the final marking |
+| CPN IDE: Run Simulation (No UI) | Explorer menu, sidebar | Simulate N steps and print the final marking |
 | Simulate 100 steps (CodeLens) | top of a `.petri.json` | Run 100 headless steps and show each place's final marking inline until you edit the file; **Clear results** removes it. Also has **Open in CPN IDE** and **Export .cpn** lenses |
 | CPN IDE: Show Backend Log | Command Palette | Open the backend and simulator log |
-| CPN IDE: Stop Backend | Command Palette | Stop the backend and simulator |
+| CPN IDE: Start Backend | Command Palette, status bar, sidebar | Start the backend without opening a model |
+| CPN IDE: Stop Backend | Command Palette, sidebar | Stop the backend and simulator |
 | CPN IDE: Start Docker Backend | Command Palette, macOS walkthrough | Run the Docker backend as container `cpn-ide-backend`, set `cpnIde.backendUrl` and reconnect open tabs |
 | CPN IDE: Stop Docker Backend | Command Palette | Stop the `cpn-ide-backend` container |
 | CPN IDE: Restart Backend | Command Palette, status bar | Restart the backend and reload open CPN IDE tabs |
