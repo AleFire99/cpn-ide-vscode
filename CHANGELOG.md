@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **CPN IDE: New Net** creates `NAME.petri.json` + `NAME.sml` with a starter net in the workspace (or the Explorer folder it was run on) and opens it in the canvas, instead of an unsaved demo net (#61). The old panel is still there as **CPN IDE: Open Blank Panel**.
 - Marketplace listing: rewritten README with screenshots, a getting-started guide, simulation and text-model walkthroughs, command and settings tables, and troubleshooting; clearer extension description.
 
 ## 0.3.0 — 2026-10-17
