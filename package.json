@@ -45,7 +45,8 @@
     "onCustomEditor:cpnIde.editor",
     "onCustomEditor:cpnIde.petriEditor",
     "workspaceContains:**/*.cpn",
-    "workspaceContains:**/*.petri.json"
+    "workspaceContains:**/*.petri.json",
+    "onStartupFinished"
   ],
   "contributes": {
     "commands": [

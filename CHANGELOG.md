@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Improved
+
+- **Open `.cpn` files in the canvas by default.** The first time a `.cpn` opens as XML text, CPN IDE asks *Always open .cpn files in CPN IDE?* (**Yes**, **Not now**, **Never**). **Yes** sets `"*.cpn": "cpnIde.editor"` in `workbench.editorAssociations` and reopens the file in the canvas. Diff views (for example the Git diff) stay text and no longer start the backend. (#70)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.
