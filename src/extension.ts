@@ -8,11 +8,12 @@ import { PetriSync } from './editor/petriSync';
 import { runSimulation } from './editor/runSimulation';
 import { isSpecFile } from './model/workspace';
 import { BackendManager } from './runtime/backend';
+import { createStatusBar } from './runtime/statusBar';
 import { openStandalonePanel, uiState } from './webview/panel';
 
 export function activate(ctx: vscode.ExtensionContext): void {
   const backend = BackendManager.init(ctx);
-  ctx.subscriptions.push(backend, PetriSync.init(), CpnEditorProvider.register(ctx), PetriEditorProvider.register(ctx));
+  ctx.subscriptions.push(backend, PetriSync.init(), CpnEditorProvider.register(ctx), PetriEditorProvider.register(ctx), createStatusBar(backend));
 
   const openUi = async () => {
     try {
@@ -44,6 +45,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('cpnIde.runSimulation', runSimulation),
     vscode.commands.registerCommand('cpnIde.exportCpn', exportCpn),
     vscode.commands.registerCommand('cpnIde.stopBackend', () => backend.stop()),
+    vscode.commands.registerCommand('cpnIde.restartBackend', () => backend.retry()),
     vscode.commands.registerCommand('cpnIde.showLog', () => backend.showLog()),
     // Test hook: reports whether a webview UI finished booting.
     vscode.commands.registerCommand('cpnIde._lastReady', () => ({ ...uiState })),

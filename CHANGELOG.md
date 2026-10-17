@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Status bar item with the backend state (not running, starting, ready, failed, simulator down); click it to show the log, restart, stop or start the backend. New command **CPN IDE: Restart Backend**. The extension now also activates in workspaces that contain `.cpn` or `.petri.json` files, without starting Java (#64).
 - Marketplace listing: rewritten README with screenshots, a getting-started guide, simulation and text-model walkthroughs, command and settings tables, and troubleshooting; clearer extension description.
 
 ## 0.3.0 — 2026-10-17

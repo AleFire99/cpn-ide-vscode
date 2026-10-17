@@ -137,6 +137,7 @@ open in CPN Tools or CPN IDE.
 | CPN IDE: Run Simulation (No UI) | Explorer menu | Simulate N steps and print the final marking |
 | CPN IDE: Show Backend Log | Command Palette | Open the backend and simulator log |
 | CPN IDE: Stop Backend | Command Palette | Stop the backend and simulator |
+| CPN IDE: Restart Backend | Command Palette, status bar | Restart the backend and reload open CPN IDE tabs |
 
 ## Settings
 
@@ -160,6 +161,9 @@ Simulation and debug settings apply when a CPN IDE tab is (re)opened.
 | macOS | no | the CPN simulator is a 32-bit binary; run the [Docker backend](#docker-backend) and set `cpnIde.backendUrl` |
 
 ## Troubleshooting
+
+The **CPN IDE** item in the status bar shows the backend state: ○ not running, spinning while it
+starts, ✓ ready, red when the backend or the simulator failed. Click it to show the log, restart or stop the backend.
 
 - **"The simulator could not start"**: on Linux, install the 32-bit glibc above. Otherwise click **Show Log** (or run
   **CPN IDE: Show Backend Log**) to see why.
