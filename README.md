@@ -178,6 +178,7 @@ opens a file as text without prompting. Diff views (for example the Git diff) al
 |---|---|---|
 | `cpnIde.simulation.stepDelayMs` | `100` | Delay between steps of a multi-step run, in ms (CPN IDE itself uses 500) |
 | `cpnIde.simulation.animate` | `true` | Animate tokens moving during simulation |
+| `cpnIde.theme` | `auto` | `auto` makes the canvas, panels and toolbar follow a dark or high-contrast VS Code theme; `light` always keeps the UI's own light look. Applies when an editor is (re)opened |
 | `cpnIde.codeLens.enabled` | `true` | Show the Simulate / Open in CPN IDE / Export .cpn CodeLenses at the top of `.petri.json` files |
 | `cpnIde.javaPath` | | Java 17+ executable. Empty: use `JAVA_HOME`, `java` on the PATH, or a downloaded runtime |
 | `cpnIde.backendUrl` | | URL of an external backend, e.g. the Docker image below. Empty: use the bundled one |

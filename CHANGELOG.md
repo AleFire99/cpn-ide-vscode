@@ -4,6 +4,7 @@
 
 ### New
 
+- **Dark canvas.** In a dark or high-contrast VS Code theme the CPN IDE editor no longer shows a bright white rectangle: panels, toolbar, tabs, trees, console, inputs and the diagram follow the theme colours, with black strokes and labels turned light. Token and enabled-transition highlights keep their colours. Set `cpnIde.theme` to `light` to keep the old look. (#71)
 - **Simulate CodeLens on `.petri.json`.** The top of a text model now offers `▶ Simulate 100 steps`, `Open in CPN IDE` and `Export .cpn`. A simulation run shows each place's final marking after its line (`→ 1`1++1`2`, `→ empty`) until you edit the file or click `Clear results`. The lenses can be turned off with `cpnIde.codeLens.enabled`. (#72)
 - **Completion, hover and go-to-definition in `.petri.json`.** Arc `from`/`to`, place `type` and `fusion`, `subpage.page` and `ports` now complete from the model itself (colour sets come from the `.sml` plus the standard ones). Hovering a place `type` shows its `colset` declaration, and Go to Definition jumps to it in the `.sml`. (#65)
 - **CPN IDE: Start Docker Backend.** One command starts (or reuses) the `cpn-ide-backend` Docker container on a free local port, waits until it answers, sets `cpnIde.backendUrl` (workspace or user) and reconnects open tabs. On macOS it is offered the first time you open a model, and the walkthrough step runs it. It can stop the container when VS Code exits, and **CPN IDE: Stop Docker Backend** stops it any time. (#69)
