@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **CPN ML syntax highlighting.** `.sml` declaration files now get their own *CPN ML* language: nested comments, `(*! Block *)` markers, SML and CPN ML keywords (`colset`, `var`, `globref`, `product`, `timed`, ...), strings, numbers, multiset operators and standard colour sets are coloured, with bracket matching and comment toggling. (#63)
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.
