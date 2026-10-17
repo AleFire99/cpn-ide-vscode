@@ -1,0 +1,73 @@
+{
+	"Text model skeleton": {
+		"prefix": "petri",
+		"description": "A whole .petri.json text model with one page, one place, one transition and one arc",
+		"body": [
+			"{",
+			"\t\"version\": 1,",
+			"\t\"declarations\": \"${1:Net}.sml\",",
+			"\t\"pages\": [",
+			"\t\t{",
+			"\t\t\t\"name\": \"${2:Main}\",",
+			"\t\t\t\"places\": [",
+			"\t\t\t\t{ \"name\": \"${3:Start}\", \"type\": \"${4:UNIT}\" }",
+			"\t\t\t],",
+			"\t\t\t\"transitions\": [",
+			"\t\t\t\t{ \"name\": \"${5:Go}\" }",
+			"\t\t\t],",
+			"\t\t\t\"arcs\": [",
+			"\t\t\t\t{ \"from\": \"${3:Start}\", \"to\": \"${5:Go}\", \"inscription\": \"${6:()}\" }",
+			"\t\t\t]",
+			"\t\t}",
+			"\t]",
+			"}"
+		]
+	},
+	"Page": {
+		"prefix": "page",
+		"description": "A page of a text model (name, places, transitions, arcs)",
+		"body": [
+			"{",
+			"\t\"name\": \"${1:Page}\",",
+			"\t\"places\": [],",
+			"\t\"transitions\": [],",
+			"\t\"arcs\": []",
+			"}"
+		]
+	},
+	"Place": {
+		"prefix": "place",
+		"description": "A place with a colour set; add init (e.g. 3`()) or port/fusion as needed",
+		"body": [
+			"{ \"name\": \"${1:Place}\", \"type\": \"${2:UNIT}\", \"pos\": [${3:0}, ${4:0}] }"
+		]
+	},
+	"Transition": {
+		"prefix": "transition",
+		"description": "A transition; add guard, time, priority or code as needed",
+		"body": [
+			"{ \"name\": \"${1:Transition}\", \"pos\": [${2:0}, ${3:0}] }"
+		]
+	},
+	"Arc": {
+		"prefix": "arc",
+		"description": "An arc between a place and a transition; from and to are their names (or keys)",
+		"body": [
+			"{ \"from\": \"${1:Place}\", \"to\": \"${2:Transition}\", \"inscription\": \"${3:()}\" }"
+		]
+	},
+	"Subpage transition": {
+		"prefix": "subpage",
+		"description": "A substitution transition that runs another page; ports maps socket places here to port places on the subpage",
+		"body": [
+			"{",
+			"\t\"name\": \"${1:Sub}\",",
+			"\t\"pos\": [${2:0}, ${3:0}],",
+			"\t\"subpage\": {",
+			"\t\t\"page\": \"${4:SubPage}\",",
+			"\t\t\"ports\": { \"${5:Socket}\": \"${6:Port}\" }",
+			"\t}",
+			"}"
+		]
+	}
+}

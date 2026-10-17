@@ -19,6 +19,7 @@ downloaded on first use if you don't already have one.
   markings shown on the diagram.
 - **Text models**: describe places, transitions and arcs in `NAME.petri.json` and the CPN ML declarations in
   `NAME.sml`. Opening the JSON shows the net graphically; edits in the canvas are saved back to the JSON.
+- **CPN ML highlighting**: `.sml` declaration files get syntax highlighting, bracket matching and comment toggling.
 - **Live diagnostics**: unknown nodes, bad references and type errors show up in the Problems panel as you edit.
 - **Convert both ways**: turn an existing `.cpn` into a text model, or export a text model to `.cpn`.
 - **Headless runs**: simulate a model for N steps without the UI and print the final marking.
@@ -125,6 +126,9 @@ var p: INT;
   [`schema/petri.schema.json`](https://github.com/AleFire99/cpn-ide-vscode/blob/develop/schema/petri.schema.json), and
   VS Code completes and validates `.petri.json` files against it.
 - `(*! Block *)` or `(*! Outer / Inner *)` in the `.sml` starts a named block in the declarations tree.
+- Snippets help you type models: in a `.petri.json`, `petri` inserts a whole model skeleton, and `page`, `place`,
+  `transition`, `arc` and `subpage` insert one element each (Tab moves between the fields). In a `.sml` file (language
+  *CPN ML*), `colset`, `var`, `fun` and `block` insert declarations.
 
 Keep the JSON in one editor and the canvas in another (**CPN IDE: Reopen as XML Text** switches a canvas tab back to
 text). The canvas reloads when either file changes on disk.
@@ -184,7 +188,12 @@ Simulation and debug settings apply when a CPN IDE tab is (re)opened.
 The **CPN IDE** item in the status bar shows the backend state: ○ not running, spinning while it
 starts, ✓ ready, red when the backend or the simulator failed. Click it to show the log, restart or stop the backend.
 
-- **"The simulator could not start"**: on Linux, install the 32-bit glibc above. Otherwise click **Show Log** (or run
+- **"The CPN simulator needs 32-bit glibc"** (Linux): the extension checks for `/lib/ld-linux.so.2` before starting and
+  shows the install command for your distribution, with **Copy command** and **Use Docker backend** buttons. Debian/Ubuntu:
+  `sudo dpkg --add-architecture i386 && sudo apt update && sudo apt install libc6:i386`; Fedora:
+  `sudo dnf install glibc.i686`; openSUSE: `sudo zypper install glibc-32bit`; Arch: `sudo pacman -S lib32-glibc`
+  (needs multilib); Fedora Silverblue/Kinoite: `rpm-ostree install glibc.i686`, then reboot.
+- **"The simulator could not start"**: on Linux, check the 32-bit glibc above. Otherwise click **Show Log** (or run
   **CPN IDE: Show Backend Log**) to see why.
 - **A simulator is already running on port 20001**: the CPN simulator always uses this port, so only one can run per
   machine. A second VS Code window shares the first one's simulator. If a crashed window left one behind, the extension

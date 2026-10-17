@@ -1,7 +1,7 @@
 // Text model (*.petri.json + *.sml) -> CPN Tools XML (format 6), the form the CPN IDE UI and
 // backend load. Graphics are fixed defaults; positions come from the spec or from layoutPage().
 import { layoutPage } from './layout';
-import { parseSml, withStandard, type Colset, type Decl } from './sml';
+import { declaredColsets, parseSml, STANDARD_SML, withStandard, type Colset, type Decl } from './sml';
 import {
   ModelError,
   nodeKey,
@@ -209,6 +209,7 @@ export function compile(spec: PetriSpec, sml: string): CompileResult {
 
   const parsed = parseSml(sml);
   ctx.issues.push(...parsed.issues);
+  const colsets = new Set([...declaredColsets(STANDARD_SML), ...declaredColsets(sml)].map((c) => c.name));
   const declsXml = globbox(withStandard(parsed.decls), ctx);
 
   // Pass 1: ids and node tables per page.
@@ -266,14 +267,20 @@ export function compile(spec: PetriSpec, sml: string): CompileResult {
     const arcs = p.arcs ?? [];
     const edges: [string, string][] = arcs.filter((a) => a && typeof a === 'object').map((a) => [a.from, a.to]);
     const nodes = (['places', 'transitions'] as const).flatMap((kind) =>
-      (p[kind] ?? []).map((n, i) => ({ key: nodeKey(n), pos: checkPos(n?.pos, `${pg.path}/${kind}/${i}/pos`, ctx) ? n?.pos : undefined })),
+      (p[kind] ?? []).flatMap((n, i) =>
+        n && typeof n === 'object' ? [{ key: nodeKey(n), pos: checkPos(n.pos, `${pg.path}/${kind}/${i}/pos`, ctx) ? n.pos : undefined }] : [],
+      ),
     );
     const pos = layoutPage(nodes, edges);
 
     const placeXml = [...pg.places].map(([key, pl]) => {
       const id = pg.ids.get(key)!;
       const path = `${pg.path}/places/${p.places!.indexOf(pl)}`;
-      str(pl.type, 'type', `${path}/type`, ctx, false);
+      if (str(pl.type, 'type', `${path}/type`, ctx, false)) {
+        // A bare colour set name (optionally "timed"); product/list expressions are left to the backend.
+        const name = /^\s*([A-Za-z][A-Za-z0-9_']*)(\s+timed)?\s*$/.exec(pl.type)?.[1];
+        if (name && !colsets.has(name)) fail(`unknown color set "${name}" (declare it with "colset ${name} = ...;" in the .sml file)`, `${path}/type`);
+      }
       str(pl.init, 'init', `${path}/init`, ctx);
       const [x, y] = pos.get(key)!;
       let extra = '';
