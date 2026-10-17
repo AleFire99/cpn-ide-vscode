@@ -26,15 +26,20 @@ Branches:
 
 ## Releases
 
-1. Create `release/X.Y.Z` from `develop` and bump the version there.
+1. Create `release/X.Y.Z` from `develop`, bump the version there, and turn the `## Unreleased` section of
+   `CHANGELOG.md` into `## X.Y.Z — <date>`: a short summary of the release, then `### New`, `### Improved`,
+   `### Fixed` and `### Known issues` as needed, written for users (what changed and how to use it).
 2. Open a PR from `release/X.Y.Z` into `main`.
 3. After merging, tag the merge commit on `main` as `vX.Y.Z`.
 4. Merge `main` back into `develop` so the release commits and version bump are kept.
 
 Pushing the tag triggers the `release` workflow. It fails unless the tag equals `v` plus the `version` in
 `package.json`; otherwise it runs lint and tests, builds the `linux-x64` and `win32-x64` VSIX files, and
-publishes a GitHub Release with generated notes and the VSIX files attached. The `publish` job then uploads
-the same VSIX files to each store that is switched on:
+publishes a GitHub Release with the VSIX files attached. The release notes are the version's `CHANGELOG.md`
+section (`node scripts/changelog-section.mjs X.Y.Z` prints it), followed by GitHub's list of merged PRs. To
+rewrite the notes of releases that already exist (after editing their CHANGELOG sections), run the `release-notes`
+workflow from the Actions tab with the tags to update. The
+`publish` job then uploads the same VSIX files to each store that is switched on:
 
 | Store | Repository variable | Secret |
 |---|---|---|
