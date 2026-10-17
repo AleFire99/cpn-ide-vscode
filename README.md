@@ -165,6 +165,7 @@ opens a file as text without prompting. Diff views (for example the Git diff) al
 | CPN IDE: Convert to Text Model | `.cpn` editor title, Explorer menu | Write `.petri.json` + `.sml` from a `.cpn` |
 | CPN IDE: Export .cpn | `.petri.json` editor title, Explorer menu | Write a `.cpn` from a text model |
 | CPN IDE: Run Simulation (No UI) | Explorer menu | Simulate N steps and print the final marking |
+| Simulate 100 steps (CodeLens) | top of a `.petri.json` | Run 100 headless steps and show each place's final marking inline until you edit the file; **Clear results** removes it. Also has **Open in CPN IDE** and **Export .cpn** lenses |
 | CPN IDE: Show Backend Log | Command Palette | Open the backend and simulator log |
 | CPN IDE: Stop Backend | Command Palette | Stop the backend and simulator |
 | CPN IDE: Start Docker Backend | Command Palette, macOS walkthrough | Run the Docker backend as container `cpn-ide-backend`, set `cpnIde.backendUrl` and reconnect open tabs |
@@ -177,6 +178,7 @@ opens a file as text without prompting. Diff views (for example the Git diff) al
 |---|---|---|
 | `cpnIde.simulation.stepDelayMs` | `100` | Delay between steps of a multi-step run, in ms (CPN IDE itself uses 500) |
 | `cpnIde.simulation.animate` | `true` | Animate tokens moving during simulation |
+| `cpnIde.codeLens.enabled` | `true` | Show the Simulate / Open in CPN IDE / Export .cpn CodeLenses at the top of `.petri.json` files |
 | `cpnIde.javaPath` | | Java 17+ executable. Empty: use `JAVA_HOME`, `java` on the PATH, or a downloaded runtime |
 | `cpnIde.backendUrl` | | URL of an external backend, e.g. the Docker image below. Empty: use the bundled one |
 | `cpnIde.port` | `0` | Port of the local backend (`0` = any free port) |

@@ -78,6 +78,14 @@
         "title": "CPN IDE: Run Simulation (No UI)"
       },
       {
+        "command": "cpnIde.simulateLens",
+        "title": "CPN IDE: Simulate 100 Steps"
+      },
+      {
+        "command": "cpnIde.clearSimulationResults",
+        "title": "CPN IDE: Clear Simulation Results"
+      },
+      {
         "command": "cpnIde.newNet",
         "title": "CPN IDE: New Net"
       },
@@ -131,6 +139,11 @@
     "configuration": {
       "title": "CPN IDE",
       "properties": {
+        "cpnIde.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the **Simulate**, **Open in CPN IDE** and **Export .cpn** CodeLenses at the top of `*.petri.json` files."
+        },
         "cpnIde.backendUrl": {
           "type": "string",
           "default": "",
@@ -321,6 +334,14 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "cpnIde.simulateLens",
+          "when": "false"
+        },
+        {
+          "command": "cpnIde.clearSimulationResults",
+          "when": "false"
+        },
         {
           "command": "cpnIde.openAsText",
           "when": "activeCustomEditorId == cpnIde.editor || activeCustomEditorId == cpnIde.petriEditor"

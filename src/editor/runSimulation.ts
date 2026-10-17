@@ -4,7 +4,7 @@ import { nodeNames } from '../model/decompile';
 import { formatIssue } from '../model/types';
 import { isSpecFile } from '../model/workspace';
 import { BackendManager } from '../runtime/backend';
-import { formatResult, runHeadless } from '../runtime/headless-sim';
+import { formatResult, runHeadless, type SimResult } from '../runtime/headless-sim';
 import { decodeBytes } from '../webview/host-core';
 import { loadModel } from './petriModel';
 
@@ -34,7 +34,6 @@ export const disposeSimulationOutput = (): void => {
 
 /** "CPN IDE: Run Simulation (No UI)": simulate a .cpn / .petri.json on the backend and print the final marking to its output channel. */
 export async function runSimulation(uri?: vscode.Uri): Promise<void> {
-  const backend = BackendManager.get();
   const target = uri ?? openModelUri();
   if (!target || !isModel(target)) {
     void vscode.window.showErrorMessage('CPN IDE: open or select a .cpn or .petri.json file to simulate.');
@@ -46,6 +45,18 @@ export async function runSimulation(uri?: vscode.Uri): Promise<void> {
     validateInput: (v) => (/^[1-9]\d*$/.test(v.trim()) ? undefined : 'Enter a positive integer'),
   });
   if (steps === undefined) return;
+  await simulateModel(target, Number(steps));
+}
+
+export interface SimulationRun {
+  result: SimResult;
+  /** Simulator id -> `Page/Place` (or transition). */
+  names: Map<string, string>;
+}
+
+/** Simulate `target` for up to `steps` steps, report to the output channel, and return the structured result (undefined on failure). */
+export async function simulateModel(target: vscode.Uri, steps: number): Promise<SimulationRun | undefined> {
+  const backend = BackendManager.get();
   const out = simulationOutput();
   out.show(true);
   try {
@@ -54,23 +65,26 @@ export async function runSimulation(uri?: vscode.Uri): Promise<void> {
       const model = await loadModel(target);
       if (!model.compiled) {
         for (const i of model.issues ?? []) out.appendLine(`[sim] ${formatIssue(i)}`);
-        return;
+        return undefined;
       }
       xml = model.compiled.xml;
     } else {
       xml = decodeBytes(await vscode.workspace.fs.readFile(target)).text;
     }
     const base = await backend.ensureStarted();
-    out.appendLine(`[sim] ${target.fsPath}: up to ${steps.trim()} step(s)`);
+    out.appendLine(`[sim] ${target.fsPath}: up to ${steps} step(s)`);
     const r = await runHeadless({
       fetch: (url, init) => fetch(url, init),
       baseUrl: base,
       xml,
-      maxSteps: Number(steps),
+      maxSteps: steps,
       sessionId: `headless-${randomUUID()}`,
     });
-    for (const l of formatResult(r, nodeNames(xml))) out.appendLine(l);
+    const names = nodeNames(xml);
+    for (const l of formatResult(r, names)) out.appendLine(l);
+    return { result: r, names };
   } catch (e) {
     out.appendLine(`[sim] failed: ${e instanceof Error ? e.message : String(e)} (see "CPN IDE: Show Backend Log")`);
+    return undefined;
   }
 }

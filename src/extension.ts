@@ -10,6 +10,7 @@ import { PetriEditorProvider } from './editor/petriEditorProvider';
 import { PETRI_VIEW_TYPE } from './editor/petriModel';
 import { PetriSync } from './editor/petriSync';
 import { disposeSimulationOutput, runSimulation } from './editor/runSimulation';
+import { SimulateLens } from './editor/simulateLens';
 import { isSpecFile } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { initDocker, startDockerBackend, stopDockerBackend, stopDockerOnExit } from './runtime/docker';
@@ -26,6 +27,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     CpnEditorProvider.register(ctx),
     PetriEditorProvider.register(ctx),
     { dispose: disposeSimulationOutput },
+    SimulateLens.register(),
     createStatusBar(backend),
     registerDefaultEditorPrompt(ctx),
   );
