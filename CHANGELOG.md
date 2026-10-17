@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### New
+
+- **Completion, hover and go-to-definition in `.petri.json`.** Arc `from`/`to`, place `type` and `fusion`, `subpage.page` and `ports` now complete from the model itself (colour sets come from the `.sml` plus the standard ones). Hovering a place `type` shows its `colset` declaration, and Go to Definition jumps to it in the `.sml`. (#65)
+
 ### Improved
 
 - **Compile errors without the backend.** An undeclared colour set on a place (for example `"type": "UNITS"`) is now reported on the `type` value as soon as you edit the `.petri.json`, next to the structural errors, instead of only after the simulator ran. Commented-out `colset` declarations do not count. (#66)
