@@ -6,6 +6,11 @@
 
 - **Headless run no longer fails with "Could not parse declaration".** Starting **CPN IDE: Run Simulation (No UI)** while the canvas was still validating could make the backend reject `sim/init`. The proxy now queues `sim/init` behind in-flight net creations, and a headless run keeps its place in the queue between its own validation and `sim/init`. (#75)
 
+### Improved
+
+- **Shorter extension description.** The Marketplace description drops "Nothing else to install". (#90)
+
+
 ## 0.4.0 — 2026-10-17
 
 This release is about getting started. New users get a guided walkthrough and ready-made examples, **New Net** creates a real model file you can keep, headless runs print readable results, and the status bar shows what the backend is doing.
