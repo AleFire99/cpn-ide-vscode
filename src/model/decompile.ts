@@ -224,7 +224,8 @@ function assignKeys(nodes: { node: XNode; isPlace: boolean }[]): NodeInfo[] {
 }
 const nodeName = (n: XNode) => kid(n, 'text')?.text ?? '';
 
-export function decompile(xml: string): { spec: PetriSpec; sml: string; warnings: string[] } {
+/** The <cpnet> element of a CPN Tools model. Throws when there is none. */
+function parseCpnet(xml: string): XNode {
   const parser = new XMLParser({
     preserveOrder: true,
     ignoreAttributes: false,
@@ -236,6 +237,29 @@ export function decompile(xml: string): { spec: PetriSpec; sml: string; warnings
   const roots = (parser.parse(xml.replace(/\r\n?/g, '\n')) as Raw[]).map(toNode).filter((n): n is XNode => !!n);
   const cpnet = kid(roots.find((r) => r.tag === 'workspaceElements'), 'cpnet') ?? roots.find((r) => r.tag === 'cpnet');
   if (!cpnet) throw new Error('not a CPN Tools model: no <cpnet> element');
+  return cpnet;
+}
+
+/** Place and transition id -> `Page/Name`, for reporting simulator results by name. Empty for unparseable XML. */
+export function nodeNames(xml: string): Map<string, string> {
+  const names = new Map<string, string>();
+  let cpnet: XNode;
+  try {
+    cpnet = parseCpnet(xml);
+  } catch {
+    return names;
+  }
+  for (const p of kidsOf(cpnet, 'page')) {
+    const page = kid(p, 'pageattr')?.attrs.name ?? '';
+    for (const n of [...kidsOf(p, 'place'), ...kidsOf(p, 'trans')]) {
+      if (n.attrs.id) names.set(n.attrs.id, `${page}/${nodeName(n) || n.attrs.id}`);
+    }
+  }
+  return names;
+}
+
+export function decompile(xml: string): { spec: PetriSpec; sml: string; warnings: string[] } {
+  const cpnet = parseCpnet(xml);
   const ctx: Ctx = { warnings: [], dropped: new Map() };
 
   const sml = globboxToSml(kid(cpnet, 'globbox'), ctx);

@@ -6,14 +6,14 @@ import { newNet } from './editor/newNet';
 import { PetriEditorProvider } from './editor/petriEditorProvider';
 import { PETRI_VIEW_TYPE } from './editor/petriModel';
 import { PetriSync } from './editor/petriSync';
-import { runSimulation } from './editor/runSimulation';
+import { disposeSimulationOutput, runSimulation } from './editor/runSimulation';
 import { isSpecFile } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { openStandalonePanel, uiState } from './webview/panel';
 
 export function activate(ctx: vscode.ExtensionContext): void {
   const backend = BackendManager.init(ctx);
-  ctx.subscriptions.push(backend, PetriSync.init(), CpnEditorProvider.register(ctx), PetriEditorProvider.register(ctx));
+  ctx.subscriptions.push(backend, PetriSync.init(), CpnEditorProvider.register(ctx), PetriEditorProvider.register(ctx), { dispose: disposeSimulationOutput });
 
   const openUi = async () => {
     try {
