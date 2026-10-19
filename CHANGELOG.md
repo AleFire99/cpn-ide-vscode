@@ -7,6 +7,10 @@
 - **Net view in the sidebar.** A new **Net** section in the CPN IDE sidebar lists the pages of the open `.petri.json` (also when you are on its canvas, `.cpn` or `.sml`) with their places, transitions and arcs; substitution transitions show their subpage. Click an entry to select it in the JSON, beside the canvas if that is what you are looking at. (#98)
 - **CPN IDE in the Activity Bar.** A new icon opens a sidebar with three views. **Models** lists every `.cpn` and `.petri.json` in the workspace; click one to open it in the canvas, or use the buttons next to it to run a headless simulation, convert a `.cpn` to text or export a text model to `.cpn`. With no models it offers **New Net** and **Open an Example**. **Backend** shows the same state as the status bar item with Start/Restart, Stop, Show Log, Docker and Settings. **Get Started** opens a bundled example in one click and links to the walkthrough and the docs. A new **CPN IDE: Start Backend** command starts the backend without opening a model. (#95)
 
+### Improved
+
+- **Calmer, leaner sidebar.** Models shows one row per net: `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in a folder are grouped, a click opens the text model (or the `.cpn`) in the canvas, and expanding the row lists the files with their buttons. The list refreshes once after a burst of file changes instead of rescanning for every file, and the active model is selected in the list. Backend only shows the Docker rows on macOS, with a backend URL set, or after a failure, and Settings is now a gear button in its title. Get Started starts collapsed. (#97)
+
 ## 0.5.0 — 2026-10-17
 
 This release is about writing models as text and working in VS Code's own style. `.sml` files get CPN ML highlighting and snippets, `.petri.json` gets completion, hover, go-to-definition and a one-click Simulate lens, and more compile errors show up without the backend. The canvas follows a dark theme, `.cpn` files can open in the canvas by default, Linux tells you exactly how to install 32-bit glibc, and macOS users can start the Docker backend with one command.

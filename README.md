@@ -49,10 +49,12 @@ net, step by step.
 
 The **CPN IDE** icon in the Activity Bar opens a sidebar with three views:
 
-- **Models**: every `.cpn` and `.petri.json` in the workspace. Click one to open it in the canvas; the buttons next to
-  it run a headless simulation and convert (`.cpn` → text) or export (text → `.cpn`).
-- **Backend**: the backend state (as in the status bar) and Start/Restart, Stop, Show Log, Docker and Settings.
-- **Get Started**: the bundled examples, **New Net**, the walkthrough and this documentation.
+- **Models**: one row per net. `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in the same folder are grouped; click the
+  row to open the text model (or the `.cpn`) in the canvas, or expand it for the files, whose buttons run a headless
+  simulation and convert (`.cpn` → text) or export (text → `.cpn`). The active model is selected as you switch tabs.
+- **Backend**: the backend state (as in the status bar) and Start/Restart, Stop and Show Log. The Docker rows appear on
+  macOS, when `cpnIde.backendUrl` is set, or if the backend failed. The gear in the title opens the settings.
+- **Get Started** (collapsed by default): the bundled examples, **New Net**, the walkthrough and this documentation.
 
 To start from scratch, run **CPN IDE: New Net** from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`), or
 right-click a folder in the Explorer. It asks for a name, writes `NAME.petri.json` and `NAME.sml` with a small starter
