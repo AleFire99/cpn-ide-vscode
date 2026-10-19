@@ -2,7 +2,7 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Edit, validate and simulate Coloured Petri Nets (CPN Tools .cpn models or plain-text .petri.json) with the bundled CPN IDE editor and simulator.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
