@@ -22,6 +22,9 @@ const REFRESH_DELAY_MS = 200;
 class ModelsProvider implements vscode.TreeDataProvider<ModelElement>, vscode.Disposable {
   private readonly changed = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this.changed.event;
+  private readonly loaded = new vscode.EventEmitter<void>();
+  /** Fires after the top-level rows have been (re)loaded. */
+  readonly onDidLoad = this.loaded.event;
   private readonly watcher = vscode.workspace.createFileSystemWatcher(MODEL_GLOB, false, true, false);
   private readonly subs: vscode.Disposable[];
   private timer: NodeJS.Timeout | undefined;
@@ -54,7 +57,8 @@ class ModelsProvider implements vscode.TreeDataProvider<ModelElement>, vscode.Di
     if (element instanceof NetNode) return element.files;
     if (element || !vscode.workspace.workspaceFolders?.length) return [];
     const uris = await vscode.workspace.findFiles(MODEL_GLOB, '**/node_modules/**');
-    const byPath = new Map(uris.map((u) => [vscode.workspace.asRelativePath(u, true), u]));
+    const multiRoot = vscode.workspace.workspaceFolders.length > 1;
+    const byPath = new Map(uris.map((u) => [vscode.workspace.asRelativePath(u, multiRoot), u]));
     this.parents.clear();
     this.fileUris.clear();
     this.nets = groupModels([...byPath.keys()]).map((g) => {
@@ -65,6 +69,7 @@ class ModelsProvider implements vscode.TreeDataProvider<ModelElement>, vscode.Di
       }
       return net;
     });
+    setTimeout(() => this.loaded.fire(), 0); // after VS Code has received the rows
     return this.nets;
   }
 
@@ -96,6 +101,7 @@ class ModelsProvider implements vscode.TreeDataProvider<ModelElement>, vscode.Di
   dispose(): void {
     clearTimeout(this.timer);
     this.changed.dispose();
+    this.loaded.dispose();
     for (const s of this.subs) s.dispose();
   }
 }
@@ -185,6 +191,7 @@ export function registerSidebar(backend: BackendManager): vscode.Disposable {
   };
   return vscode.Disposable.from(
     models,
+    models.onDidLoad(reveal),
     backendView,
     modelsView,
     modelsView.onDidChangeVisibility(reveal),
