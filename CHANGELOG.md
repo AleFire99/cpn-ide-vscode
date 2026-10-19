@@ -1,15 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-10-19
+
+CPN IDE now has its own place in the Activity Bar. The sidebar lists the nets in your workspace, shows the structure of the open model, and gives the backend controls and the examples a home, so the commands no longer have to be found in the Command Palette.
 
 ### New
 
-- **Net view in the sidebar.** A new **Net** section in the CPN IDE sidebar lists the pages of the open `.petri.json` (also when you are on its canvas, `.cpn` or `.sml`) with their places, transitions and arcs; substitution transitions show their subpage. Click an entry to select it in the JSON, beside the canvas if that is what you are looking at. (#98)
-- **CPN IDE in the Activity Bar.** A new icon opens a CPN IDE sidebar. **Models** lists every `.cpn` and `.petri.json` in the workspace; click one to open it in the canvas, or use the buttons next to it to run a headless simulation, convert a `.cpn` to text or export a text model to `.cpn`. With no models it offers **New Net** and **Open an Example**. **Backend** shows the same state as the status bar item with Start/Restart, Stop, Show Log, Docker and Settings. **Get Started** opens a bundled example in one click and links to the walkthrough and the docs. A new **CPN IDE: Start Backend** command starts the backend without opening a model. (#95)
-
-### Improved
-
-- **Calmer, leaner sidebar.** Models shows one row per net: `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in a folder are grouped, a click opens the text model (or the `.cpn`) in the canvas, and expanding the row lists the files with their buttons. The list refreshes once after a burst of file changes instead of rescanning for every file, and the active model is selected in the list. Backend only shows the Docker rows on macOS, with a backend URL set, or after a failure, and Settings is now a gear button in its title. Get Started starts collapsed. (#97)
+- **CPN IDE in the Activity Bar.** A new icon opens the CPN IDE sidebar. **Models** shows one row per net: `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in the same folder are grouped. Click a net to open it in the canvas (the text model if there is one, else the `.cpn`), or expand it for its files, whose buttons run a headless simulation, convert a `.cpn` to text or export a text model to `.cpn`. The net you are working on is selected as you switch tabs. With no models, it offers **New Net** and **Open an Example**. **Backend** shows the same state as the status bar item, with Start/Restart, Stop and Show Log. The Docker actions appear on macOS, when `cpnIde.backendUrl` is set, or after the backend failed, and the gear in its title opens the settings. **Get Started** (collapsed) opens a bundled example in one click and links to the walkthrough and the docs. (#95, #97)
+- **Net view.** The **Net** section of the sidebar lists the pages of the open `.petri.json` with their places, transitions and arcs; substitution transitions show their subpage and places their colour set. It also follows the canvas, and an open `.cpn` or `.sml` that has a `.petri.json` next to it. Click an entry to select it in the JSON, beside the canvas if that is what you are looking at. (#98)
+- **CPN IDE: Start Backend.** Starts the backend without opening a model. (#95)
 
 ## 0.5.0 — 2026-10-17
 
