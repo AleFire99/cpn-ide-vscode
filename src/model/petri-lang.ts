@@ -1,7 +1,7 @@
 // vscode-free language support for `*.petri.json`: where the cursor is, what can go there, and what a
 // colour-set reference points to. The JSON schema already covers keys; this covers values that refer to the model.
 
-import { getLocation, type Segment } from 'jsonc-parser';
+import { findNodeAtLocation, getLocation, parseTree, type Node, type Segment } from 'jsonc-parser';
 import { declaredColsets, parseSml, STANDARD_SML } from './sml';
 import { nodeKey, type PageSpec, type PetriSpec } from './types';
 
@@ -122,4 +122,58 @@ export function colsetInfo(sml: string, name: string): ColsetInfo | undefined {
 function fromColset(text: string): string {
   const m = /(^|\n)colset\s/.exec(text);
   return (m ? text.slice(m.index + m[1].length) : text).trim();
+}
+
+export type NetSymbolKind = 'page' | 'place' | 'transition' | 'substitution' | 'arc';
+
+export interface NetSymbol {
+  name: string;
+  detail: string;
+  kind: NetSymbolKind;
+  /** Offsets of the whole JSON object. */
+  range: [number, number];
+  /** Offsets of the name value (the object itself when it has none). */
+  selection: [number, number];
+  children: NetSymbol[];
+}
+
+const strOf = (n: Node | undefined) => (n?.type === 'string' ? String(n.value) : undefined);
+
+/** Pages with their places, transitions and arcs as an outline tree. Tolerates incomplete JSON. */
+export function netSymbols(text: string): NetSymbol[] {
+  const root = parseTree(text, [], { allowTrailingComma: true });
+  const pages = root && findNodeAtLocation(root, ['pages']);
+  if (!pages || pages.type !== 'array') return [];
+  const sym = (o: Node, kind: NetSymbolKind, name: string, detail: string, nameNode?: Node, children: NetSymbol[] = []): NetSymbol => {
+    const sel = nameNode ?? o;
+    return { name, detail, kind, range: [o.offset, o.offset + o.length], selection: [sel.offset, sel.offset + sel.length], children };
+  };
+  const items = (page: Node, key: string) => (findNodeAtLocation(page, [key])?.children ?? []).filter((o) => o.type === 'object');
+  const out: NetSymbol[] = [];
+  for (const page of pages.children ?? []) {
+    if (page.type !== 'object') continue;
+    const nameNode = findNodeAtLocation(page, ['name']);
+    const children: NetSymbol[] = [];
+    for (const o of items(page, 'places')) {
+      const n = findNodeAtLocation(o, ['name']);
+      const type = strOf(findNodeAtLocation(o, ['type']));
+      const port = strOf(findNodeAtLocation(o, ['port']));
+      const fusion = strOf(findNodeAtLocation(o, ['fusion']));
+      const detail = [type, port && `port ${port}`, fusion && `fusion ${fusion}`].filter(Boolean).join(', ');
+      children.push(sym(o, 'place', strOf(n) ?? '?', detail, n));
+    }
+    for (const o of items(page, 'transitions')) {
+      const n = findNodeAtLocation(o, ['name']);
+      const sub = strOf(findNodeAtLocation(o, ['subpage', 'page']));
+      children.push(sym(o, sub ? 'substitution' : 'transition', strOf(n) ?? '?', sub ? `subpage ${sub}` : '', n));
+    }
+    for (const o of items(page, 'arcs')) {
+      const from = strOf(findNodeAtLocation(o, ['from'])) ?? '?';
+      const to = strOf(findNodeAtLocation(o, ['to'])) ?? '?';
+      const ins = strOf(findNodeAtLocation(o, ['inscription']));
+      children.push(sym(o, 'arc', `${from} → ${to}`, ins ?? ''));
+    }
+    out.push(sym(page, 'page', strOf(nameNode) ?? '?', '', nameNode, children));
+  }
+  return out;
 }

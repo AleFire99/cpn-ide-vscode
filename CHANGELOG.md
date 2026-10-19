@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 — 2026-10-19
+
+CPN IDE now has its own place in the Activity Bar. The sidebar lists the nets in your workspace, shows the structure of the open model, and gives the backend controls and the examples a home, so the commands no longer have to be found in the Command Palette.
+
+### New
+
+- **CPN IDE in the Activity Bar.** A new icon opens the CPN IDE sidebar. **Models** shows one row per net: `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in the same folder are grouped. Click a net to open it in the canvas (the text model if there is one, else the `.cpn`), or expand it for its files, whose buttons run a headless simulation, convert a `.cpn` to text or export a text model to `.cpn`. The net you are working on is selected as you switch tabs. With no models, it offers **New Net** and **Open an Example**. **Backend** shows the same state as the status bar item, with Start/Restart, Stop and Show Log. The Docker actions appear on macOS, when `cpnIde.backendUrl` is set, or after the backend failed, and the gear in its title opens the settings. **Get Started** (collapsed) opens a bundled example in one click and links to the walkthrough and the docs. (#95, #97)
+- **Net view.** The **Net** section of the sidebar lists the pages of the open `.petri.json` with their places, transitions and arcs; substitution transitions show their subpage and places their colour set. It also follows the canvas, and an open `.cpn` or `.sml` that has a `.petri.json` next to it. Click an entry to select it in the JSON, beside the canvas if that is what you are looking at. (#98)
+- **CPN IDE: Start Backend.** Starts the backend without opening a model. (#95)
+
 ## 0.5.0 — 2026-10-17
 
 This release is about writing models as text and working in VS Code's own style. `.sml` files get CPN ML highlighting and snippets, `.petri.json` gets completion, hover, go-to-definition and a one-click Simulate lens, and more compile errors show up without the backend. The canvas follows a dark theme, `.cpn` files can open in the canvas by default, Linux tells you exactly how to install 32-bit glibc, and macOS users can start the Docker backend with one command.

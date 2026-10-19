@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { colsetInfo, locate, suggest } from '../../src/model/petri-lang';
+import { colsetInfo, locate, netSymbols, suggest } from '../../src/model/petri-lang';
 import { parseSpecText } from '../../src/model/workspace';
 
 const ex = (f: string) => fs.readFileSync(path.resolve(__dirname, '../../examples', f), 'utf8');
@@ -82,5 +82,35 @@ describe('colsetInfo', () => {
 
   it('is undefined for unknown names', () => {
     expect(colsetInfo(sml, 'NOPE')).toBeUndefined();
+  });
+});
+
+describe('netSymbols', () => {
+  it('lists pages with places, transitions, substitution transitions and arcs', () => {
+    const syms = netSymbols(hier);
+    expect(syms.map((s) => s.name)).toEqual(['Top', 'Worker']);
+    const top = syms[0].children;
+    expect(top.filter((c) => c.kind === 'place').map((c) => c.name)).toEqual(['Jobs', 'Results', 'Count']);
+    expect(top.find((c) => c.name === 'Jobs')?.detail).toBe('JOB');
+    expect(top.find((c) => c.name === 'Count')?.detail).toBe('INT, fusion Counter');
+    const sub = top.find((c) => c.kind === 'substitution');
+    expect(sub).toMatchObject({ name: 'Process', detail: 'subpage Worker' });
+    expect(top.filter((c) => c.kind === 'arc').map((c) => c.name)).toEqual(['Jobs → Process', 'Process → Results']);
+    expect(syms[1].children.find((c) => c.name === 'Work')?.kind).toBe('transition');
+  });
+
+  it('uses object ranges and name selections', () => {
+    const place = netSymbols(hier)[0].children[0];
+    expect(hier.slice(...place.range).startsWith('{ "name": "Jobs"')).toBe(true);
+    expect(hier.slice(...place.selection)).toBe('"Jobs"');
+  });
+
+  it('does not throw on malformed or partial JSON', () => {
+    expect(netSymbols('')).toEqual([]);
+    expect(netSymbols('not json')).toEqual([]);
+    expect(netSymbols('{"pages": 3}')).toEqual([]);
+    const partial = netSymbols('{"pages":[{"name":"A","places":[{"name":"P","type":"INT"},{"name":');
+    expect(partial[0].name).toBe('A');
+    expect(partial[0].children[0].name).toBe('P');
   });
 });
