@@ -147,6 +147,11 @@
         "command": "cpnIde.refreshModels",
         "title": "CPN IDE: Refresh Models",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "cpnIde.openSettings",
+        "title": "CPN IDE: Open Settings",
+        "icon": "$(gear)"
       }
     ],
     "configuration": {
@@ -265,6 +270,7 @@
         {
           "id": "cpnIde.start",
           "name": "Get Started",
+          "visibility": "collapsed",
           "icon": "media/activity-icon.svg"
         }
       ]
@@ -370,6 +376,11 @@
           "command": "cpnIde.exportCpn",
           "when": "resourceFilename =~ /\\.petri\\.json$/i",
           "group": "navigation@2"
+        },
+        {
+          "command": "cpnIde.openSettings",
+          "when": "view == cpnIde.backend",
+          "group": "navigation@1"
         }
       ],
       "explorer/context": [
@@ -419,6 +430,10 @@
         {
           "command": "cpnIde.refreshModels",
           "when": "false"
+        },
+        {
+          "command": "cpnIde.openSettings",
+          "when": "false"
         }
       ],
       "view/title": [
@@ -431,12 +446,17 @@
           "command": "cpnIde.refreshModels",
           "when": "view == cpnIde.models",
           "group": "navigation@2"
+        },
+        {
+          "command": "cpnIde.openSettings",
+          "when": "view == cpnIde.backend",
+          "group": "navigation@1"
         }
       ],
       "view/item/context": [
         {
           "command": "cpnIde.runSimulation",
-          "when": "view == cpnIde.models",
+          "when": "view == cpnIde.models && (viewItem == cpn || viewItem == petri)",
           "group": "inline@1"
         },
         {
@@ -451,12 +471,12 @@
         },
         {
           "command": "cpnIde.openInCpnIde",
-          "when": "view == cpnIde.models",
+          "when": "view == cpnIde.models && viewItem != sml",
           "group": "1_open@1"
         },
         {
           "command": "cpnIde.runSimulation",
-          "when": "view == cpnIde.models",
+          "when": "view == cpnIde.models && (viewItem == cpn || viewItem == petri)",
           "group": "2_run@1"
         },
         {
