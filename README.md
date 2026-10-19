@@ -47,11 +47,13 @@ net, step by step.
 4. The first time, the extension starts its local backend (and downloads Java if needed). This takes a few seconds; the
    project console at the bottom of the canvas reports **"Model is correct"** once the model has been validated.
 
-The **CPN IDE** icon in the Activity Bar opens a sidebar with three views:
+The **CPN IDE** icon in the Activity Bar opens a sidebar with four views:
 
 - **Models**: one row per net. `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in the same folder are grouped; click the
   row to open the text model (or the `.cpn`) in the canvas, or expand it for the files, whose buttons run a headless
   simulation and convert (`.cpn` → text) or export (text → `.cpn`). The active model is selected as you switch tabs.
+- **Net**: the pages, places, transitions and arcs of the open text model (or of the `.petri.json` next to an open
+  `.cpn` / `.sml`). Click one to jump to it in the JSON.
 - **Backend**: the backend state (as in the status bar) and Start/Restart, Stop and Show Log. The Docker rows appear on
   macOS, when `cpnIde.backendUrl` is set, or if the backend failed. The gear in the title opens the settings.
 - **Get Started** (collapsed by default): the bundled examples, **New Net**, the walkthrough and this documentation.
