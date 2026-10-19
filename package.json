@@ -258,6 +258,11 @@
           "icon": "media/activity-icon.svg"
         },
         {
+          "id": "cpnIde.net",
+          "name": "Net",
+          "icon": "media/activity-icon.svg"
+        },
+        {
           "id": "cpnIde.backend",
           "name": "Backend",
           "icon": "media/activity-icon.svg"
@@ -270,6 +275,10 @@
       ]
     },
     "viewsWelcome": [
+      {
+        "view": "cpnIde.net",
+        "contents": "Open a .petri.json text model to see its pages, places, transitions and arcs."
+      },
       {
         "view": "cpnIde.models",
         "contents": "No folder is open. Open one to list its Coloured Petri Net models.\n[Open Folder](command:vscode.openFolder)\n[Open an Example](command:cpnIde.openExample)",

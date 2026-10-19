@@ -1,7 +1,7 @@
 // Completion, hover and go-to-definition for values in `*.petri.json` that refer to the model itself.
 
 import * as vscode from 'vscode';
-import { colsetInfo, locate, netSymbols, refAt, suggest, type NetSymbol } from '../model/petri-lang';
+import { colsetInfo, locate, refAt, suggest } from '../model/petri-lang';
 import { parseSpecText } from '../model/workspace';
 import { readText, smlUriFor } from './petriModel';
 
@@ -21,20 +21,6 @@ function typeAt(doc: vscode.TextDocument, pos: vscode.Position) {
   const loc = locate(doc.getText(), doc.offsetAt(pos));
   if (refAt(loc.path, loc.atKey)?.kind !== 'colset' || !loc.text) return undefined;
   return { name: loc.text, range: rangeOf(doc, loc.range) };
-}
-
-const kinds = (): Record<NetSymbol['kind'], vscode.SymbolKind> => ({
-  page: vscode.SymbolKind.Namespace,
-  place: vscode.SymbolKind.Variable,
-  transition: vscode.SymbolKind.Function,
-  substitution: vscode.SymbolKind.Module,
-  arc: vscode.SymbolKind.Property,
-});
-
-function toSymbol(doc: vscode.TextDocument, s: NetSymbol): vscode.DocumentSymbol {
-  const sym = new vscode.DocumentSymbol(s.name, s.detail, kinds()[s.kind], rangeOf(doc, s.range), rangeOf(doc, s.selection));
-  sym.children = s.children.map((c) => toSymbol(doc, c));
-  return sym;
 }
 
 export function registerPetriLanguage(): vscode.Disposable {
@@ -64,9 +50,6 @@ export function registerPetriLanguage(): vscode.Disposable {
         const info = t && colsetInfo((await smlOf(doc)).text, t.name);
         return info ? new vscode.Hover(new vscode.MarkdownString().appendCodeblock(info.text, 'cpnml'), t.range) : undefined;
       },
-    }),
-    vscode.languages.registerDocumentSymbolProvider(SELECTOR, {
-      provideDocumentSymbols: (doc) => netSymbols(doc.getText()).map((s) => toSymbol(doc, s)),
     }),
     vscode.languages.registerDefinitionProvider(SELECTOR, {
       async provideDefinition(doc, pos) {

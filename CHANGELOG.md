@@ -4,7 +4,7 @@
 
 ### New
 
-- **Outline for `.petri.json`.** The Outline view, breadcrumbs and Go to Symbol (Ctrl+Shift+O) now list a text model's pages with their places, transitions and arcs; substitution transitions show their subpage. (#98)
+- **Net view in the sidebar.** A new **Net** section in the CPN IDE sidebar lists the pages of the open `.petri.json` (also when you are on its canvas, `.cpn` or `.sml`) with their places, transitions and arcs; substitution transitions show their subpage. Click an entry to select it in the JSON, beside the canvas if that is what you are looking at. (#98)
 - **CPN IDE in the Activity Bar.** A new icon opens a sidebar with three views. **Models** lists every `.cpn` and `.petri.json` in the workspace; click one to open it in the canvas, or use the buttons next to it to run a headless simulation, convert a `.cpn` to text or export a text model to `.cpn`. With no models it offers **New Net** and **Open an Example**. **Backend** shows the same state as the status bar item with Start/Restart, Stop, Show Log, Docker and Settings. **Get Started** opens a bundled example in one click and links to the walkthrough and the docs. A new **CPN IDE: Start Backend** command starts the backend without opening a model. (#95)
 
 ## 0.5.0 — 2026-10-17
