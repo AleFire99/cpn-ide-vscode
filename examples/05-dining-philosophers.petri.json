@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "declarations": "05-dining-philosophers.sml",
+  "pages": [
+    {
+      "name": "DiningPhilosophers",
+      "places": [
+        {
+          "name": "P1_Thinking",
+          "type": "UNIT",
+          "init": "1`()",
+          "pos": [
+            -150,
+            -480
+          ]
+        },
+        {
+          "name": "P1_HasLeft",
+          "type": "UNIT",
+          "pos": [
+            0,
+            -540
+          ]
+        },
+        {
+          "name": "P1_Eating",
+          "type": "UNIT",
+          "pos": [
+            150,
+            -480
+          ]
+        },
+        {
+          "name": "Fork1",
+          "type": "UNIT",
+          "init": "1`()",
+          "pos": [
+            208,
+            -120
+          ]
+        },
+        {
+          "name": "P2_Thinking",
+          "type": "UNIT",
+          "init": "1`()",
+          "pos": [
+            266,
+            240
+          ]
+        },
+        {
+          "name": "P2_HasLeft",
+          "type": "UNIT",
+          "pos": [
+            416,
+            180
+          ]
+        },
+        {
+          "name": "P2_Eating",
+          "type": "UNIT",
+          "pos": [
+            566,
+            240
+          ]
+        },
+        {
+          "name": "Fork2",
+          "type": "UNIT",
+          "init": "1`()",
+          "pos": [
+            0,
+            240
+          ]
+        },
+        {
+          "name": "P3_Thinking",
+          "type": "UNIT",
+          "init": "1`()",
+          "pos": [
+            -566,
+            240
+          ]
+        },
+        {
+          "name": "P3_HasLeft",
+          "type": "UNIT",
+          "pos": [
+            -416,
+            180
+          ]
+        },
+        {
+          "name": "P3_Eating",
+          "type": "UNIT",
+          "pos": [
+            -266,
+            240
+          ]
+        },
+        {
+          "name": "Fork3",
+          "type": "UNIT",
+          "init": "1`()",
+          "pos": [
+            -208,
+            -120
+          ]
+        }
+      ],
+      "transitions": [
+        {
+          "name": "P1_TakeLeft",
+          "pos": [
+            -75,
+            -510
+          ]
+        },
+        {
+          "name": "P1_TakeRight",
+          "pos": [
+            75,
+            -510
+          ]
+        },
+        {
+          "name": "P1_Release",
+          "pos": [
+            0,
+            -420
+          ]
+        },
+        {
+          "name": "P2_TakeLeft",
+          "pos": [
+            341,
+            210
+          ]
+        },
+        {
+          "name": "P2_TakeRight",
+          "pos": [
+            491,
+            210
+          ]
+        },
+        {
+          "name": "P2_Release",
+          "pos": [
+            416,
+            300
+          ]
+        },
+        {
+          "name": "P3_TakeLeft",
+          "pos": [
+            -491,
+            210
+          ]
+        },
+        {
+          "name": "P3_TakeRight",
+          "pos": [
+            -341,
+            210
+          ]
+        },
+        {
+          "name": "P3_Release",
+          "pos": [
+            -416,
+            300
+          ]
+        }
+      ],
+      "arcs": [
+        {
+          "from": "P1_Thinking",
+          "to": "P1_TakeLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "Fork1",
+          "to": "P1_TakeLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "P1_TakeLeft",
+          "to": "P1_HasLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "P1_HasLeft",
+          "to": "P1_TakeRight",
+          "inscription": "()"
+        },
+        {
+          "from": "Fork2",
+          "to": "P1_TakeRight",
+          "inscription": "()"
+        },
+        {
+          "from": "P1_TakeRight",
+          "to": "P1_Eating",
+          "inscription": "()"
+        },
+        {
+          "from": "P1_Eating",
+          "to": "P1_Release",
+          "inscription": "()"
+        },
+        {
+          "from": "P1_Release",
+          "to": "P1_Thinking",
+          "inscription": "()"
+        },
+        {
+          "from": "P1_Release",
+          "to": "Fork1",
+          "inscription": "()"
+        },
+        {
+          "from": "P1_Release",
+          "to": "Fork2",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_Thinking",
+          "to": "P2_TakeLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "Fork2",
+          "to": "P2_TakeLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_TakeLeft",
+          "to": "P2_HasLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_HasLeft",
+          "to": "P2_TakeRight",
+          "inscription": "()"
+        },
+        {
+          "from": "Fork3",
+          "to": "P2_TakeRight",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_TakeRight",
+          "to": "P2_Eating",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_Eating",
+          "to": "P2_Release",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_Release",
+          "to": "P2_Thinking",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_Release",
+          "to": "Fork2",
+          "inscription": "()"
+        },
+        {
+          "from": "P2_Release",
+          "to": "Fork3",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_Thinking",
+          "to": "P3_TakeLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "Fork3",
+          "to": "P3_TakeLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_TakeLeft",
+          "to": "P3_HasLeft",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_HasLeft",
+          "to": "P3_TakeRight",
+          "inscription": "()"
+        },
+        {
+          "from": "Fork1",
+          "to": "P3_TakeRight",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_TakeRight",
+          "to": "P3_Eating",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_Eating",
+          "to": "P3_Release",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_Release",
+          "to": "P3_Thinking",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_Release",
+          "to": "Fork3",
+          "inscription": "()"
+        },
+        {
+          "from": "P3_Release",
+          "to": "Fork1",
+          "inscription": "()"
+        }
+      ]
+    }
+  ]
+}
