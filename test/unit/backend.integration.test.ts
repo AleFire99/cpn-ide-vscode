@@ -14,6 +14,7 @@ import {
   waitForPortRelease,
 } from '../../src/runtime/backend-core';
 import { postInit, removeTempDirs, tempDir } from './helpers';
+import { portTaken } from '../../src/runtime/simulator-prestart';
 
 /** Local addresses of TCP listeners on `port` from /proc/net/tcp (IPv4, state 0A), e.g. "127.0.0.1". */
 function listenAddrs(port: number): string[] {
@@ -37,6 +38,14 @@ async function waitFor(cond: () => boolean | Promise<boolean>, ms: number): Prom
 
 // Real-backend test; needs resources/ populated and Java 17. Run: CPN_IT=1 npm test
 // The simulator daemon uses the fixed port 20001, so this also needs that port free.
+/** Resolve true once the port can be bound on loopback (what the simulator pre-start checks), false after timeoutMs. */
+async function bindable(port: number, timeoutMs: number): Promise<boolean> {
+  for (const end = Date.now() + timeoutMs; Date.now() < end; await new Promise((r) => setTimeout(r, 500))) {
+    if (!(await portTaken(port))) return true;
+  }
+  return false;
+}
+
 describe.skipIf(!process.env.CPN_IT)('real backend', () => {
   // Temp dirs go once every backend is stopped.
   afterAll(removeTempDirs);
@@ -132,6 +141,9 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
   it('survives overlapping first inits and a stop/start cycle (simulator pre-started)', async () => {
     expect(await waitForPortRelease(SIMULATOR_PORT, 70000)).toBe(true);
     if (await isPortListening(SIMULATOR_PORT)) throw new Error(`port ${SIMULATOR_PORT} is already in use`);
+    // The previous test's daemon can leave sockets that still block bind() for a while; the pre-start checks with
+    // bind(), so wait for that too or it (correctly) skips the pre-start and the assertion below fails.
+    expect(await bindable(SIMULATOR_PORT, 70000)).toBe(true);
     const root = path.resolve(__dirname, '../../resources');
     const userHome = tempDir('cpn-it-');
     const tmpDir = path.join(userHome, 'tmp');
