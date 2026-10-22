@@ -59,4 +59,9 @@ describe('siphons and traps', () => {
     expect(r.truncated).toBe(true);
     expect(commoner(philosophers, 1).verdict).toBe('possible-deadlock');
   });
+  it('weighted net: a marked trap proves nothing, so inconclusive', () => {
+    // t needs 2 tokens from p, which holds 1: dead at once although {p} is a marked trap.
+    const net: PTNet = { places: [{ id: 'p', label: 'p' }], transitions: [{ id: 't', label: 't' }], pre: [[2]], post: [[2]], m0: [1], exact: true, approximations: [] };
+    expect(commoner(net).verdict).toBe('inconclusive');
+  });
 });

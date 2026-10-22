@@ -2,7 +2,7 @@
 import type { PTNet } from './ptnet';
 
 export interface CommonerResult {
-  verdict: 'deadlock-free' | 'live' | 'possible-deadlock';
+  verdict: 'deadlock-free' | 'live' | 'possible-deadlock' | 'inconclusive';
   /** Minimal siphons (place indices) with no initially marked trap. */
   badSiphons: number[][];
   /** The siphon enumeration hit its cap, so the verdict is not conclusive. */
@@ -76,12 +76,15 @@ export const isFreeChoice = (net: PTNet): boolean => {
   return true;
 };
 
-/** Commoner: every siphon holds an initially marked trap => deadlock-free (also live if free-choice and ordinary). */
+/**
+ * Commoner: in an ordinary net, every siphon holding an initially marked trap => deadlock-free (and live if also
+ * free-choice). With arc weights > 1 a marked trap may hold too few tokens, so the property proves nothing.
+ */
 export const commoner = (net: PTNet, cap?: number): CommonerResult => {
   const { siphons, truncated } = minimalSiphons(net, cap);
   const badSiphons = siphons.filter(s => !maximalTrap(net, s).some(p => net.m0[p] > 0));
   const ordinary = net.pre.every(r => r.every(w => w <= 1)) && net.post.every(r => r.every(w => w <= 1));
   const ok = badSiphons.length === 0 && !truncated;
-  const verdict = !ok ? 'possible-deadlock' : isFreeChoice(net) && ordinary ? 'live' : 'deadlock-free';
+  const verdict = !ok ? 'possible-deadlock' : !ordinary ? 'inconclusive' : isFreeChoice(net) ? 'live' : 'deadlock-free';
   return { verdict, badSiphons, truncated };
 };
