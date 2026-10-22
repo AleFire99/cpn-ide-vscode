@@ -2,7 +2,7 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Edit, validate and simulate Coloured Petri Nets (CPN Tools .cpn models or plain-text .petri.json) with the bundled CPN IDE editor and simulator.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
@@ -200,13 +200,26 @@
         "cpnIde.eventLog.timeUnit": {
           "type": "string",
           "default": "hours",
-          "enum": ["years", "months", "weeks", "days", "hours", "minutes", "seconds"],
+          "enum": [
+            "years",
+            "months",
+            "weeks",
+            "days",
+            "hours",
+            "minutes",
+            "seconds"
+          ],
           "markdownDescription": "What one simulated time unit means in the exported event log."
         },
         "cpnIde.eventLog.recordedEvents": {
           "type": "string",
           "default": "start+complete",
-          "enum": ["start", "complete", "start+complete", "in transition name"],
+          "enum": [
+            "start",
+            "complete",
+            "start+complete",
+            "in transition name"
+          ],
           "markdownDescription": "Which lifecycle events the exported event log records."
         },
         "cpnIde.eventLog.informationLevelIsEvent": {
@@ -551,8 +564,8 @@
           "command": "cpnIde.saveAnalysisReport",
           "when": "view == cpnIde.analysis",
           "group": "navigation@4"
-      },
-      {
+        },
+        {
           "command": "cpnIde.runReplications",
           "when": "view == cpnIde.analysis",
           "group": "navigation@5"
