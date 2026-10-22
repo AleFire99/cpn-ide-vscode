@@ -239,6 +239,9 @@ starts, ✓ ready, red when the backend or the simulator failed. Click it to sho
   (needs multilib); Fedora Silverblue/Kinoite: `rpm-ostree install glibc.i686`, then reboot.
 - **"The simulator could not start"**: on Linux, check the 32-bit glibc above. Otherwise click **Show Log** (or run
   **CPN IDE: Show Backend Log**) to see why.
+- **"Function not implemented" in `cpnmld.log`** (VS Code inside a container, Docker 29 or later): the container's default
+  seccomp profile blocks the 32-bit socket call the simulator uses. The Linux VSIX preloads a shim for this
+  (`resources/backend/shim`); if you built the extension yourself, run `scripts/build-sockshim.sh` (needs `gcc-multilib`).
 - **A simulator is already running on port 20001**: the CPN simulator always uses this port, so only one can run per
   machine. A second VS Code window shares the first one's simulator. If a crashed window left one behind, the extension
   offers to stop it.
