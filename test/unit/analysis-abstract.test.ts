@@ -69,4 +69,11 @@ describe('toPTNet', () => {
     expect(toPTNet(one('f x'), '').exact).toBe(false);
     expect(toPTNet(one('x', undefined, 'LST'), 'colset LST = list INT;').exact).toBe(false);
   });
+
+  it('counts the empty multiset as no tokens', () => {
+    const n = toPTNet(one('x ++ empty', 'empty'), '');
+    expect(n.pre[0][0]).toBe(1);
+    expect(n.m0).toEqual([0]);
+    expect(n.exact).toBe(true);
+  });
 });

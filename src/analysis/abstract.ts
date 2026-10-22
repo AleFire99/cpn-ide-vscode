@@ -57,6 +57,7 @@ function tokens(s: string): { k: 'o' | 'p'; t: string }[] {
 /** Tokens in one multiset term (the part between `++`). */
 function termCount(term: string, vals: Map<string, string>, depth: number): Count {
   if (term === '') return { n: 1, approx: 'empty term' };
+  if (term === 'empty') return { n: 0 }; // the empty multiset
   const m = /^([A-Za-z0-9_']+)\s*`([\s\S]*)$/.exec(term);
   let n = 1;
   let rest = term;
