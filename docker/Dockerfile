@@ -15,7 +15,17 @@ WORKDIR /src
 COPY scripts/fetch-cpn.sh scripts/patch-cpnmld.mjs scripts/patch-ui.mjs scripts/
 RUN scripts/fetch-cpn.sh
 
-# ---- Stage 2: runtime ----
+# ---- Stage 2: socket shim for the 32-bit simulator (see docker/sockshim.c, #119) ----
+FROM docker.io/library/debian:bookworm-slim AS shim
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends gcc gcc-multilib libc6-dev-i386 \
+ && rm -rf /var/lib/apt/lists/*
+COPY docker/sockshim.c /src/
+# The i386 shim, plus an empty 64-bit library so 64-bit processes (java, sh, curl) preload quietly.
+RUN gcc -m32 -shared -fPIC -O2 -Wall -Werror -o /src/libsockshim32.so /src/sockshim.c \
+ && echo > /src/empty.c && gcc -shared -fPIC -o /src/libsockshim64.so /src/empty.c
+
+# ---- Stage 3: runtime ----
 FROM docker.io/library/eclipse-temurin:17-jre-jammy
 
 LABEL org.opencontainers.image.title="cpn-ide-backend" \
@@ -33,10 +43,16 @@ RUN apt-get update \
 
 WORKDIR /opt/cpn-ide
 COPY --from=fetch /src/resources/backend/cpn-ide-back-1.28-SNAPSHOT.jar /src/resources/backend/application.properties ./
+# Docker >= 29 blocks the i386 socketcall(2) its glibc uses for sockets; the shim uses the direct syscalls instead.
+# ld.so expands $PLATFORM per process: i686 (i386) for the simulator, x86_64 for everything else.
+COPY --from=shim /src/libsockshim32.so shim/i686/libsockshim.so
+COPY --from=shim /src/libsockshim32.so shim/i386/libsockshim.so
+COPY --from=shim /src/libsockshim64.so shim/x86_64/libsockshim.so
 
 # user.home is the data dir: the backend writes the simulator workspace under it.
 ENV JAVA_OPTS="" \
-    SERVER_PORT=8080
+    SERVER_PORT=8080 \
+    LD_PRELOAD="/opt/cpn-ide/shim/\$PLATFORM/libsockshim.so"
 VOLUME /data
 USER cpn
 EXPOSE 8080

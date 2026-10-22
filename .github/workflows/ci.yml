@@ -78,13 +78,16 @@ jobs:
 
   # The 32-bit CPN simulator does not start on GitHub-hosted VMs (its SML heap image
   # fails to load), but works in this container, the same base as docker/Dockerfile.
-  # Pinned to 24.04: on ubuntu-26.04 hosts the 32-bit daemon's socket() fails with ENOSYS (#118, #119).
+  # Docker >= 29's default seccomp profile blocks the i386 socketcall(2) the simulator's glibc uses (#119);
+  # the test container runs unconfined (the published image uses docker/sockshim.c instead).
   backend-it:
     name: backend-it
     needs: fetch-installer
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 20
-    container: eclipse-temurin:17-jre-jammy
+    container:
+      image: eclipse-temurin:17-jre-jammy
+      options: --security-opt seccomp=unconfined
     steps:
       - name: Install system packages
         run: |
