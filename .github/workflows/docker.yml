@@ -60,10 +60,12 @@ jobs:
       - name: Smoke test
         run: |
           docker run -d --name cpn -p 8080:8080 cpn-ide-backend:ci
+          # Default seccomp profile on purpose: Docker >= 29 needs docker/sockshim.c (#119).
           if ! docker/smoke-test.sh http://localhost:8080; then
             docker logs cpn
             exit 1
           fi
+          if docker logs cpn 2>&1 | grep -q 'cannot be preloaded'; then docker logs cpn; echo 'LD_PRELOAD shim not found'; exit 1; fi
           docker rm -f cpn
 
       - name: Push image
