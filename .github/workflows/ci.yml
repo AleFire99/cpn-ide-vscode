@@ -78,10 +78,11 @@ jobs:
 
   # The 32-bit CPN simulator does not start on GitHub-hosted VMs (its SML heap image
   # fails to load), but works in this container, the same base as docker/Dockerfile.
+  # Pinned to 24.04: on ubuntu-26.04 hosts the 32-bit daemon's socket() fails with ENOSYS (#118, #119).
   backend-it:
     name: backend-it
     needs: fetch-installer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     container: eclipse-temurin:17-jre-jammy
     steps:
