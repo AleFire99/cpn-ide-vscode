@@ -14,7 +14,7 @@ import { toPTNet } from '../analysis/abstract';
 import { decompile } from '../model/decompile';
 import type { PetriSpec } from '../model/types';
 import { exploreStateSpace, DEFAULT_MAX_NODES, DEFAULT_MAX_MS, type StateSpaceResult } from '../runtime/explore-core';
-import { analyseStructure, reportText, stateSpaceRows, structuralRows, type StructuralResults } from './analysis-core';
+import { analyseStructure, reportText, rowsToText, stateSpaceRows, structuralRows, type StructuralResults } from './analysis-core';
 
 /** Where a finding's text lives. */
 interface Files {
@@ -136,7 +136,12 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
     return { xml, spec: d.spec, sml: d.sml };
   }
 
-  async structuralAnalysis(): Promise<void> {
+  /** The view's rows as indented text (the commands return it, for tests). */
+  text(): string[] {
+    return rowsToText(this.getChildren());
+  }
+
+  async structuralAnalysis(): Promise<string[] | undefined> {
     const uri = this.target();
     if (!uri) return;
     try {
@@ -144,12 +149,13 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
       this.adopt(uri);
       this.structural = analyseStructure(toPTNet(spec, sml));
       this.show(uri);
+      return this.text();
     } catch (e) {
       void vscode.window.showErrorMessage(`CPN IDE: Structural Analysis failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
-  async analyseStateSpace(): Promise<void> {
+  async analyseStateSpace(): Promise<string[] | undefined> {
     const uri = this.target();
     if (!uri) return;
     const cfg = vscode.workspace.getConfiguration('cpnIde');
@@ -197,6 +203,7 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
         }
       }
       this.show(uri);
+      return this.text();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       backend.output.appendLine(`[state space] ${uri.fsPath}: ${msg}`);

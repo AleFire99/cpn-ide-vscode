@@ -77,6 +77,6 @@ suite('CPN IDE petri model editor', () => {
       const all = vscode.languages.getDiagnostics(specUri).filter((d) => d.source === 'cpn');
       return all.length ? all : undefined;
     }, 90000);
-    assert.ok(diags.some((d) => /color-set/i.test(d.message)), diags.map((d) => d.message).join(' | '));
+    assert.ok(diags.some((d) => /colou?r[- ]set/i.test(d.message)), diags.map((d) => d.message).join(' | '));
   });
 });

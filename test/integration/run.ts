@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'cpn-it-'));
   // Work on a copy so saves never touch the committed fixture.
   fs.copyFileSync(path.join(root, 'test/fixtures/sample.cpn'), path.join(work, 'sample.cpn'));
-  for (const f of ['04-hierarchy.petri.json', '04-hierarchy.sml']) fs.copyFileSync(path.join(root, 'examples', f), path.join(work, f));
+  for (const f of ['04-hierarchy.petri.json', '04-hierarchy.sml', '05-dining-philosophers.petri.json', '05-dining-philosophers.sml']) fs.copyFileSync(path.join(root, 'examples', f), path.join(work, f));
   try {
     await runTests({
       // Offline runs (e.g. inside `unshare -rn`) can point at an already downloaded VS Code.
