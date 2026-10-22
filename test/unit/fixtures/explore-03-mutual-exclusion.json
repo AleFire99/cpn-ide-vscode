@@ -1,0 +1,114 @@
+[
+ {
+  "route": "init",
+  "status": 200,
+  "text": "{\"issues\":{},\"success\":true}"
+ },
+ {
+  "route": "sim/init",
+  "body": "{}",
+  "status": 200,
+  "text": "{\"firedTrans\":[],\"enableTrans\":[\"ID19\"],\"tokensAndMark\":[{\"id\":\"ID16\",\"tokens\":2,\"marking\":\"1`1++\\n1`2\"},{\"id\":\"ID17\",\"tokens\":1,\"marking\":\"1`()\"},{\"id\":\"ID18\",\"tokens\":0,\"marking\":\"empty\"}],\"extraInfo\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"structure CPN'NetCapture = CPN'NetCapture(structure CPN'InstTable = CPN'InstTable)\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"CPN'NetCapture.initNet ()\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"CPN'NetCapture.checkNames()\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"structure CPN'State = CPN'State(structure CPN'NetCapture = CPN'NetCapture)\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"CPN'Env.use_string(CPN'State.genMark(CPN'NetCapture.getNet()))\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"CPN'Env.use_string(CPN'State.genState(CPN'NetCapture.getNet()))\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"structure CPN'Event = CPN'Event(structure CPN'NetCapture = CPN'NetCapture)\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"CPN'Env.use_string(CPN'Event.genBind(CPN'NetCapture.getNet()))\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"CPN'Env.use_string(CPN'Event.genEvent(CPN'NetCapture.getNet()))\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"structure CPNToolsModel = CPNToolsModel(structure CPNToolsState = CPNToolsState structure CPNToolsEvent = CPNToolsEvent)\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"local\\n  val bs = String.concat (CPN'Event.genBind (CPN'NetCapture.getNet ()));\\n  val lines = String.tokens (fn c => c = #\\\"\\\\n\\\") bs;\\n  fun nm l = case String.tokens (fn c => c = #\\\" \\\") l of\\n      (\\\"|\\\" :: n :: \\\"of\\\" :: _) => SOME n\\n    | (\\\"datatype\\\" :: \\\"event\\\" :: \\\"=\\\" :: \\\"CPN'FAKE\\\" :: _) => NONE\\n    | _ => NONE;\\n  val names = List.mapPartial nm lines;\\n  val code = \\\"structure CPN'SSNames = struct val all = [\\\" ^ String.concatWith \\\",\\\" (List.map (fn n => \\\"\\\\\\\"\\\" ^ n ^ \\\"\\\\\\\"\\\") names) ^ \\\"]\\\\nfun name e = case e of \\\" ^\\n     String.concatWith \\\" | \\\" (List.map (fn n => \\\"Bind.\\\" ^ n ^ \\\" _ => \\\\\\\"\\\" ^ n ^ \\\"\\\\\\\"\\\") names) ^ \\\" | _ => \\\\\\\"?\\\\\\\" end\\\";\\nin\\n  val _ = CPN'Env.use_string [code]\\nend;\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"val ssNb = 262144;\\nfun ssHash (s : string) = (CharVector.foldl (fn (c, a) => (a * 33 + Char.ord c) mod 16777213) 5381 s) mod ssNb;\\nval ssSlice : (int -> bool) ref = ref (fn _ => true);\\nval ssFin : (unit -> unit) ref = ref (fn () => ());\\nfun ssStart (pids : string list, maxNodes : int, outFile : string) =\\nlet\\n  val t0 = Time.now ();\\n  val tbl : (string * int) list Array.array = Array.array (ssNb, []);\\n  val parent = Array.array (maxNodes + 2, ~1);\\n  val pev = Array.array (maxNodes + 2, \\\"\\\");\\n  val nodes = ref 0;\\n  val arcs = ref 0;\\n  val np = List.length pids;\\n  val lo = Array.array (np, 1000000000);\\n  val hi = Array.array (np, 0);\\n  val fired : string list ref = ref [];\\n  val dead : (int * string) list ref = ref [];\\n  val complete = ref true;\\n  val info = List.map (fn id => valOf (HashTable.find CPN'Place.instances id)) pids;\\n  val front : (int * CPNToolsState.state * CPNToolsModel.event list) list ref = ref [];\\n  val back : (int * CPNToolsState.state * CPNToolsModel.event list) list ref = ref [];\\n  fun visit s =\\n    (CPNToolsState.setState s;\\n     ignore (List.foldl (fn (i, k) =>\\n        let val n = #size i 1 in\\n          (if n < Array.sub (lo, k) then Array.update (lo, k, n) else ());\\n          (if n > Array.sub (hi, k) then Array.update (hi, k, n) else ());\\n          k + 1 end) 0 info));\\n  fun lookup (s, p, e) =\\n    let val key = CPNToolsState.toString s;\\n        val h = ssHash key;\\n        val b = Array.sub (tbl, h)\\n    in case List.find (fn (k, _) => k = key) b of\\n         SOME (_, id) => (id, false)\\n       | NONE => if !nodes >= maxNodes then (complete := false; (~1, false))\\n                 else let val id = !nodes + 1 in\\n                        nodes := id; Array.update (tbl, h, (key, id) :: b);\\n                        Array.update (parent, id, p); Array.update (pev, id, e); (id, true) end\\n    end;\\n  fun trace id = if id <= 1 orelse Array.sub (parent, id) < 0 then [] else List.@ (trace (Array.sub (parent, id)), [Array.sub (pev, id)]);\\n  fun process (id, s, evs) =\\n    (visit s;\\n     (case evs of\\n        [] => dead := (id, String.concatWith \\\" | \\\" (List.map (fn i => String.map (fn c => if c = #\\\"\\\\n\\\" then #\\\" \\\" else c) (#print i 1)) info)) :: !dead\\n      | _ => ());\\n     List.app (fn e =>\\n       let val nm = CPN'SSNames.name e;\\n           val succ = CPNToolsModel.nextStates (s, e) in\\n         (if List.exists (fn x => x = nm) (!fired) then () else fired := nm :: !fired);\\n         List.app (fn (s2, ev2) =>\\n           (arcs := !arcs + 1;\\n            case lookup (s2, id, nm) of\\n              (id2, true) => back := (id2, s2, ev2) :: !back\\n            | _ => ())) succ\\n       end) evs);\\n  fun finish () =\\n    let val f = TextIO.openOut outFile;\\n        fun w s = TextIO.output (f, s ^ \\\"\\\\n\\\");\\n    in w (\\\"nodes \\\" ^ Int.toString (!nodes)); w (\\\"arcs \\\" ^ Int.toString (!arcs));\\n       w (\\\"complete \\\" ^ (if !complete andalso List.null (!front) andalso List.null (!back) then \\\"1\\\" else \\\"0\\\"));\\n       w (\\\"ms \\\" ^ LargeInt.toString (Time.toMilliseconds (Time.- (Time.now (), t0))));\\n       w (\\\"fired \\\" ^ String.concatWith \\\",\\\" (!fired));\\n       w (\\\"alltrans \\\" ^ String.concatWith \\\",\\\" CPN'SSNames.all);\\n       List.tabulate (np, fn i => w (\\\"bound \\\" ^ List.nth (pids, i) ^ \\\" \\\" ^ Int.toString (Array.sub (lo, i)) ^ \\\" \\\" ^ Int.toString (Array.sub (hi, i))));\\n       List.app (fn (id, m) => w (\\\"dead \\\" ^ Int.toString id ^ \\\" \\\" ^ String.concatWith \\\",\\\" (trace id) ^ \\\" # \\\" ^ m)) (List.rev (!dead));\\n       TextIO.closeOut f\\n    end;\\n  (* a one-line report so the caller can show progress between slices *)\\n  fun progress () =\\n    let val f = TextIO.openOut outFile in\\n      TextIO.output (f, \\\"nodes \\\" ^ Int.toString (!nodes) ^ \\\"\\\\n\\\"); TextIO.closeOut f\\n    end;\\n  (* runs for at most ms milliseconds; true when finished *)\\n  fun slice ms =\\n    let val t1 = Time.now ();\\n        fun expired () = Time.toMilliseconds (Time.- (Time.now (), t1)) > LargeInt.fromInt ms;\\n        fun go () =\\n          (case !front of\\n             [] => (case !back of [] => (finish (); true) | b => (front := List.rev b; back := []; go ()))\\n           | x :: rest => if expired () then (progress (); false) else (front := rest; process x; go ()))\\n    in go () end;\\n  val _ = List.app (fn (s, evs) => case lookup (s, ~1, \\\"\\\") of (id, true) => back := (id, s, evs) :: !back | _ => ()) (CPNToolsModel.getInitialStates ());\\nin (ssSlice := slice; ssFin := finish) end;\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"val _ = (OS.FileSys.mkDir \\\"/home/u/CPN_IDE\\\") handle _ => (); val _ = (OS.FileSys.mkDir \\\"/home/u/CPN_IDE/model_out\\\") handle _ => (); val _ = (OS.FileSys.mkDir \\\"/home/u/CPN_IDE/model_out/explore\\\") handle _ => (); val _ = (OS.FileSys.remove \\\"/home/u/CPN_IDE/model_out/explore/ss.html\\\") handle _ => ();\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"ssStart ([\\\"ID16\\\",\\\"ID17\\\",\\\"ID18\\\"], 100000, \\\"/home/u/CPN_IDE/model_out/explore/ss.html\\\");\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\",\"files\":null}"
+ },
+ {
+  "route": "sim/script",
+  "body": "{\"repeat\":\"val _ = (!ssSlice) 500;\"}",
+  "status": 200,
+  "text": "{\"extraInfo\":\"\\n\\nFilename: /home/u/CPN_IDE/model_out/explore/ss.html\\nnodes 3\\narcs 4\\ncomplete 1\\nms 6\\nfired MutualExclusion'Leave,MutualExclusion'Enter\\nalltrans MutualExclusion'Enter,MutualExclusion'Leave\\nbound ID16 1 2\\nbound ID17 0 1\\nbound ID18 0 1\\n\",\"files\":null}"
+ },
+ {
+  "route": "sim/init",
+  "body": "{}",
+  "status": 200,
+  "text": "{\"firedTrans\":[],\"enableTrans\":[\"ID19\"],\"tokensAndMark\":[{\"id\":\"ID16\",\"tokens\":2,\"marking\":\"1`1++\\n1`2\"},{\"id\":\"ID17\",\"tokens\":1,\"marking\":\"1`()\"},{\"id\":\"ID18\",\"tokens\":0,\"marking\":\"empty\"}],\"extraInfo\":null}"
+ },
+ {
+  "route": "",
+  "status": 404,
+  "text": "{\"timestamp\":\"2026-10-22T18:03:54.945+0000\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Not Found\",\"path\":\"/api/v2/cpn/\"}"
+ }
+]
