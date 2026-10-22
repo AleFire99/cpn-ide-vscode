@@ -149,6 +149,21 @@
         "icon": "$(check)"
       },
       {
+        "command": "cpnIde.structuralAnalysis",
+        "title": "CPN IDE: Structural Analysis",
+        "icon": "$(symbol-numeric)"
+      },
+      {
+        "command": "cpnIde.analyseStateSpace",
+        "title": "CPN IDE: Analyse State Space",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "cpnIde.saveAnalysisReport",
+        "title": "CPN IDE: Save Analysis Report",
+        "icon": "$(save)"
+      },
+      {
         "command": "cpnIde.refreshModels",
         "title": "CPN IDE: Refresh Models",
         "icon": "$(refresh)"
@@ -176,6 +191,18 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Path to a Java 17+ executable. Leave empty to use `JAVA_HOME`, `java` on the PATH, or an automatically downloaded runtime."
+        },
+        "cpnIde.stateSpace.maxStates": {
+          "type": "number",
+          "default": 100000,
+          "minimum": 1,
+          "markdownDescription": "Analyse State Space stops after this many states and reports a partial result."
+        },
+        "cpnIde.stateSpace.timeoutSeconds": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "markdownDescription": "Analyse State Space stops after this many seconds and reports a partial result."
         },
         "cpnIde.port": {
           "type": "number",
@@ -293,7 +320,7 @@
     "viewsWelcome": [
       {
         "view": "cpnIde.analysis",
-        "contents": "No results yet. Open a .cpn or .petri.json model and check it against the CPN IDE validator.\n[Check Model](command:cpnIde.checkModel)"
+        "contents": "No results yet. Open a .cpn or .petri.json model and check it against the CPN IDE validator, or analyse its structure.\n[Check Model](command:cpnIde.checkModel)\n[Structural Analysis](command:cpnIde.structuralAnalysis)\n[Analyse State Space](command:cpnIde.analyseStateSpace)"
       },
       {
         "view": "cpnIde.net",
@@ -464,6 +491,21 @@
           "command": "cpnIde.checkModel",
           "when": "view == cpnIde.analysis",
           "group": "navigation@1"
+        },
+        {
+          "command": "cpnIde.structuralAnalysis",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cpnIde.analyseStateSpace",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@3"
+        },
+        {
+          "command": "cpnIde.saveAnalysisReport",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@4"
         },
         {
           "command": "cpnIde.newNet",

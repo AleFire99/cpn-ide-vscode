@@ -26,6 +26,9 @@ import { reloadAllWebviews } from '../webview/panel';
 /** Thrown after the missing-glibc problem was already reported, so the generic error dialog is skipped. */
 class ReportedError extends Error {}
 
+/** `-Duser.home` of the Docker image (docker/Dockerfile). */
+const DOCKER_BACKEND_HOME = '/data';
+
 export class BackendManager implements vscode.Disposable {
   private static instance: BackendManager | undefined;
   private running: RunningBackend | undefined;
@@ -59,6 +62,15 @@ export class BackendManager implements vscode.Disposable {
     // Through the proxy when it runs, so these calls queue up with the UI's inits.
     if (external) return this.proxy.url ?? external.replace(/\/+$/, '');
     return this.running?.isAlive() ? this.proxy.url ?? this.running.baseUrl : undefined;
+  }
+
+  /**
+   * The backend's `user.home`, where the state space report is written. Local: our data dir. With `cpnIde.backendUrl`
+   * (e.g. the Docker image, which runs with `-Duser.home=/data`) it is the home inside that backend, not ours.
+   */
+  userHome(): string {
+    const external = vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl', '').trim();
+    return external ? DOCKER_BACKEND_HOME : path.join(this.ctx.globalStorageUri.fsPath, 'data');
   }
 
   get status(): BackendStatus {
@@ -129,7 +141,7 @@ export class BackendManager implements vscode.Disposable {
           const r = await startBackendProcess({
             javaPath,
             backendDir,
-            userHome: path.join(this.ctx.globalStorageUri.fsPath, 'data'),
+            userHome: this.userHome(),
             tmpDir,
             port,
             onOutput: (s) => {

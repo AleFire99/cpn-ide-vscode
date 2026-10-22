@@ -56,6 +56,12 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   `.cpn` / `.sml`). Click one to jump to it in the JSON.
 - **Analysis**: **Check Model** (the check button in the view title) validates the open `.cpn` or `.petri.json` with the
   CPN IDE validator and lists the errors with their location; click one to open its source.
+  **Structural Analysis** needs no backend: it shows boundedness, deadlock freedom / liveness (Commoner and the state
+  equation) and P/T-invariants in sections. **Analyse State Space** explores the reachable markings on the backend
+  (cancellable; limits `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`) and shows bounds, dead
+  markings and dead transitions, confirming or refuting the structural deadlock candidate. Every row carries a badge:
+  proved, up to N, candidate, inconclusive or approximate (the net has arcs whose token count is not fixed). A cut-short
+  search is labelled as a lower bound. **Save Analysis Report** writes both to a text file.
 - **Backend**: the backend state (as in the status bar) and Start/Restart, Stop and Show Log. The Docker rows appear on
   macOS, when `cpnIde.backendUrl` is set, or if the backend failed. The gear in the title opens the settings.
 - **Get Started** (collapsed by default): the bundled examples, **New Net**, the walkthrough and this documentation.
