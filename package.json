@@ -144,6 +144,11 @@
         "icon": "$(export)"
       },
       {
+        "command": "cpnIde.checkModel",
+        "title": "CPN IDE: Check Model",
+        "icon": "$(check)"
+      },
+      {
         "command": "cpnIde.refreshModels",
         "title": "CPN IDE: Refresh Models",
         "icon": "$(refresh)"
@@ -268,6 +273,11 @@
           "icon": "media/activity-icon.svg"
         },
         {
+          "id": "cpnIde.analysis",
+          "name": "Analysis",
+          "icon": "media/activity-icon.svg"
+        },
+        {
           "id": "cpnIde.backend",
           "name": "Backend",
           "icon": "media/activity-icon.svg"
@@ -281,6 +291,10 @@
       ]
     },
     "viewsWelcome": [
+      {
+        "view": "cpnIde.analysis",
+        "contents": "No results yet. Open a .cpn or .petri.json model and check it against the CPN IDE validator.\n[Check Model](command:cpnIde.checkModel)"
+      },
       {
         "view": "cpnIde.net",
         "contents": "Open a .petri.json text model to see its pages, places, transitions and arcs."
@@ -446,6 +460,11 @@
         }
       ],
       "view/title": [
+        {
+          "command": "cpnIde.checkModel",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@1"
+        },
         {
           "command": "cpnIde.newNet",
           "when": "view == cpnIde.models",
