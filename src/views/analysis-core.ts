@@ -146,7 +146,7 @@ export function structuralRows(r: StructuralResults, ss?: StateSpaceResult): Ana
     b.bounded === true
       ? result('Structurally bounded', { kind: 'proved' }, approx)
       : b.bounded === false
-        ? result('Not structurally bounded', { kind: 'proved' }, approx, 'some firing sequence adds tokens without limit')
+        ? result('Not structurally bounded', { kind: 'proved' }, approx, 'unbounded for some initial marking; this one may still be bounded')
         : result('Structural boundedness', { kind: 'inconclusive' }, approx),
   );
   net.places.forEach((pl, p) => {
