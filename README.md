@@ -67,6 +67,9 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   markings and dead transitions, confirming or refuting the structural deadlock candidate. Every row carries a badge:
   proved, up to N, candidate, inconclusive or approximate (the net has arcs whose token count is not fixed). A cut-short
   search is labelled as a lower bound. **Save Analysis Report** writes both to a text file.
+  Caveats: the state space is for untimed nets only; monitors are ignored; a partial search (cap or timeout reached)
+  only gives lower bounds and is labelled as such; and the structural analysis counts tokens without their colours, so
+  its results are approximate whenever an arc's token count is not fixed (the badge says so).
 - **Backend**: the backend state (as in the status bar) and Start/Restart, Stop and Show Log. The Docker rows appear on
   macOS, when `cpnIde.backendUrl` is set, or if the backend failed. The gear in the title opens the settings.
 - **Get Started** (collapsed by default): the bundled examples, **New Net**, the walkthrough and this documentation.
@@ -245,7 +248,7 @@ starts, ✓ ready, red when the backend or the simulator failed. Click it to sho
 
 ## Examples
 
-The [`examples/`](https://github.com/AleFire99/cpn-ide-vscode/tree/develop/examples) folder has four small models, each
+The [`examples/`](https://github.com/AleFire99/cpn-ide-vscode/tree/develop/examples) folder has six small models, each
 as a text model and as a generated `.cpn`:
 
 | Model | What it shows |
@@ -254,6 +257,8 @@ as a text model and as a generated `.cpn`:
 | `02-producer-consumer` | A counter produces items 1..5 into a buffer (guard `[n <= 5]`) and a consumer takes them out |
 | `03-mutual-exclusion` | Two processes share one lock, so at most one is ever in *Critical* |
 | `04-hierarchy` | A *Worker* subpage behind a substitution transition, with a fusion place shared by both pages |
+| `05-dining-philosophers` | Three philosophers take the left fork, then the right (uncoloured); the net can reach a dead marking |
+| `06-unbounded-producer` | A producer keeps adding tokens to a buffer; it is structurally unbounded, so a state space search hits its cap |
 
 ## How it works
 

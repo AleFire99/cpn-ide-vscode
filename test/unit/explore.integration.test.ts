@@ -45,7 +45,7 @@ describe.skipIf(!process.env.CPN_IT)('state space exploration on the real backen
     removeTempDirs();
   }, 90000);
 
-  const explore = async (example: string): Promise<StateSpaceResult> => {
+  const explore = async (example: string, maxNodes?: number): Promise<StateSpaceResult> => {
     const xml = fs.readFileSync(path.resolve(__dirname, `../../examples/${example}.cpn`), 'latin1');
     const out = await exploreStateSpace({
       fetch: recordFile ? recordingFetch : doFetch,
@@ -54,6 +54,7 @@ describe.skipIf(!process.env.CPN_IT)('state space exploration on the real backen
       sessionId: 'explore',
       userHome,
       names: nodeNames(xml),
+      maxNodes,
     });
     if (!out.ok) throw new Error(JSON.stringify(out.issues));
     if (recordFile) {
@@ -74,6 +75,19 @@ describe.skipIf(!process.env.CPN_IT)('state space exploration on the real backen
     expect(r.deadTransitions).toEqual([]);
     const lock = Object.entries(r.bounds).find(([n]) => /lock/i.test(n));
     expect(lock?.[1].max).toBe(1);
+  }, 120000);
+
+  it('05-dining-philosophers: reaches a dead marking (everyone holds one fork)', async () => {
+    const r = await explore('05-dining-philosophers');
+    expect(r.complete).toBe(true);
+    expect(r.deadMarkings.length).toBeGreaterThan(0);
+    expect(r.deadMarkings[0].trace.length).toBeGreaterThan(0);
+  }, 120000);
+
+  it('06-unbounded-producer: stops at the state cap, incomplete', async () => {
+    const r = await explore('06-unbounded-producer', 50);
+    expect(r.complete).toBe(false);
+    expect(r.nodes).toBeGreaterThanOrEqual(50);
   }, 120000);
 
   it('01-simple-flow: has a dead marking reached by named transitions', async () => {

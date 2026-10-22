@@ -4,6 +4,7 @@
 
 ### New
 
+- **Two new examples** for the Analysis view: `05-dining-philosophers` (three philosophers that can reach a dead marking) and `06-unbounded-producer` (a buffer that grows without limit), plus a walkthrough step on analysis. (#108)
 - **Run Replications and Export Event Log** in the Analysis view. Run N replications with a progress notification and open the text replication report, or record a simulation and export it as an XES or CSV event log into `play_out` next to the model (settings under `cpnIde.eventLog.*`). (#105)
 - **Structural Analysis and Analyse State Space in the Analysis view.** Results are grouped in sections (Boundedness, Deadlocks / Liveness, Invariants), each with a badge: proved, up to N, candidate, inconclusive or approximate. A state-equation deadlock candidate is confirmed or refuted by the state space. **Save Analysis Report** writes the results to a text file. New settings `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`. (#107)
 
