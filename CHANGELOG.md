@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **Structural Analysis and Analyse State Space in the Analysis view.** Results are grouped in sections (Boundedness, Deadlocks / Liveness, Invariants), each with a badge: proved, up to N, candidate, inconclusive or approximate. A state-equation deadlock candidate is confirmed or refuted by the state space. **Save Analysis Report** writes the results to a text file. New settings `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`. (#107)
+
 ## 0.6.0 — 2026-10-19
 
 CPN IDE now has its own place in the Activity Bar. The sidebar lists the nets in your workspace, shows the structure of the open model, and gives the backend controls and the examples a home, so the commands no longer have to be found in the Command Palette.
