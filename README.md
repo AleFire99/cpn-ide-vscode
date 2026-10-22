@@ -56,6 +56,11 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   `.cpn` / `.sml`). Click one to jump to it in the JSON.
 - **Analysis**: **Check Model** (the check button in the view title) validates the open `.cpn` or `.petri.json` with the
   CPN IDE validator and lists the errors with their location; click one to open its source.
+  **Run Replications** runs N replications on the backend with a progress notification and opens the text
+  `replication_report.txt` (a remote or Docker backend keeps it on its own machine, the notification says where).
+  **Export Event Log** simulates the model while recording events and writes an XES or CSV event log to a `play_out`
+  folder next to the model file; its case id (a variable bound on the net's transitions), start time, time unit and
+  recorded events come from the `cpnIde.eventLog.*` settings.
   **Structural Analysis** needs no backend: it shows boundedness, deadlock freedom / liveness (Commoner and the state
   equation) and P/T-invariants in sections. **Analyse State Space** explores the reachable markings on the backend
   (cancellable; limits `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`) and shows bounds, dead

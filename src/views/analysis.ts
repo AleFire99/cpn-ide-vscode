@@ -7,6 +7,7 @@ import { locatePointer, modelIssuesToFindings, remoteIssuesToFindings, validateR
 import { isSpecFile } from '../model/workspace';
 import { BackendManager } from '../runtime/backend';
 import { findingsToRows, type AnalysisRow } from './analysis-core';
+import { registerReplicationCommands } from './analysis-replication';
 // #107 (structural analysis and state space)
 import { randomUUID } from 'node:crypto';
 import { toPTNet } from '../analysis/abstract';
@@ -265,6 +266,7 @@ export function registerAnalysisView(): vscode.Disposable {
     provider,
     vscode.commands.registerCommand('cpnIde.checkModel', () => provider.check()),
     vscode.commands.registerCommand('cpnIde.analysis.reveal', reveal),
+    registerReplicationCommands(),
     // #107
     vscode.commands.registerCommand('cpnIde.structuralAnalysis', () => provider.structuralAnalysis()),
     vscode.commands.registerCommand('cpnIde.analyseStateSpace', () => provider.analyseStateSpace()),

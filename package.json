@@ -164,6 +164,16 @@
         "icon": "$(save)"
       },
       {
+        "command": "cpnIde.runReplications",
+        "title": "CPN IDE: Run Replications",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "cpnIde.exportEventLog",
+        "title": "CPN IDE: Export Event Log (CSV/XES)",
+        "icon": "$(output)"
+      },
+      {
         "command": "cpnIde.refreshModels",
         "title": "CPN IDE: Refresh Models",
         "icon": "$(refresh)"
@@ -177,6 +187,33 @@
     "configuration": {
       "title": "CPN IDE",
       "properties": {
+        "cpnIde.eventLog.caseId": {
+          "type": "string",
+          "default": "i",
+          "markdownDescription": "Name of the case id variable used when exporting an event log (play-out)."
+        },
+        "cpnIde.eventLog.startDateTime": {
+          "type": "string",
+          "default": "2022-01-01T00:00",
+          "markdownDescription": "Start date and time of the exported event log, as `YYYY-MM-DDTHH:mm`."
+        },
+        "cpnIde.eventLog.timeUnit": {
+          "type": "string",
+          "default": "hours",
+          "enum": ["years", "months", "weeks", "days", "hours", "minutes", "seconds"],
+          "markdownDescription": "What one simulated time unit means in the exported event log."
+        },
+        "cpnIde.eventLog.recordedEvents": {
+          "type": "string",
+          "default": "start+complete",
+          "enum": ["start", "complete", "start+complete", "in transition name"],
+          "markdownDescription": "Which lifecycle events the exported event log records."
+        },
+        "cpnIde.eventLog.informationLevelIsEvent": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Event-level (on) or case-level (off) information in the exported event log."
+        },
         "cpnIde.codeLens.enabled": {
           "type": "boolean",
           "default": true,
@@ -506,6 +543,16 @@
           "command": "cpnIde.saveAnalysisReport",
           "when": "view == cpnIde.analysis",
           "group": "navigation@4"
+      },
+      {
+          "command": "cpnIde.runReplications",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@5"
+        },
+        {
+          "command": "cpnIde.exportEventLog",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@6"
         },
         {
           "command": "cpnIde.newNet",
