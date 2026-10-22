@@ -56,9 +56,11 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   `.cpn` / `.sml`). Click one to jump to it in the JSON.
 - **Analysis**: **Check Model** (the check button in the view title) validates the open `.cpn` or `.petri.json` with the
   CPN IDE validator and lists the errors with their location; click one to open its source.
-  **Run Replications** runs N replications on the backend with a progress notification and opens the HTML performance
-  report. **Export Event Log** simulates the model while recording events and writes an XES or CSV event log; its case id,
-  start time, time unit and recorded events come from the `cpnIde.eventLog.*` settings.
+  **Run Replications** runs N replications on the backend with a progress notification and opens the text
+  `replication_report.txt` (a remote or Docker backend keeps it on its own machine, the notification says where).
+  **Export Event Log** simulates the model while recording events and writes an XES or CSV event log to a `play_out`
+  folder next to the model file; its case id (a variable bound on the net's transitions), start time, time unit and
+  recorded events come from the `cpnIde.eventLog.*` settings.
 - **Backend**: the backend state (as in the status bar) and Start/Restart, Stop and Show Log. The Docker rows appear on
   macOS, when `cpnIde.backendUrl` is set, or if the backend failed. The gear in the title opens the settings.
 - **Get Started** (collapsed by default): the bundled examples, **New Net**, the walkthrough and this documentation.

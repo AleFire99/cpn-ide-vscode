@@ -196,6 +196,11 @@ export class BackendManager implements vscode.Disposable {
     }
   }
 
+  /** The local backend's `-Duser.home` (replication reports are written below it). */
+  userHome(): string {
+    return path.join(this.ctx.globalStorageUri.fsPath, 'data');
+  }
+
   private get tmpRoot(): string {
     return path.join(this.ctx.globalStorageUri.fsPath, 'tmp');
   }

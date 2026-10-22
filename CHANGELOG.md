@@ -4,7 +4,7 @@
 
 ### New
 
-- **Run Replications and Export Event Log** in the Analysis view. Run N replications with a progress notification and open the HTML performance report, or record a simulation and export it as an XES or CSV event log (settings under `cpnIde.eventLog.*`). (#105)
+- **Run Replications and Export Event Log** in the Analysis view. Run N replications with a progress notification and open the text replication report, or record a simulation and export it as an XES or CSV event log into `play_out` next to the model (settings under `cpnIde.eventLog.*`). (#105)
 
 ## 0.6.0 — 2026-10-19
 

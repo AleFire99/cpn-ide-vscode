@@ -1,7 +1,6 @@
 // Analysis view actions: Run N Replications and Export Event Log. Kept apart from analysis.ts.
 
 import { randomUUID } from 'node:crypto';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { loadModel } from '../editor/petriModel';
@@ -9,7 +8,7 @@ import { nodeNames } from '../model/decompile';
 import { formatIssue } from '../model/types';
 import { isSpecFile } from '../model/workspace';
 import { BackendManager } from '../runtime/backend';
-import { exportEventLog, runReplications, type FetchLike, type PlayOutExport } from '../runtime/replication-core';
+import { exportEventLog, latestReportDir, runReplications, type FetchLike, type PlayOutExport } from '../runtime/replication-core';
 import { decodeBytes } from '../webview/host-core';
 
 const isModel = (u: vscode.Uri) => /\.cpn$/i.test(u.path) || isSpecFile(u.path);
@@ -43,6 +42,20 @@ function reportIssues(issues: Record<string, unknown>, xml: string, out: vscode.
   void vscode.window.showErrorMessage('CPN IDE: the model has validation errors, see the CPN IDE output.');
 }
 
+/** `replication_report.txt` of the newest `reps_<k>` under `root`, if readable. */
+async function newestReport(root: string): Promise<vscode.Uri | undefined> {
+  try {
+    const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(root));
+    const dir = latestReportDir(entries.map(([n]) => n));
+    if (!dir) return undefined;
+    const file = vscode.Uri.file(path.join(root, dir, 'replication_report.txt'));
+    await vscode.workspace.fs.stat(file);
+    return file;
+  } catch {
+    return undefined;
+  }
+}
+
 async function replications(): Promise<void> {
   const uri = targetModel();
   if (!uri) return void vscode.window.showInformationMessage('CPN IDE: open a .cpn or .petri.json model first.');
@@ -54,12 +67,13 @@ async function replications(): Promise<void> {
     if (xml === undefined) return;
     const baseUrl = await backend.ensureStarted();
     let last = 0;
+    const sessionId = `replication-${randomUUID()}`;
     const r = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Running ${n} replications` }, (progress) =>
       runReplications({
         fetch: fetch as unknown as FetchLike,
         baseUrl,
         xml,
-        sessionId: `replication-${randomUUID()}`,
+        sessionId,
         repeat: Number(n),
         onProgress: (f) => {
           const pct = Math.round(f * 100);
@@ -69,18 +83,15 @@ async function replications(): Promise<void> {
       }),
     );
     if (!r.ok) return reportIssues(r.issues, xml, backend.output);
-    backend.output.appendLine(`[analysis] replications: ${r.report}`);
-    const report = r.files[0];
-    if (!report) return void vscode.window.showInformationMessage('CPN IDE: replications finished, the backend returned no report.');
-    const dir = path.join(os.tmpdir(), `cpn-ide-replication-${randomUUID()}`);
-    await vscode.workspace.fs.createDirectory(vscode.Uri.file(dir));
-    let main: vscode.Uri | undefined;
-    for (const f of r.files) {
-      const target = vscode.Uri.file(path.join(dir, path.basename(f.fileName)));
-      await vscode.workspace.fs.writeFile(target, Buffer.from(f.htmlContent, 'utf8'));
-      main ??= target;
+    backend.output.appendLine(`[analysis] replications: ${r.extraInfo}`);
+    const root = path.join(backend.userHome(), 'CPN_IDE', 'model_out', sessionId);
+    const report = await newestReport(root);
+    if (report) {
+      await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(report), { preview: false });
+    } else {
+      const remote = vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl', '').trim() ? ' on the backend machine' : '';
+      void vscode.window.showInformationMessage(`CPN IDE: replications finished. ${r.extraInfo || `The report is in ${root}${remote}.`}`);
     }
-    if (main) await vscode.env.openExternal(main);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     backend.output.appendLine(`[analysis] replications failed: ${msg}`);
@@ -95,15 +106,12 @@ async function eventLog(): Promise<void> {
   if (!format) return;
   const steps = await vscode.window.showInputBox({ prompt: 'Number of simulation steps to record', value: '100', validateInput: (v) => (/^[1-9]\d*$/.test(v.trim()) ? undefined : 'Enter a positive integer') });
   if (steps === undefined) return;
-  const dest = await vscode.window.showSaveDialog({ defaultUri: vscode.Uri.file(uri.fsPath.replace(/(\.petri)?\.(json|cpn)$/i, `.${format}`)), filters: { 'Event log': [format] } });
-  if (!dest) return;
   const cfg = vscode.workspace.getConfiguration('cpnIde.eventLog');
   const backend = BackendManager.get();
   try {
     const xml = await modelXml(uri, backend.output);
     if (xml === undefined) return;
     const baseUrl = await backend.ensureStarted();
-    const base = path.basename(dest.fsPath).replace(/\.(xes|csv)$/i, '');
     const r = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Exporting event log' }, () =>
       exportEventLog({
         fetch: fetch as unknown as FetchLike,
@@ -117,14 +125,18 @@ async function eventLog(): Promise<void> {
         recordedEvents: cfg.get('recordedEvents', 'start+complete'),
         informationLevelIsEvent: cfg.get('informationLevelIsEvent', true),
         exportType: format as PlayOutExport,
-        path: path.dirname(dest.fsPath),
-        fileName: base,
+        path: uri.fsPath,
+        fileName: path.basename(uri.fsPath).replace(/(\.petri)?\.(json|cpn)$/i, ''),
       }),
     );
     if (!r.ok) return reportIssues(r.issues, xml, backend.output);
-    if (r.nofLogEvents === 0) return void vscode.window.showWarningMessage(r.nofPlayOutEvents === 0 ? 'CPN IDE: no events were recorded.' : 'CPN IDE: the event log is empty, check the case id variable.');
-    const pick = await vscode.window.showInformationMessage(`CPN IDE: wrote ${r.nofLogEvents} events to ${r.absoluteFileName}`, 'Open');
-    if (pick) await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(r.absoluteFileName));
+    if (r.nofPlayOutEvents === 0) return void vscode.window.showWarningMessage('CPN IDE: no events were recorded.');
+    const caseId = cfg.get('caseId', 'i');
+    if (r.nofLogEvents === 0) return void vscode.window.showWarningMessage(`CPN IDE: no event binds the case variable '${caseId}'; set cpnIde.eventLog.caseId.`);
+    const pick = await vscode.window.showInformationMessage(`CPN IDE: wrote ${r.nofLogEvents} events to ${r.absoluteFileName}`, 'Open', 'Reveal in Explorer');
+    const file = vscode.Uri.file(r.absoluteFileName);
+    if (pick === 'Open') await vscode.commands.executeCommand('vscode.open', file);
+    else if (pick === 'Reveal in Explorer') await vscode.commands.executeCommand('revealFileInOS', file);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     backend.output.appendLine(`[analysis] event log failed: ${msg}`);

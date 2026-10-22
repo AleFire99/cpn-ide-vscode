@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { exportEventLog, progressFraction, runReplications, type FetchLike } from '../../src/runtime/replication-core';
+import { exportEventLog, latestReportDir, progressFraction, runReplications, type FetchLike } from '../../src/runtime/replication-core';
 
 function fakeFetch(opts: { issues?: Record<string, unknown>; steps?: number } = {}) {
   const calls: { url: string; method?: string; headers?: Record<string, string>; body?: string }[] = [];
@@ -10,9 +10,9 @@ function fakeFetch(opts: { issues?: Record<string, unknown>; steps?: number } = 
     if (url.endsWith('/sim/init')) return json({ enableTrans: left > 0 ? ['t'] : [] });
     if (url.endsWith('/init')) return json(opts.issues ? { success: false, issues: opts.issues } : { success: true, issues: {} });
     if (url.endsWith('/sim/step/multistep')) return json({ enableTrans: --left > 0 ? ['t'] : [] });
-    if (url.endsWith('/sim/replication_progress')) return json({ progress: '50.00' });
-    if (url.endsWith('/sim/replication')) return json({ extraInfo: 'done', files: [{ fileName: 'r.html', htmlContent: '<p/>' }] });
-    if (url.endsWith('/play_out/apply')) return json({ absoluteFileName: '/o/log.xes', nofPlayOutEvents: 4, nofLogEvents: 4 });
+    if (url.endsWith('/sim/replication_progress')) return json({ progress: '100.0' });
+    if (url.endsWith('/sim/replication')) return json({ extraInfo: '', files: [] });
+    if (url.endsWith('/play_out/apply')) return json({ absoluteFileName: '/m/play_out/log.xes', nofPlayOutEvents: 4, nofLogEvents: 4 });
     if (url.includes('/play_out/')) return json({});
     if (url.endsWith('/cpn/')) return json({});
     return { status: 404, text: async () => 'nope' };
@@ -27,7 +27,7 @@ describe('runReplications', () => {
     const { f, calls } = fakeFetch();
     const seen: number[] = [];
     const r = await runReplications({ ...base, fetch: f, repeat: 30, onProgress: (p) => seen.push(p), sleep: async () => undefined, pollMs: 1 });
-    expect(r).toEqual({ ok: true, report: 'done', files: [{ fileName: 'r.html', htmlContent: '<p/>' }] });
+    expect(r).toEqual({ ok: true, extraInfo: '' });
     const rep = calls.find((c) => c.url.endsWith('/sim/replication'));
     expect(JSON.parse(rep?.body ?? '')).toEqual({ repeat: '30' });
     expect(rep?.headers?.['X-SessionId']).toBe('s1');
@@ -49,8 +49,16 @@ describe('progressFraction', () => {
   it('reads percentages and fractions', () => {
     expect(progressFraction('37.50')).toBeCloseTo(0.375);
     expect(progressFraction('0.4')).toBeCloseTo(0.4);
+    expect(progressFraction('100.0')).toBe(1);
     expect(progressFraction('x')).toBe(0);
     expect(progressFraction('250')).toBe(1);
+  });
+});
+
+describe('latestReportDir', () => {
+  it('picks the highest reps_k numerically', () => {
+    expect(latestReportDir(['reps_2', 'reps_10', 'other', 'reps_x'])).toBe('reps_10');
+    expect(latestReportDir(['a'])).toBeUndefined();
   });
 });
 
@@ -64,13 +72,13 @@ describe('exportEventLog', () => {
     recordedEvents: 'start+complete' as const,
     informationLevelIsEvent: true,
     exportType: 'xes' as const,
-    path: '/o',
+    path: '/m/net.cpn',
     fileName: 'log',
   };
   it('records events, simulates, then applies the export', async () => {
     const { f, calls } = fakeFetch({ steps: 2 });
     const r = await exportEventLog({ ...cfg, fetch: f });
-    expect(r).toEqual({ ok: true, absoluteFileName: '/o/log.xes', nofPlayOutEvents: 4, nofLogEvents: 4 });
+    expect(r).toEqual({ ok: true, absoluteFileName: '/m/play_out/log.xes', nofPlayOutEvents: 4, nofLogEvents: 4 });
     const routes = calls.map((c) => c.url.split('/cpn/')[1]);
     expect(routes).toEqual(['init', 'sim/init', 'play_out/clear', 'play_out/events/true', 'play_out/times/true', 'sim/init', 'sim/step/multistep', 'sim/step/multistep', 'play_out/apply', 'play_out/events/false', '']);
     expect(JSON.parse(calls.find((c) => c.url.endsWith('apply'))?.body ?? '')).toEqual({
@@ -80,7 +88,7 @@ describe('exportEventLog', () => {
       recordedEvents: 'start+complete',
       informationLevelIsEvent: true,
       exportType: 'xes',
-      path: '/o',
+      path: '/m/net.cpn',
       fileName: 'log',
     });
   });

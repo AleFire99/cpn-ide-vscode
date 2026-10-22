@@ -7,17 +7,19 @@ import type { FetchLike } from './headless-sim';
 
 export type { FetchLike };
 
-export interface HtmlFile {
-  fileName: string;
-  htmlContent: string;
-}
-
+/** The backend answers with empty `extraInfo`/`files`; the reports are text files on its disk (see latestReportDir). */
 export interface ReplicationResp {
   extraInfo?: string;
-  files?: HtmlFile[];
 }
 
-export type ReplicationResult = { ok: false; issues: Record<string, unknown> } | { ok: true; report: string; files: HtmlFile[] };
+export type ReplicationResult = { ok: false; issues: Record<string, unknown> } | { ok: true; extraInfo: string };
+
+/** Newest `reps_<k>` folder name (highest k) among directory entries, if any. */
+export function latestReportDir(entries: readonly string[]): string | undefined {
+  const ks = entries.map((e) => /^reps_(\d+)$/.exec(e)).filter((m): m is RegExpExecArray => !!m);
+  ks.sort((a, b) => Number(b[1]) - Number(a[1]));
+  return ks[0]?.[0];
+}
 
 export interface SessionOptions {
   fetch: FetchLike;
@@ -46,8 +48,9 @@ export interface PlayOutOptions extends SessionOptions {
   recordedEvents: 'start' | 'complete' | 'start+complete' | 'in transition name';
   informationLevelIsEvent: boolean;
   exportType: PlayOutExport;
-  /** Directory on the backend's machine the log is written to. */
+  /** Path of the model file: the backend writes to `dirname(path)/play_out/<fileName>.<ext>`. */
   path: string;
+  /** Without extension. */
   fileName: string;
 }
 
@@ -84,7 +87,7 @@ async function prepare(api: Api, xml: string): Promise<Record<string, unknown> |
   return undefined;
 }
 
-/** The backend reports a percentage as text, e.g. "37.5"; accept 0..1 as well. */
+/** The backend reports a 0-100 percentage as text, e.g. "100.0"; values up to 1 are taken as fractions. */
 export function progressFraction(progress: string | number | undefined): number {
   const n = typeof progress === 'number' ? progress : parseFloat(progress ?? '');
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -120,7 +123,7 @@ export async function runReplications(o: ReplicationOptions): Promise<Replicatio
       await poll;
     }
     o.onProgress?.(1);
-    return { ok: true, report: resp.extraInfo ?? '', files: resp.files ?? [] };
+    return { ok: true, extraInfo: resp.extraInfo ?? '' };
   } finally {
     await api('', undefined, 'release').catch(() => undefined);
   }
