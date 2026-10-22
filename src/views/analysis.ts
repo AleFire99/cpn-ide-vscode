@@ -2,6 +2,7 @@
 
 import * as vscode from 'vscode';
 import { loadModel } from '../editor/petriModel';
+import { nodeNames } from '../model/decompile';
 import { locatePointer, modelIssuesToFindings, remoteIssuesToFindings, validateRemote, type FetchLike, type Finding } from '../model/diagnostics';
 import { isSpecFile } from '../model/workspace';
 import { BackendManager } from '../runtime/backend';
@@ -93,7 +94,13 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
     } else {
       const xml = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8');
       this.files = { spec: uri, sml: uri };
-      findings = remoteIssuesToFindings(await validateRemote(fetchFn, url, xml, 'cpnide-analysis'), {});
+      // A .cpn has no id map to a source line, so name the element in the message instead.
+      const names = nodeNames(xml);
+      const resp = await validateRemote(fetchFn, url, xml, 'cpnide-analysis');
+      findings = Object.entries(resp.issues ?? {}).flatMap(([id, list]) =>
+        remoteIssuesToFindings({ issues: { [id]: list } }, {}).map((f) => (names.has(id) ? { ...f, message: `${names.get(id)}: ${f.message}` } : f)),
+      );
+      if (resp.success === false && findings.length === 0) findings = remoteIssuesToFindings(resp, {});
     }
     this.rows = findingsToRows(findings);
     this.view.description = uri.path.slice(uri.path.lastIndexOf('/') + 1);
