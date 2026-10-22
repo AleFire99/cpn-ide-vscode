@@ -100,13 +100,19 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
     execFileSync('sh', ['-c', `unzip -p "${path.join(root, 'backend', BACKEND_JAR)}" BOOT-INF/lib/org.cpntools.accesscpn.engine_3.0.0.jar > "${engine}"`]);
     execFileSync('unzip', ['-qo', engine, 'cpnmld.x86-linux', 'run.x86-linux', 'cpn.ML.x86-linux', '-d', foreignDir]);
     for (const f of ['cpnmld.x86-linux', 'run.x86-linux']) fs.chmodSync(path.join(foreignDir, f), 0o755);
-    const daemon = spawn(path.join(foreignDir, 'cpnmld.x86-linux'), [String(SIMULATOR_PORT), './run.x86-linux'], {
-      cwd: foreignDir,
-      stdio: 'ignore',
-    });
+    const spawnDaemon = () =>
+      spawn(path.join(foreignDir, 'cpnmld.x86-linux'), [String(SIMULATOR_PORT), './run.x86-linux'], { cwd: foreignDir, stdio: 'ignore' });
+    // cpnmld binds without SO_REUSEADDR, so a TIME-WAIT socket that appears after the check above (the previous
+    // test's last connection closing late) makes it exit with "Address already in use": wait and try again.
+    let daemon = spawnDaemon();
+    let up = await waitFor(() => !!findPortOwner(SIMULATOR_PORT), 10000);
+    for (let attempt = 1; !up && attempt < 3 && daemon.exitCode !== null; attempt++) {
+      expect(await waitForPortRelease(SIMULATOR_PORT, 70000)).toBe(true);
+      daemon = spawnDaemon();
+      up = await waitFor(() => !!findPortOwner(SIMULATOR_PORT), 10000);
+    }
     let started: Awaited<ReturnType<typeof startBackendProcess>> | undefined;
     try {
-      const up = await waitFor(() => !!findPortOwner(SIMULATOR_PORT), 10000);
       if (!up) {
         const log = fs.existsSync(path.join(foreignDir, 'cpnmld.log')) ? fs.readFileSync(path.join(foreignDir, 'cpnmld.log'), 'utf8') : '(no log)';
         throw new Error(`daemon not found: exit=${daemon.exitCode} sig=${daemon.signalCode} uid=${process.getuid?.()} log=${log} tcp=${fs.readFileSync('/proc/net/tcp', 'utf8')}`);
@@ -136,7 +142,7 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
       await waitFor(() => findSimulatorPids(tmpDir).length === 0, 10000);
       for (const pid of findSimulatorPids(tmpDir)) process.kill(pid, 'SIGKILL');
     }
-  }, 180000);
+  }, 300000);
 
   it('survives overlapping first inits and a stop/start cycle (simulator pre-started)', async () => {
     expect(await waitForPortRelease(SIMULATOR_PORT, 70000)).toBe(true);
