@@ -9,6 +9,7 @@ import {
   findSimulatorPids,
   isForeignSimulator,
   isPortListening,
+  shimEnv,
   startBackendProcess,
   stopSimulatorProcess,
   waitForPortRelease,
@@ -101,7 +102,11 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
     execFileSync('unzip', ['-qo', engine, 'cpnmld.x86-linux', 'run.x86-linux', 'cpn.ML.x86-linux', '-d', foreignDir]);
     for (const f of ['cpnmld.x86-linux', 'run.x86-linux']) fs.chmodSync(path.join(foreignDir, f), 0o755);
     const spawnDaemon = () =>
-      spawn(path.join(foreignDir, 'cpnmld.x86-linux'), [String(SIMULATOR_PORT), './run.x86-linux'], { cwd: foreignDir, stdio: 'ignore' });
+      spawn(path.join(foreignDir, 'cpnmld.x86-linux'), [String(SIMULATOR_PORT), './run.x86-linux'], {
+        cwd: foreignDir,
+        env: shimEnv(path.join(root, 'backend')),
+        stdio: 'ignore',
+      });
     // cpnmld binds without SO_REUSEADDR, so a TIME-WAIT socket that appears after the check above (the previous
     // test's last connection closing late) makes it exit with "Address already in use": wait and try again.
     let daemon = spawnDaemon();

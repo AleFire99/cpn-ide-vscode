@@ -44,10 +44,12 @@ jobs:
       - name: Install innoextract
         run: |
           sudo apt-get update
-          sudo apt-get install -y innoextract
+          sudo apt-get install -y innoextract gcc-multilib
 
       - name: Fetch CPN IDE binaries
         run: scripts/fetch-cpn.sh
+        env:
+          REQUIRE_SOCKSHIM: "1"
 
       - run: npm run build
 
@@ -56,6 +58,9 @@ jobs:
           mkdir -p dist-vsix
           npx @vscode/vsce package --no-dependencies --target linux-x64 -o dist-vsix/
           npx @vscode/vsce package --no-dependencies --target win32-x64 -o dist-vsix/
+
+      - name: Check the socket shim is in the linux-x64 VSIX
+        run: unzip -l dist-vsix/*linux-x64*.vsix | grep -q 'resources/backend/shim/x86_64/libsockshim.so'
 
       - uses: actions/upload-artifact@v7
         with:

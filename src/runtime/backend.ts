@@ -15,6 +15,7 @@ import {
   reapStaleSimulators,
   startBackendProcess,
   type RunningBackend,
+  seccompHint,
 } from './backend-core';
 import { checkGlibc32, glibc32Message, type Glibc32Problem } from './glibc-core';
 import { InitProxy } from './init-proxy';
@@ -34,6 +35,7 @@ export class BackendManager implements vscode.Disposable {
   private running: RunningBackend | undefined;
   private starting: Promise<string> | undefined;
   private failureShown = false;
+  private seccompSeen = false;
   private initWatchdog: NodeJS.Timeout | undefined;
   private retrying = false;
   // Stable URL in front of the backend (also across restarts) that serializes net creation; see InitProxy.
@@ -137,6 +139,7 @@ export class BackendManager implements vscode.Disposable {
         { location: vscode.ProgressLocation.Notification, title: 'CPN IDE: starting backend...' },
         async () => {
           this.failureShown = false;
+          this.seccompSeen = false;
           this.output.appendLine(`[backend] starting with ${javaPath}`);
           const r = await startBackendProcess({
             javaPath,
@@ -146,6 +149,7 @@ export class BackendManager implements vscode.Disposable {
             port,
             onOutput: (s) => {
               this.output.append(stripAnsi(s));
+              if (seccompHint(s) || s.includes('seccomp profile blocks')) this.seccompSeen = true;
               if (s.includes('Error starting simulator')) void this.reportSimulatorFailure();
               this.watchInit(s);
             },
@@ -270,10 +274,13 @@ export class BackendManager implements vscode.Disposable {
     this.setStatus({ kind: 'simulatorDown' });
     const foreign = this.findForeignOwner();
     this.output.appendLine('[error] the simulator could not start');
+    const hint = this.seccompSeen ? seccompHint('Function not implemented') : undefined;
+    if (hint) this.output.appendLine(`[error] ${hint}`);
     const buttons = [...(foreign ? ['Stop stale simulator'] : []), 'Retry', 'Show Log'];
     const c = await vscode.window.showErrorMessage(
       'CPN IDE: the simulator could not start.' +
-        (foreign ? ` A stale simulator daemon (pid ${foreign.pid}) is holding port ${SIMULATOR_PORT}.` : ''),
+        (foreign ? ` A stale simulator daemon (pid ${foreign.pid}) is holding port ${SIMULATOR_PORT}.` : '') +
+        (hint ? ` ${hint}` : ''),
       ...buttons,
     );
     if (c === 'Show Log') {

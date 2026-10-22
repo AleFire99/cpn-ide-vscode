@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- **Local backend inside containers on Docker 29 and later** (dev containers, Codespaces). The Linux VSIX now ships the same socket shim as the Docker image and preloads it for the simulator, so "Error starting simulator" no longer appears under Docker's default sandbox. If the simulator log still shows "Function not implemented", the extension now explains the cause. (#126)
 - **Docker backend on Docker 29 and later.** Docker's default sandbox (seccomp) no longer allows the old 32-bit system call the simulator used to open its sockets, so the backend image failed with "Error starting simulator". The image now routes those calls through the direct system calls Docker still allows, so it works with Docker's default sandbox, without `--privileged` or `seccomp=unconfined`. (#119)
 
 ## 0.6.0 — 2026-10-19

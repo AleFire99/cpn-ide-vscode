@@ -12,7 +12,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl innoextract nodejs npm zip unzip \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
-COPY scripts/fetch-cpn.sh scripts/patch-cpnmld.mjs scripts/patch-ui.mjs scripts/
+COPY scripts/fetch-cpn.sh scripts/build-sockshim.sh scripts/patch-cpnmld.mjs scripts/patch-ui.mjs scripts/
 RUN scripts/fetch-cpn.sh
 
 # ---- Stage 2: socket shim for the 32-bit simulator (see docker/sockshim.c, #119) ----
@@ -47,7 +47,11 @@ COPY --from=fetch /src/resources/backend/cpn-ide-back-1.28-SNAPSHOT.jar /src/res
 # ld.so expands $PLATFORM per process: i686 (i386) for the simulator, x86_64 for everything else.
 COPY --from=shim /src/libsockshim32.so shim/i686/libsockshim.so
 COPY --from=shim /src/libsockshim32.so shim/i386/libsockshim.so
+COPY --from=shim /src/libsockshim32.so shim/i586/libsockshim.so
 COPY --from=shim /src/libsockshim64.so shim/x86_64/libsockshim.so
+# glibc >= 2.33 reports $PLATFORM as haswell / xeon_phi on CPUs with those hwcaps: keep 64-bit processes quiet there too.
+COPY --from=shim /src/libsockshim64.so shim/haswell/libsockshim.so
+COPY --from=shim /src/libsockshim64.so shim/xeon_phi/libsockshim.so
 
 # user.home is the data dir: the backend writes the simulator workspace under it.
 ENV JAVA_OPTS="" \
