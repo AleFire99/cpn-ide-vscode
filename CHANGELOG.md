@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **Run Replications and Export Event Log** in the Analysis view. Run N replications with a progress notification and open the HTML performance report, or record a simulation and export it as an XES or CSV event log (settings under `cpnIde.eventLog.*`). (#105)
+
 ## 0.6.0 — 2026-10-19
 
 CPN IDE now has its own place in the Activity Bar. The sidebar lists the nets in your workspace, shows the structure of the open model, and gives the backend controls and the examples a home, so the commands no longer have to be found in the Command Palette.

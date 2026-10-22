@@ -7,6 +7,7 @@ import { locatePointer, modelIssuesToFindings, remoteIssuesToFindings, validateR
 import { isSpecFile } from '../model/workspace';
 import { BackendManager } from '../runtime/backend';
 import { findingsToRows, type AnalysisRow } from './analysis-core';
+import { registerReplicationCommands } from './analysis-replication';
 
 /** Where a finding's text lives. */
 interface Files {
@@ -128,5 +129,6 @@ export function registerAnalysisView(): vscode.Disposable {
     provider,
     vscode.commands.registerCommand('cpnIde.checkModel', () => provider.check()),
     vscode.commands.registerCommand('cpnIde.analysis.reveal', reveal),
+    registerReplicationCommands(),
   );
 }
