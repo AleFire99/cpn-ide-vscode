@@ -39,3 +39,9 @@ binaries. No other bytes change. The macOS daemon is not patched (the local simu
 ## Binaries are not stored in this repository
 
 The CPN IDE binaries are downloaded from the official CPN IDE installer by `scripts/fetch-cpn.sh` and placed in `resources/`. They are not stored in this repository.
+
+## javascript-lp-solver
+
+- Use: linear and mixed-integer programming for structural analysis (state equation), bundled into the extension.
+- License: MIT
+- Project: https://github.com/JWally/jsLPSolver
