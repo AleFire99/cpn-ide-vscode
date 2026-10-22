@@ -12,6 +12,7 @@ import {
   preflightError,
   probeHttp,
   reapStaleSimulators,
+  SHIM_PLATFORMS,
   seccompHint,
   shimEnv,
   waitForHttp,
@@ -128,6 +129,14 @@ describe('shimEnv', () => {
   });
   it('prepends to an existing LD_PRELOAD', () => {
     expect(shimEnv('/b', { LD_PRELOAD: 'x.so' }, has, 'linux').LD_PRELOAD).toBe('/b/shim/$PLATFORM/libsockshim.so:x.so');
+  });
+  it('needs every platform dir, so 64-bit processes never warn', () => {
+    expect(SHIM_PLATFORMS).toEqual(expect.arrayContaining(['x86_64', 'haswell', 'xeon_phi', 'i386', 'i586', 'i686']));
+    const env = {};
+    expect(shimEnv('/b', env, (p) => !p.includes('/haswell/'), 'linux')).toBe(env);
+    const seen: string[] = [];
+    shimEnv('/b', env, (p) => (seen.push(p), true), 'linux');
+    expect(seen).toHaveLength(SHIM_PLATFORMS.length);
   });
   it('does nothing when the shim is missing or off Linux', () => {
     const env = { A: '1' };

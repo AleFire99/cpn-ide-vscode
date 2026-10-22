@@ -90,6 +90,9 @@ export function buildBackendArgs(o: Pick<SpawnOptions, 'userHome' | 'tmpDir' | '
   ];
 }
 
+/** $PLATFORM values of ld.so: 32-bit i386/i586/i686, 64-bit x86_64 (haswell and xeon_phi on CPUs with those hwcaps). */
+export const SHIM_PLATFORMS = ['x86_64', 'haswell', 'xeon_phi', 'i386', 'i586', 'i686'];
+
 /**
  * Env for the java child (and the simulator daemon) on Linux: preload the socketcall shim when the
  * VSIX ships it (#126). Docker >= 29's default seccomp profile blocks the i386 socketcall(2) of the
@@ -101,7 +104,8 @@ export function shimEnv(
   exists: (p: string) => boolean = fs.existsSync,
   platform: NodeJS.Platform = process.platform,
 ): NodeJS.ProcessEnv {
-  if (platform !== 'linux' || !exists(path.join(backendDir, 'shim', 'x86_64', 'libsockshim.so'))) return env;
+  // Every $PLATFORM ld.so may report must resolve, or 64-bit processes print "cannot be preloaded".
+  if (platform !== 'linux' || !SHIM_PLATFORMS.every((d) => exists(path.join(backendDir, 'shim', d, 'libsockshim.so')))) return env;
   const shim = `${backendDir}/shim/$PLATFORM/libsockshim.so`;
   return { ...env, LD_PRELOAD: env.LD_PRELOAD ? `${shim}:${env.LD_PRELOAD}` : shim };
 }

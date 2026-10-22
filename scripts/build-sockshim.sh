@@ -28,8 +28,7 @@ echo > "$WORK/empty.c"
 gcc -shared -fPIC -o "$WORK/libsockshim64.so" "$WORK/empty.c" || skip "could not build the 64-bit stub"
 
 rm -rf "$SHIM_DIR"
-mkdir -p "$SHIM_DIR/i686" "$SHIM_DIR/i386" "$SHIM_DIR/x86_64"
-cp "$WORK/libsockshim32.so" "$SHIM_DIR/i686/libsockshim.so"
-cp "$WORK/libsockshim32.so" "$SHIM_DIR/i386/libsockshim.so"
-cp "$WORK/libsockshim64.so" "$SHIM_DIR/x86_64/libsockshim.so"
+mkdir -p "$SHIM_DIR/i686" "$SHIM_DIR/i586" "$SHIM_DIR/i386" "$SHIM_DIR/x86_64" "$SHIM_DIR/haswell" "$SHIM_DIR/xeon_phi"
+for d in i386 i586 i686; do cp "$WORK/libsockshim32.so" "$SHIM_DIR/$d/libsockshim.so"; done
+for d in x86_64 haswell xeon_phi; do cp "$WORK/libsockshim64.so" "$SHIM_DIR/$d/libsockshim.so"; done
 echo "build-sockshim: done -> $SHIM_DIR"
