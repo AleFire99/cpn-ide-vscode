@@ -123,11 +123,12 @@ export function checkReachable(net: PTNet, target: Target): 'unreachable' | 'inc
   return timedOut || res.feasible ? 'inconclusive' : 'unreachable';
 }
 
-export type DeadlockResult = { deadlockFree: true } | { candidate: number[] } | { unknown: true };
+/** `assumedMax`: the proof only covers markings where every LP-unbounded input place holds at most this many tokens. */
+export type DeadlockResult = { deadlockFree: true; assumedMax?: number } | { candidate: number[] } | { unknown: true };
 
 /**
  * MILP over the state equation looking for a marking that disables every transition.
- * Infeasible: deadlock-free (proved, unless an LP-unbounded input place holds more than the big-M).
+ * Infeasible: deadlock-free, proved outright when every input place is LP-bounded, otherwise up to `assumedMax`.
  * Feasible: a candidate dead marking, to confirm with the state space. `unknown` on solver timeout.
  */
 export function deadlockCandidate(net: PTNet): DeadlockResult {
@@ -141,6 +142,7 @@ export function deadlockCandidate(net: PTNet): DeadlockResult {
   const vars = flowVars(net, c);
   const ints: Record<string, 1> = {};
   const binaries: Record<string, 1> = {};
+  let capped = false;
   for (const t of net.transitions.keys()) ints[`x${t}`] = 1;
 
   net.transitions.forEach((_, t) => {
@@ -151,6 +153,7 @@ export function deadlockCandidate(net: PTNet): DeadlockResult {
       if (w <= 0) return;
       const z = `z${t}_${p}`;
       binaries[z] = 1;
+      if (!Number.isFinite(bounds[p])) capped = true;
       const big = Math.max(Number.isFinite(bounds[p]) ? bounds[p] : FALLBACK_BIG_M, w);
       // z = 1 forces M(p) <= w - 1; z = 0 relaxes it by big-M:  (Cx)(p) + big*z <= w - 1 + big - m0(p).
       const row = `dead${t}_${p}`;
@@ -168,5 +171,6 @@ export function deadlockCandidate(net: PTNet): DeadlockResult {
       ),
     };
   }
-  return timedOut ? { unknown: true } : { deadlockFree: true };
+  if (timedOut) return { unknown: true };
+  return capped ? { deadlockFree: true, assumedMax: FALLBACK_BIG_M } : { deadlockFree: true };
 }

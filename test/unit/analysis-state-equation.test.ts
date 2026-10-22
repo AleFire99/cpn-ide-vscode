@@ -72,4 +72,11 @@ describe('state equation analysis', () => {
     expect(checkReachable(mutex, { 1: { min: 1 }, 3: { min: 1 } })).toBe('unreachable');
     expect(checkReachable(mutex, { 1: { min: 1 } })).toBe('inconclusive');
   });
+  it('deadlock-free with an unbounded input place: proved only up to the big-M', () => {
+    const n = net(['gen', 'q'], [1, 0], [
+      ['make', { gen: 1 }, { gen: 1, q: 1 }],
+      ['take', { q: 1 }, {}],
+    ]);
+    expect(deadlockCandidate(n)).toEqual({ deadlockFree: true, assumedMax: 1e5 });
+  });
 });
