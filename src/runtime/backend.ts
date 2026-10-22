@@ -15,6 +15,7 @@ import {
   reapStaleSimulators,
   startBackendProcess,
   type RunningBackend,
+  seccompHint,
 } from './backend-core';
 import { checkGlibc32, glibc32Message, type Glibc32Problem } from './glibc-core';
 import { InitProxy } from './init-proxy';
@@ -26,11 +27,15 @@ import { reloadAllWebviews } from '../webview/panel';
 /** Thrown after the missing-glibc problem was already reported, so the generic error dialog is skipped. */
 class ReportedError extends Error {}
 
+/** `-Duser.home` of the Docker image (docker/Dockerfile). */
+const DOCKER_BACKEND_HOME = '/data';
+
 export class BackendManager implements vscode.Disposable {
   private static instance: BackendManager | undefined;
   private running: RunningBackend | undefined;
   private starting: Promise<string> | undefined;
   private failureShown = false;
+  private seccompSeen = false;
   private initWatchdog: NodeJS.Timeout | undefined;
   private retrying = false;
   // Stable URL in front of the backend (also across restarts) that serializes net creation; see InitProxy.
@@ -59,6 +64,15 @@ export class BackendManager implements vscode.Disposable {
     // Through the proxy when it runs, so these calls queue up with the UI's inits.
     if (external) return this.proxy.url ?? external.replace(/\/+$/, '');
     return this.running?.isAlive() ? this.proxy.url ?? this.running.baseUrl : undefined;
+  }
+
+  /**
+   * The backend's `user.home`, where the state space report is written. Local: our data dir. With `cpnIde.backendUrl`
+   * (e.g. the Docker image, which runs with `-Duser.home=/data`) it is the home inside that backend, not ours.
+   */
+  userHome(): string {
+    const external = vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl', '').trim();
+    return external ? DOCKER_BACKEND_HOME : path.join(this.ctx.globalStorageUri.fsPath, 'data');
   }
 
   get status(): BackendStatus {
@@ -125,15 +139,17 @@ export class BackendManager implements vscode.Disposable {
         { location: vscode.ProgressLocation.Notification, title: 'CPN IDE: starting backend...' },
         async () => {
           this.failureShown = false;
+          this.seccompSeen = false;
           this.output.appendLine(`[backend] starting with ${javaPath}`);
           const r = await startBackendProcess({
             javaPath,
             backendDir,
-            userHome: path.join(this.ctx.globalStorageUri.fsPath, 'data'),
+            userHome: this.userHome(),
             tmpDir,
             port,
             onOutput: (s) => {
               this.output.append(stripAnsi(s));
+              if (seccompHint(s) || s.includes('seccomp profile blocks')) this.seccompSeen = true;
               if (s.includes('Error starting simulator')) void this.reportSimulatorFailure();
               this.watchInit(s);
             },
@@ -258,10 +274,13 @@ export class BackendManager implements vscode.Disposable {
     this.setStatus({ kind: 'simulatorDown' });
     const foreign = this.findForeignOwner();
     this.output.appendLine('[error] the simulator could not start');
+    const hint = this.seccompSeen ? seccompHint('Function not implemented') : undefined;
+    if (hint) this.output.appendLine(`[error] ${hint}`);
     const buttons = [...(foreign ? ['Stop stale simulator'] : []), 'Retry', 'Show Log'];
     const c = await vscode.window.showErrorMessage(
       'CPN IDE: the simulator could not start.' +
-        (foreign ? ` A stale simulator daemon (pid ${foreign.pid}) is holding port ${SIMULATOR_PORT}.` : ''),
+        (foreign ? ` A stale simulator daemon (pid ${foreign.pid}) is holding port ${SIMULATOR_PORT}.` : '') +
+        (hint ? ` ${hint}` : ''),
       ...buttons,
     );
     if (c === 'Show Log') {

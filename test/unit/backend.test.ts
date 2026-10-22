@@ -12,6 +12,9 @@ import {
   preflightError,
   probeHttp,
   reapStaleSimulators,
+  SHIM_PLATFORMS,
+  seccompHint,
+  shimEnv,
   waitForHttp,
 } from '../../src/runtime/backend-core';
 
@@ -114,5 +117,37 @@ describe('simulator process discovery', () => {
     fs.mkdirSync(path.join(root, 'keep-me'));
     reapStaleSimulators(root, (pid) => pid === 222);
     expect(fs.readdirSync(root).sort()).toEqual(['222', 'keep-me']);
+  });
+});
+
+describe('shimEnv', () => {
+  const has = () => true;
+  it('preloads the shim with a literal $PLATFORM', () => {
+    const e = shimEnv('/b', { A: '1' }, has, 'linux');
+    expect(e.LD_PRELOAD).toBe('/b/shim/$PLATFORM/libsockshim.so');
+    expect(e.A).toBe('1');
+  });
+  it('prepends to an existing LD_PRELOAD', () => {
+    expect(shimEnv('/b', { LD_PRELOAD: 'x.so' }, has, 'linux').LD_PRELOAD).toBe('/b/shim/$PLATFORM/libsockshim.so:x.so');
+  });
+  it('needs every platform dir, so 64-bit processes never warn', () => {
+    expect(SHIM_PLATFORMS).toEqual(expect.arrayContaining(['x86_64', 'haswell', 'xeon_phi', 'i386', 'i586', 'i686']));
+    const env = {};
+    expect(shimEnv('/b', env, (p) => !p.includes('/haswell/'), 'linux')).toBe(env);
+    const seen: string[] = [];
+    shimEnv('/b', env, (p) => (seen.push(p), true), 'linux');
+    expect(seen).toHaveLength(SHIM_PLATFORMS.length);
+  });
+  it('does nothing when the shim is missing or off Linux', () => {
+    const env = { A: '1' };
+    expect(shimEnv('/b', env, () => false, 'linux')).toBe(env);
+    expect(shimEnv('/b', env, has, 'win32')).toBe(env);
+  });
+});
+
+describe('seccompHint', () => {
+  it('flags the socketcall failure only', () => {
+    expect(seccompHint('Error opening stream socket: Function not implemented')).toMatch(/seccomp/);
+    expect(seccompHint('all fine')).toBeUndefined();
   });
 });

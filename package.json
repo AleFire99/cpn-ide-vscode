@@ -2,7 +2,7 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Edit, validate and simulate Coloured Petri Nets (CPN Tools .cpn models or plain-text .petri.json) with the bundled CPN IDE editor and simulator.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
@@ -144,6 +144,36 @@
         "icon": "$(export)"
       },
       {
+        "command": "cpnIde.checkModel",
+        "title": "CPN IDE: Check Model",
+        "icon": "$(check)"
+      },
+      {
+        "command": "cpnIde.structuralAnalysis",
+        "title": "CPN IDE: Structural Analysis",
+        "icon": "$(symbol-numeric)"
+      },
+      {
+        "command": "cpnIde.analyseStateSpace",
+        "title": "CPN IDE: Analyse State Space",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "cpnIde.saveAnalysisReport",
+        "title": "CPN IDE: Save Analysis Report",
+        "icon": "$(save)"
+      },
+      {
+        "command": "cpnIde.runReplications",
+        "title": "CPN IDE: Run Replications",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "cpnIde.exportEventLog",
+        "title": "CPN IDE: Export Event Log (CSV/XES)",
+        "icon": "$(output)"
+      },
+      {
         "command": "cpnIde.refreshModels",
         "title": "CPN IDE: Refresh Models",
         "icon": "$(refresh)"
@@ -157,6 +187,46 @@
     "configuration": {
       "title": "CPN IDE",
       "properties": {
+        "cpnIde.eventLog.caseId": {
+          "type": "string",
+          "default": "i",
+          "markdownDescription": "Name of the case id variable used when exporting an event log (play-out)."
+        },
+        "cpnIde.eventLog.startDateTime": {
+          "type": "string",
+          "default": "2022-01-01T00:00",
+          "markdownDescription": "Start date and time of the exported event log, as `YYYY-MM-DDTHH:mm`."
+        },
+        "cpnIde.eventLog.timeUnit": {
+          "type": "string",
+          "default": "hours",
+          "enum": [
+            "years",
+            "months",
+            "weeks",
+            "days",
+            "hours",
+            "minutes",
+            "seconds"
+          ],
+          "markdownDescription": "What one simulated time unit means in the exported event log."
+        },
+        "cpnIde.eventLog.recordedEvents": {
+          "type": "string",
+          "default": "start+complete",
+          "enum": [
+            "start",
+            "complete",
+            "start+complete",
+            "in transition name"
+          ],
+          "markdownDescription": "Which lifecycle events the exported event log records."
+        },
+        "cpnIde.eventLog.informationLevelIsEvent": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Event-level (on) or case-level (off) information in the exported event log."
+        },
         "cpnIde.codeLens.enabled": {
           "type": "boolean",
           "default": true,
@@ -171,6 +241,18 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Path to a Java 17+ executable. Leave empty to use `JAVA_HOME`, `java` on the PATH, or an automatically downloaded runtime."
+        },
+        "cpnIde.stateSpace.maxStates": {
+          "type": "number",
+          "default": 100000,
+          "minimum": 1,
+          "markdownDescription": "Analyse State Space stops after this many states and reports a partial result."
+        },
+        "cpnIde.stateSpace.timeoutSeconds": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "markdownDescription": "Analyse State Space stops after this many seconds and reports a partial result."
         },
         "cpnIde.port": {
           "type": "number",
@@ -268,6 +350,11 @@
           "icon": "media/activity-icon.svg"
         },
         {
+          "id": "cpnIde.analysis",
+          "name": "Analysis",
+          "icon": "media/activity-icon.svg"
+        },
+        {
           "id": "cpnIde.backend",
           "name": "Backend",
           "icon": "media/activity-icon.svg"
@@ -281,6 +368,10 @@
       ]
     },
     "viewsWelcome": [
+      {
+        "view": "cpnIde.analysis",
+        "contents": "No results yet. Open a .cpn or .petri.json model and check it against the CPN IDE validator, or analyse its structure.\n[Check Model](command:cpnIde.checkModel)\n[Structural Analysis](command:cpnIde.structuralAnalysis)\n[Analyse State Space](command:cpnIde.analyseStateSpace)"
+      },
       {
         "view": "cpnIde.net",
         "contents": "Open a .petri.json text model to see its pages, places, transitions and arcs."
@@ -334,6 +425,14 @@
             "completionEvents": [
               "onCommand:cpnIde.newNet"
             ]
+          },
+          {
+            "id": "analyse",
+            "title": "Analyse your net",
+            "description": "Open the CPN IDE sidebar and use the **Analysis** view: check the model, run the structural analysis (no backend needed) and explore the state space. Try it on the dining philosophers example.\n[Open an Example](command:cpnIde.openExample)",
+            "media": {
+              "markdown": "media/walkthrough/analysis.md"
+            }
           },
           {
             "id": "linux",
@@ -447,6 +546,36 @@
       ],
       "view/title": [
         {
+          "command": "cpnIde.checkModel",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@1"
+        },
+        {
+          "command": "cpnIde.structuralAnalysis",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cpnIde.analyseStateSpace",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@3"
+        },
+        {
+          "command": "cpnIde.saveAnalysisReport",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@4"
+        },
+        {
+          "command": "cpnIde.runReplications",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@5"
+        },
+        {
+          "command": "cpnIde.exportEventLog",
+          "when": "view == cpnIde.analysis",
+          "group": "navigation@6"
+        },
+        {
           "command": "cpnIde.newNet",
           "when": "view == cpnIde.models",
           "group": "navigation@1"
@@ -526,6 +655,7 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
+    "javascript-lp-solver": "^0.4.24",
     "jsonc-parser": "^3.3.1"
   }
 }

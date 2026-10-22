@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "declarations": "06-unbounded-producer.sml",
+  "pages": [
+    {
+      "name": "UnboundedProducer",
+      "places": [
+        {
+          "name": "Buffer",
+          "type": "UNIT",
+          "pos": [
+            250,
+            0
+          ]
+        }
+      ],
+      "transitions": [
+        {
+          "name": "Produce",
+          "pos": [
+            0,
+            0
+          ]
+        }
+      ],
+      "arcs": [
+        {
+          "from": "Produce",
+          "to": "Buffer",
+          "inscription": "()"
+        }
+      ]
+    }
+  ]
+}

@@ -15,6 +15,7 @@ import { isSpecFile } from './model/workspace';
 import { BackendManager } from './runtime/backend';
 import { initDocker, startDockerBackend, stopDockerBackend, stopDockerOnExit } from './runtime/docker';
 import { createStatusBar } from './runtime/statusBar';
+import { registerAnalysisView } from './views/analysis';
 import { registerNetView } from './views/netView';
 import { registerSidebar } from './views/sidebar';
 import { openStandalonePanel, uiState } from './webview/panel';
@@ -33,6 +34,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     createStatusBar(backend),
     registerSidebar(backend),
     registerNetView(),
+    registerAnalysisView(),
     registerDefaultEditorPrompt(ctx),
   );
 

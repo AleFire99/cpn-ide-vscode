@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0 — 2026-10-22
+
+The CPN IDE sidebar gets an **Analysis** view: check a model on demand, prove properties with linear algebra (invariants, bounds, boundedness, deadlock freedom) without running anything, explore the state space in the bundled simulator to confirm or refute deadlocks, and run replications or export event logs without opening the canvas. The simulator also works again under Docker 29's default sandbox, both in the Docker image and in dev containers.
+
+### New
+
+- **Analysis view with Check Model.** A new **Analysis** section in the sidebar. **Check Model** validates the open `.cpn` or `.petri.json` with the CPN IDE validator on demand and lists the errors; click one to open its source. (#103)
+- **Two new examples** for the Analysis view: `05-dining-philosophers` (three philosophers that can reach a dead marking) and `06-unbounded-producer` (a buffer that grows without limit), plus a walkthrough step on analysis. (#108)
+- **Run Replications and Export Event Log** in the Analysis view. Run N replications with a progress notification and open the text replication report, or record a simulation and export it as an XES or CSV event log into `play_out` next to the model (settings under `cpnIde.eventLog.*`). (#105)
+- **Structural Analysis and Analyse State Space in the Analysis view.** Results are grouped in sections (Boundedness, Deadlocks / Liveness, Invariants), each with a badge: proved, up to N, candidate, inconclusive or approximate. A state-equation deadlock candidate is confirmed or refuted by the state space. **Save Analysis Report** writes the results to a text file. New settings `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`. (#107)
+
+### Fixed
+
+- **Local backend inside containers on Docker 29 and later** (dev containers, Codespaces). The Linux VSIX now ships the same socket shim as the Docker image and preloads it for the simulator, so "Error starting simulator" no longer appears under Docker's default sandbox. If the simulator log still shows "Function not implemented", the extension now explains the cause. (#126)
+- **Docker backend on Docker 29 and later.** Docker's default sandbox (seccomp) no longer allows the old 32-bit system call the simulator used to open its sockets, so the backend image failed with "Error starting simulator". The image now routes those calls through the direct system calls Docker still allows, so it works with Docker's default sandbox, without `--privileged` or `seccomp=unconfined`. (#119)
+
 ## 0.6.0 — 2026-10-19
 
 CPN IDE now has its own place in the Activity Bar. The sidebar lists the nets in your workspace, shows the structure of the open model, and gives the backend controls and the examples a home, so the commands no longer have to be found in the Command Palette.

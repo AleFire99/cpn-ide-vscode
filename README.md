@@ -47,13 +47,29 @@ net, step by step.
 4. The first time, the extension starts its local backend (and downloads Java if needed). This takes a few seconds; the
    project console at the bottom of the canvas reports **"Model is correct"** once the model has been validated.
 
-The **CPN IDE** icon in the Activity Bar opens a sidebar with four views:
+The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
 
 - **Models**: one row per net. `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in the same folder are grouped; click the
   row to open the text model (or the `.cpn`) in the canvas, or expand it for the files, whose buttons run a headless
   simulation and convert (`.cpn` → text) or export (text → `.cpn`). The active model is selected as you switch tabs.
 - **Net**: the pages, places, transitions and arcs of the open text model (or of the `.petri.json` next to an open
   `.cpn` / `.sml`). Click one to jump to it in the JSON.
+- **Analysis**: **Check Model** (the check button in the view title) validates the open `.cpn` or `.petri.json` with the
+  CPN IDE validator and lists the errors with their location; click one to open its source.
+  **Run Replications** runs N replications on the backend with a progress notification and opens the text
+  `replication_report.txt` (a remote or Docker backend keeps it on its own machine, the notification says where).
+  **Export Event Log** simulates the model while recording events and writes an XES or CSV event log to a `play_out`
+  folder next to the model file; its case id (a variable bound on the net's transitions), start time, time unit and
+  recorded events come from the `cpnIde.eventLog.*` settings.
+  **Structural Analysis** needs no backend: it shows boundedness, deadlock freedom / liveness (Commoner and the state
+  equation) and P/T-invariants in sections. **Analyse State Space** explores the reachable markings on the backend
+  (cancellable; limits `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`) and shows bounds, dead
+  markings and dead transitions, confirming or refuting the structural deadlock candidate. Every row carries a badge:
+  proved, up to N, candidate, inconclusive or approximate (the net has arcs whose token count is not fixed). A cut-short
+  search is labelled as a lower bound. **Save Analysis Report** writes both to a text file.
+  Caveats: the state space is for untimed nets only; monitors are ignored; a partial search (cap or timeout reached)
+  only gives lower bounds and is labelled as such; and the structural analysis counts tokens without their colours, so
+  its results are approximate whenever an arc's token count is not fixed (the badge says so).
 - **Backend**: the backend state (as in the status bar) and Start/Restart, Stop and Show Log. The Docker rows appear on
   macOS, when `cpnIde.backendUrl` is set, or if the backend failed. The gear in the title opens the settings.
 - **Get Started** (collapsed by default): the bundled examples, **New Net**, the walkthrough and this documentation.
@@ -223,6 +239,9 @@ starts, ✓ ready, red when the backend or the simulator failed. Click it to sho
   (needs multilib); Fedora Silverblue/Kinoite: `rpm-ostree install glibc.i686`, then reboot.
 - **"The simulator could not start"**: on Linux, check the 32-bit glibc above. Otherwise click **Show Log** (or run
   **CPN IDE: Show Backend Log**) to see why.
+- **"Function not implemented" in `cpnmld.log`** (VS Code inside a container, Docker 29 or later): the container's default
+  seccomp profile blocks the 32-bit socket call the simulator uses. The Linux VSIX preloads a shim for this
+  (`resources/backend/shim`); if you built the extension yourself, run `scripts/build-sockshim.sh` (needs `gcc-multilib`).
 - **A simulator is already running on port 20001**: the CPN simulator always uses this port, so only one can run per
   machine. A second VS Code window shares the first one's simulator. If a crashed window left one behind, the extension
   offers to stop it.
@@ -232,7 +251,7 @@ starts, ✓ ready, red when the backend or the simulator failed. Click it to sho
 
 ## Examples
 
-The [`examples/`](https://github.com/AleFire99/cpn-ide-vscode/tree/develop/examples) folder has four small models, each
+The [`examples/`](https://github.com/AleFire99/cpn-ide-vscode/tree/develop/examples) folder has six small models, each
 as a text model and as a generated `.cpn`:
 
 | Model | What it shows |
@@ -241,6 +260,8 @@ as a text model and as a generated `.cpn`:
 | `02-producer-consumer` | A counter produces items 1..5 into a buffer (guard `[n <= 5]`) and a consumer takes them out |
 | `03-mutual-exclusion` | Two processes share one lock, so at most one is ever in *Critical* |
 | `04-hierarchy` | A *Worker* subpage behind a substitution transition, with a fusion place shared by both pages |
+| `05-dining-philosophers` | Three philosophers take the left fork, then the right (uncoloured); the net can reach a dead marking |
+| `06-unbounded-producer` | A producer keeps adding tokens to a buffer; it is structurally unbounded, so a state space search hits its cap |
 
 ## How it works
 

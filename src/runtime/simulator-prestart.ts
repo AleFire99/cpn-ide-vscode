@@ -10,7 +10,7 @@ import * as fs from 'node:fs';
 import * as net from 'node:net';
 import * as path from 'node:path';
 import * as zlib from 'node:zlib';
-import { SIMULATOR_PORT, findPortOwner } from './backend-core';
+import { SIMULATOR_PORT, findPortOwner, seccompHint } from './backend-core';
 
 const ENGINE_ENTRY = 'BOOT-INF/lib/org.cpntools.accesscpn.engine_3.0.0.jar';
 
@@ -154,12 +154,14 @@ export async function prestartSimulator(
   log: (s: string) => void,
   timeoutMs = 15000,
   platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
 ): Promise<PrestartedSimulator> {
   const names = simulatorFiles(platform);
   if (!names) throw new Error(`no bundled simulator for ${platform}`);
   const simDir = extractSimulator(backendJar, tmpDir, platform);
   const child = spawn(path.join(simDir, names.cpnmld), [String(SIMULATOR_PORT), './' + names.run], {
     cwd: simDir,
+    env,
     stdio: 'ignore',
     windowsHide: true,
     detached: platform !== 'win32',
@@ -183,7 +185,17 @@ export async function prestartSimulator(
     }
   };
   for (const end = Date.now() + timeoutMs; Date.now() < end; ) {
-    if (exited) throw new Error(`simulator daemon exited early (see ${path.join(simDir, 'cpnmld.log')})`);
+    if (exited) {
+      const logFile = path.join(simDir, 'cpnmld.log');
+      let text = '';
+      try {
+        text = fs.readFileSync(logFile, 'utf8');
+      } catch {
+        /* no log */
+      }
+      const hint = seccompHint(text);
+      throw new Error(`simulator daemon exited early (see ${logFile})${hint ? `. ${hint}` : ''}`);
+    }
     const up = platform === 'linux' ? findPortOwner(SIMULATOR_PORT)?.pid === child.pid : await portTaken(SIMULATOR_PORT);
     if (up) {
       log(`[backend] simulator daemon pid ${child.pid} listening on 127.0.0.1:${SIMULATOR_PORT}\n`);

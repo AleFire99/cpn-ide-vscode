@@ -90,12 +90,40 @@ export function buildBackendArgs(o: Pick<SpawnOptions, 'userHome' | 'tmpDir' | '
   ];
 }
 
+/** $PLATFORM values of ld.so: 32-bit i386/i586/i686, 64-bit x86_64 (haswell and xeon_phi on CPUs with those hwcaps). */
+export const SHIM_PLATFORMS = ['x86_64', 'haswell', 'xeon_phi', 'i386', 'i586', 'i686'];
+
+/**
+ * Env for the java child (and the simulator daemon) on Linux: preload the socketcall shim when the
+ * VSIX ships it (#126). Docker >= 29's default seccomp profile blocks the i386 socketcall(2) of the
+ * 32-bit simulator; the shim uses the direct socket syscalls. "$PLATFORM" stays literal for ld.so.
+ */
+export function shimEnv(
+  backendDir: string,
+  env: NodeJS.ProcessEnv = process.env,
+  exists: (p: string) => boolean = fs.existsSync,
+  platform: NodeJS.Platform = process.platform,
+): NodeJS.ProcessEnv {
+  // Every $PLATFORM ld.so may report must resolve, or 64-bit processes print "cannot be preloaded".
+  if (platform !== 'linux' || !SHIM_PLATFORMS.every((d) => exists(path.join(backendDir, 'shim', d, 'libsockshim.so')))) return env;
+  const shim = `${backendDir}/shim/$PLATFORM/libsockshim.so`;
+  return { ...env, LD_PRELOAD: env.LD_PRELOAD ? `${shim}:${env.LD_PRELOAD}` : shim };
+}
+
+/** Hint appended when the simulator log shows the seccomp symptom of #119 / #126, else undefined. */
+export function seccompHint(log: string): string | undefined {
+  return log.includes('Function not implemented')
+    ? "The container's seccomp profile blocks the 32-bit socket calls the simulator needs (Docker >= 29); the socket shim (resources/backend/shim) is missing or ineffective. See https://github.com/AleFire99/cpn-ide-vscode/issues/119."
+    : undefined;
+}
+
 function spawnBackend(o: SpawnOptions): ChildProcess {
   fs.mkdirSync(o.userHome, { recursive: true });
   fs.mkdirSync(o.tmpDir, { recursive: true });
   const args = buildBackendArgs(o);
   const child = spawn(o.javaPath, args, {
     cwd: o.backendDir,
+    env: shimEnv(o.backendDir),
     windowsHide: true,
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: process.platform !== 'win32', // own process group so we can kill the tree
@@ -211,7 +239,7 @@ export async function startBackendProcess(
       o.onOutput(`[backend] port ${SIMULATOR_PORT} is in use; not starting a simulator daemon\n`);
     } else {
       try {
-        daemon = await prestartSimulator(path.join(o.backendDir, BACKEND_JAR), o.tmpDir, o.onOutput);
+        daemon = await prestartSimulator(path.join(o.backendDir, BACKEND_JAR), o.tmpDir, o.onOutput, undefined, undefined, shimEnv(o.backendDir));
       } catch (e) {
         // Fall back to Access/CPN's lazy start.
         o.onOutput(`[backend] simulator pre-start failed: ${e instanceof Error ? e.message : String(e)}\n`);

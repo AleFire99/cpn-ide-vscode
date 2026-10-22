@@ -6,4 +6,6 @@ export const EXAMPLES = [
   { id: '02-producer-consumer', label: 'Producer / consumer', detail: 'A guarded counter produces items 1..5 into a buffer; a consumer takes them out' },
   { id: '03-mutual-exclusion', label: 'Mutual exclusion', detail: 'Two processes share one lock, so at most one is ever in Critical' },
   { id: '04-hierarchy', label: 'Hierarchy', detail: 'A Worker subpage behind a substitution transition, with a fusion place' },
+  { id: '05-dining-philosophers', label: 'Dining philosophers', detail: 'Three philosophers take the left fork, then the right: the net can reach a dead marking' },
+  { id: '06-unbounded-producer', label: 'Unbounded producer', detail: 'A producer keeps adding tokens to a buffer, so the state space is infinite' },
 ] as const;
