@@ -9,6 +9,7 @@ import {
   findSimulatorPids,
   isForeignSimulator,
   isPortListening,
+  shimEnv,
   startBackendProcess,
   stopSimulatorProcess,
   waitForPortRelease,
@@ -93,6 +94,7 @@ describe.skipIf(!process.env.CPN_IT)('real backend', () => {
     for (const f of ['cpnmld.x86-linux', 'run.x86-linux']) fs.chmodSync(path.join(foreignDir, f), 0o755);
     const daemon = spawn(path.join(foreignDir, 'cpnmld.x86-linux'), [String(SIMULATOR_PORT), './run.x86-linux'], {
       cwd: foreignDir,
+      env: shimEnv(path.join(root, 'backend')),
       stdio: 'ignore',
     });
     let started: Awaited<ReturnType<typeof startBackendProcess>> | undefined;

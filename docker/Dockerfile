@@ -12,7 +12,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl innoextract nodejs npm zip unzip \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
-COPY scripts/fetch-cpn.sh scripts/patch-cpnmld.mjs scripts/patch-ui.mjs scripts/
+COPY scripts/fetch-cpn.sh scripts/build-sockshim.sh scripts/patch-cpnmld.mjs scripts/patch-ui.mjs scripts/
 RUN scripts/fetch-cpn.sh
 
 # ---- Stage 2: socket shim for the 32-bit simulator (see docker/sockshim.c, #119) ----
