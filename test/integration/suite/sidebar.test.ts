@@ -8,7 +8,7 @@ suite('CPN IDE sidebar', () => {
     await ext.activate();
     // Each focus command exists only if the view is contributed, and fails if no provider is registered.
     await vscode.commands.executeCommand('workbench.view.extension.cpnIde');
-    for (const view of ['cpnIde.models', 'cpnIde.net', 'cpnIde.analysis', 'cpnIde.backend', 'cpnIde.start']) await vscode.commands.executeCommand(`${view}.focus`);
+    for (const view of ['cpnIde.models', 'cpnIde.net', 'cpnIde.analysis']) await vscode.commands.executeCommand(`${view}.focus`);
     await vscode.commands.executeCommand('cpnIde.refreshModels');
   });
 

@@ -152,9 +152,11 @@ export function structuralRows(r: StructuralResults, ss?: StateSpaceResult): Ana
   net.places.forEach((pl, p) => {
     const cands = [r.invBounds[p], r.lp[p]].filter((x): x is number => x !== undefined && Number.isFinite(x));
     const ub = cands.length ? Math.min(...cands) : undefined;
-    const seen = ss?.bounds[pl.label];
-    const reached = seen ? `reached ${seen.min}..${seen.max}${ss && !ss.complete ? ' (lower bound)' : ''}` : undefined;
-    const detail = [ub === undefined ? 'no bound' : `at most ${ub}`, reached].filter(Boolean).join(' · ');
+    // A cut-short search only gives partial figures, so show reached bounds from a complete one only.
+    const seen = ss?.complete ? ss.bounds[pl.label] : undefined;
+    const reached = seen ? `reached ${seen.min}..${seen.max}` : undefined;
+    const grows = ss?.unbounded?.place === pl.label ? 'grows without bound in the state space' : undefined;
+    const detail = [ub === undefined ? 'no bound' : `at most ${ub}`, reached, grows].filter(Boolean).join(' · ');
     bound.push(result(pl.label, ub === undefined ? { kind: 'inconclusive' } : { kind: 'proved' }, approx, detail));
   });
   sections.push(section('Boundedness', 'graph', bound));
@@ -217,22 +219,42 @@ export function structuralRows(r: StructuralResults, ss?: StateSpaceResult): Ana
   return sections;
 }
 
-/** Rows for the state space result, with the caveats of a search that was cut short. */
-export function stateSpaceRows(r: StateSpaceResult): AnalysisRow[] {
-  const cut = !r.complete;
-  const strength: Strength = cut ? { kind: 'upTo', n: r.nodes, unit: 'states' } : { kind: 'proved' };
-  const overview = result(`${r.nodes} states, ${r.arcs} arcs`, strength, false, `${r.elapsedMs} ms${cut ? ' · incomplete: stopped at a cap or cancelled' : ''}`);
+/**
+ * Rows for the state space result, with the caveats of a search that was cut short. `exact`: the PT abstraction of the net is exact.
+ * `plainTokens`: every place has colour set UNIT. A growing token count only proves unboundedness when tokens are indistinguishable.
+ */
+export function stateSpaceRows(r: StateSpaceResult, exact = true, plainTokens = false): AnalysisRow[] {
+  if (r.unbounded) {
+    const { place, trace } = r.unbounded;
+    const path = trace.join(' > ') || '(initial)';
+    const row = exact && plainTokens
+      ? result(`Unbounded: place ${place}`, { kind: 'proved' }, false, `reached by ${path}`)
+      : { ...result(`Likely unbounded: place ${place}`, { kind: 'candidate' }, true, `reached by ${path}`), icon: 'warning' };
+    return [section('State space', 'type-hierarchy', [row, result(`${r.nodes} states explored before stopping`, { kind: 'upTo', n: r.nodes, unit: 'states' }, false, `${r.elapsedMs} ms`)])];
+  }
+  if (!r.complete) {
+    const row = result('Inconclusive: stopped at the state cap or timeout', { kind: 'inconclusive' }, false, `${r.nodes} states, ${r.arcs} arcs, ${r.elapsedMs} ms; partial figures are hidden`);
+    return [section('State space', 'type-hierarchy', [row])];
+  }
+  const strength: Strength = { kind: 'proved' };
+  const overview = result(`${r.nodes} states, ${r.arcs} arcs`, strength, false, `${r.elapsedMs} ms`);
   const dead: AnalysisRow[] = [
     result(plural(r.deadMarkings.length, 'dead marking'), strength, false),
     ...r.deadMarkings.map<AnalysisRow>((m) => ({ kind: 'result', label: `node ${m.node}`, icon: 'debug-pause', description: m.trace.join(' > ') || '(initial)' })),
-    result(cut ? `Not fired within ${r.nodes} states` : 'Dead transitions', strength, false, r.deadTransitions.join(', ') || 'none'),
+    result('Dead transitions', strength, false, r.deadTransitions.join(', ') || 'none'),
   ];
-  const bounds = Object.entries(r.bounds).map(([n, b]) => result(n, strength, false, `${b.min}..${b.max}${cut ? ' (lower bound)' : ''}`));
+  const bounds = Object.entries(r.bounds).map(([n, b]) => result(n, strength, false, `${b.min}..${b.max}`));
   return [
     section('State space', 'type-hierarchy', [overview]),
     section('Boundedness (state space)', 'graph', bounds),
     section('Deadlocks / Liveness (state space)', 'debug-pause', dead),
   ];
+}
+
+/** Summary lines of the state space for the saved report; same logic as the rows. */
+function stateSpaceLines(r: StateSpaceResult, exact: boolean, plainTokens: boolean): string[] {
+  if (r.complete && !r.unbounded) return formatStateSpace(r);
+  return ['State space', ...rowsToText(stateSpaceRows(r, exact, plainTokens)[0].children ?? [], '  ')];
 }
 
 /** Flatten rows to indented text. */
@@ -241,10 +263,31 @@ export function rowsToText(rows: AnalysisRow[], indent = ''): string[] {
 }
 
 /** The text of a saved report: the structural summary, then the state space text. */
-export function reportText(name: string, structural?: StructuralResults, ss?: StateSpaceResult): string {
+export function reportText(name: string, structural?: StructuralResults, ss?: StateSpaceResult, plainTokens = false): string {
   const lines = [`CPN IDE analysis report: ${name}`, ''];
   if (structural) lines.push('Structural analysis', ...rowsToText(structuralRows(structural, ss), '  '), '');
-  if (ss) lines.push(...formatStateSpace(ss), '');
+  if (ss) lines.push(...stateSpaceLines(ss, structural?.net.exact ?? true, plainTokens), '');
   if (!structural && !ss) lines.push('No results yet.');
   return lines.join('\n');
+}
+
+/** Whether every place has colour set UNIT (directly or through a `colset X = unit;` alias), so tokens are indistinguishable. */
+export function onlyPlainTokens(spec: PetriSpec, sml: string): boolean {
+  const units = new Set(['UNIT']);
+  for (const m of sml.matchAll(/\bcolset\s+(\w+)\s*=\s*unit\s*(?:with\b[^;]*)?;/g)) units.add(m[1]);
+  return spec.pages.every((pg) => (pg.places ?? []).every((pl) => units.has(pl.type.trim())));
+}
+
+export interface AnalyseSteps {
+  /** True when the model has no errors and the analysis may go on; false or undefined stops. */
+  check: () => Promise<boolean | undefined>;
+  structural: () => Promise<unknown>;
+  stateSpace: () => Promise<string[] | undefined>;
+}
+
+/** Check Model, then Structural Analysis, then Analyse State Space; stops after the check when it finds errors. */
+export async function runAnalyse(steps: AnalyseSteps): Promise<string[] | undefined> {
+  if (!(await steps.check())) return undefined;
+  await steps.structural();
+  return steps.stateSpace();
 }

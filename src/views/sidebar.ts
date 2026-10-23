@@ -1,10 +1,5 @@
 import * as vscode from 'vscode';
-import { EXAMPLES } from '../model/examples';
-import type { BackendManager } from '../runtime/backend';
-import { backendRows, groupModels, MODEL_GLOB, modelKind, type ModelGroup } from './sidebar-core';
-
-const WALKTHROUGH = 'AleFire99.cpn-ide-vscode#gettingStarted';
-const DOCS = 'https://github.com/AleFire99/cpn-ide-vscode#readme';
+import { groupModels, MODEL_GLOB, modelKind, type ModelGroup } from './sidebar-core';
 
 /** A net row: the files sharing one base name in one folder. File rows are their `vscode.Uri`, so item menus get a Uri. */
 class NetNode {
@@ -82,7 +77,8 @@ class ModelsProvider implements vscode.TreeDataProvider<ModelElement>, vscode.Di
       const { group } = element;
       const item = new vscode.TreeItem(group.name, vscode.TreeItemCollapsibleState.Collapsed);
       item.id = `${group.dir}/${group.name}`;
-      item.description = group.dir || undefined;
+      const cpn = modelKind(group.open) === 'cpn';
+      item.description = [cpn ? 'CPN Tools model' : undefined, group.dir || undefined].filter(Boolean).join(' · ') || undefined;
       item.tooltip = group.open;
       item.iconPath = new vscode.ThemeIcon('type-hierarchy');
       item.contextValue = 'net';
@@ -106,72 +102,6 @@ class ModelsProvider implements vscode.TreeDataProvider<ModelElement>, vscode.Di
   }
 }
 
-function leaf(label: string, icon: string, command: vscode.Command, opts: { tooltip?: string; description?: string } = {}): vscode.TreeItem {
-  const item = new vscode.TreeItem(label);
-  item.iconPath = new vscode.ThemeIcon(icon);
-  item.command = command;
-  item.tooltip = opts.tooltip;
-  item.description = opts.description;
-  return item;
-}
-
-/** Backend view: the backend state and the actions that apply to it. */
-class BackendProvider implements vscode.TreeDataProvider<vscode.TreeItem>, vscode.Disposable {
-  private readonly changed = new vscode.EventEmitter<void>();
-  readonly onDidChangeTreeData = this.changed.event;
-  private readonly sub: vscode.Disposable;
-
-  constructor(private readonly backend: BackendManager) {
-    this.sub = vscode.Disposable.from(
-      backend.onDidChangeStatus(() => this.changed.fire()),
-      vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('cpnIde.backendUrl') && this.changed.fire()),
-    );
-  }
-
-  dispose(): void {
-    this.sub.dispose();
-    this.changed.dispose();
-  }
-
-  getChildren(element?: vscode.TreeItem): vscode.TreeItem[] {
-    if (element) return [];
-    return backendRows(this.backend.status, {
-      isMac: process.platform === 'darwin',
-      hasBackendUrl: !!vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl')?.trim(),
-    }).map((r) => {
-      const item = new vscode.TreeItem(r.label);
-      item.iconPath = new vscode.ThemeIcon(r.icon);
-      item.tooltip = r.tooltip;
-      item.description = r.description;
-      if (r.command) item.command = { title: r.label, command: r.command, arguments: r.args };
-      return item;
-    });
-  }
-
-  getTreeItem(item: vscode.TreeItem): vscode.TreeItem {
-    return item;
-  }
-}
-
-/** Get Started view: the bundled examples, the walkthrough and the docs. */
-class StartProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-  getChildren(element?: vscode.TreeItem): vscode.TreeItem[] {
-    if (element) return [];
-    return [
-      ...EXAMPLES.map((e) =>
-        leaf(e.label, 'type-hierarchy', { title: 'Open Example', command: 'cpnIde.openExample', arguments: [e.id] }, { tooltip: e.detail, description: 'example' }),
-      ),
-      leaf('New Net…', 'new-file', { title: 'New Net', command: 'cpnIde.newNet' }),
-      leaf('Walkthrough', 'book', { title: 'Open Walkthrough', command: 'workbench.action.openWalkthrough', arguments: [WALKTHROUGH, false] }),
-      leaf('Documentation', 'link-external', { title: 'Open Documentation', command: 'vscode.open', arguments: [vscode.Uri.parse(DOCS)] }),
-    ];
-  }
-
-  getTreeItem(item: vscode.TreeItem): vscode.TreeItem {
-    return item;
-  }
-}
-
 /** The file behind the active tab (text editor or custom editor), if any. */
 function activeFile(): vscode.Uri | undefined {
   const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
@@ -179,9 +109,8 @@ function activeFile(): vscode.Uri | undefined {
 }
 
 /** The CPN IDE view container in the Activity Bar. */
-export function registerSidebar(backend: BackendManager): vscode.Disposable {
+export function registerSidebar(): vscode.Disposable {
   const models = new ModelsProvider();
-  const backendView = new BackendProvider(backend);
   const modelsView = vscode.window.createTreeView('cpnIde.models', { treeDataProvider: models });
   /** Select the active model's file row, without taking focus. */
   const reveal = () => {
@@ -192,12 +121,9 @@ export function registerSidebar(backend: BackendManager): vscode.Disposable {
   return vscode.Disposable.from(
     models,
     models.onDidLoad(reveal),
-    backendView,
     modelsView,
     modelsView.onDidChangeVisibility(reveal),
     vscode.window.tabGroups.onDidChangeTabs(reveal),
-    vscode.window.registerTreeDataProvider('cpnIde.backend', backendView),
-    vscode.window.registerTreeDataProvider('cpnIde.start', new StartProvider()),
     vscode.commands.registerCommand('cpnIde.refreshModels', () => models.refresh()),
     vscode.commands.registerCommand('cpnIde.openSettings', () => vscode.commands.executeCommand('workbench.action.openSettings', 'cpnIde')),
   );

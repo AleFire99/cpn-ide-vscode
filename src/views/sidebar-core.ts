@@ -1,6 +1,4 @@
-// vscode-free contents of the CPN IDE sidebar (Activity Bar): which rows the Models and Backend views show.
-import type { BackendStatus } from '../runtime/status-core';
-import { presentStatus } from '../runtime/status-core';
+// vscode-free contents of the CPN IDE sidebar (Activity Bar): which rows the Models view shows.
 
 /** Glob of the files listed in the Models view. */
 export const MODEL_GLOB = '**/*.{cpn,petri.json,sml}';
@@ -21,15 +19,17 @@ export interface ModelGroup {
   name: string;
   /** Folder of the files (workspace-relative, '' at the root). */
   dir: string;
-  /** Workspace-relative paths of the files, text model first. */
+  /** Workspace-relative paths of the listed files, text model first. A .cpn is left out when the net has a .petri.json. */
   files: { path: string; kind: ModelKind }[];
-  /** The file a click opens in the canvas: the .petri.json if present, else the .cpn. */
+  /** The file a click opens in the canvas: the .petri.json if present, else the .cpn (its only text model). */
   open: string;
 }
 
 /**
  * Group NAME.petri.json / NAME.cpn / NAME.sml in the same folder into one net, sorted by folder then name,
- * case-insensitively. A lone .sml (declarations without a net) is not listed. Takes workspace-relative paths.
+ * case-insensitively. A .cpn next to a .petri.json is its export, so it is not listed as a file of the net
+ * (the group is opened on the .petri.json); a lone .cpn stays listed and opens the .cpn. A lone .sml
+ * (declarations without a net) is not listed. Takes workspace-relative paths.
  */
 export function groupModels(paths: readonly string[]): ModelGroup[] {
   const groups = new Map<string, ModelGroup>();
@@ -46,6 +46,8 @@ export function groupModels(paths: readonly string[]): ModelGroup[] {
   }
   const result: ModelGroup[] = [];
   for (const g of groups.values()) {
+    // The .petri.json is the primary format; a .cpn beside it is only its export.
+    if (g.files.some((f) => f.kind === 'petri')) g.files = g.files.filter((f) => f.kind !== 'cpn');
     g.files.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind));
     const first = g.files[0];
     if (first.kind === 'sml') continue;
@@ -54,55 +56,3 @@ export function groupModels(paths: readonly string[]): ModelGroup[] {
   }
   return result.sort((a, b) => a.dir.toLowerCase().localeCompare(b.dir.toLowerCase()) || a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 }
-
-export interface BackendRow {
-  label: string;
-  /** Codicon id. */
-  icon: string;
-  tooltip?: string;
-  command?: string;
-  args?: unknown[];
-  description?: string;
-}
-
-export interface BackendRowOptions {
-  /** macOS, where the simulator cannot run natively. */
-  isMac: boolean;
-  /** `cpnIde.backendUrl` is set. */
-  hasBackendUrl: boolean;
-}
-
-/** Rows of the Backend view: the state (as in the status bar item), then the actions that apply to it. */
-export function backendRows(s: BackendStatus, o: BackendRowOptions): BackendRow[] {
-  const docker = o.isMac || o.hasBackendUrl || s.kind === 'error' || s.kind === 'simulatorDown';
-  const p = presentStatus(s);
-  const state: BackendRow = {
-    label: STATE_LABEL[s.kind],
-    icon: s.kind === 'starting' ? 'loading~spin' : s.kind === 'ready' ? 'check' : s.kind === 'stopped' ? 'circle-outline' : 'error',
-    tooltip: p.tooltip,
-    description: s.kind === 'ready' ? s.url : undefined,
-  };
-  const running = s.kind !== 'stopped';
-  return [
-    state,
-    running
-      ? { label: 'Restart Backend', icon: 'debug-restart', command: 'cpnIde.restartBackend' }
-      : { label: 'Start Backend', icon: 'play', command: 'cpnIde.startBackend' },
-    ...(running ? [{ label: 'Stop Backend', icon: 'debug-stop', command: 'cpnIde.stopBackend' }] : []),
-    { label: 'Show Backend Log', icon: 'output', command: 'cpnIde.showLog' },
-    ...(docker
-      ? [
-          { label: 'Start Docker Backend', icon: 'vm', command: 'cpnIde.startDockerBackend' },
-          { label: 'Stop Docker Backend', icon: 'vm-outline', command: 'cpnIde.stopDockerBackend' },
-        ]
-      : []),
-  ];
-}
-
-const STATE_LABEL: Record<BackendStatus['kind'], string> = {
-  stopped: 'Not running',
-  starting: 'Starting…',
-  ready: 'Running',
-  simulatorDown: 'Simulator down',
-  error: 'Failed',
-};

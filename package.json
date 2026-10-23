@@ -2,7 +2,7 @@
   "name": "cpn-ide-vscode",
   "displayName": "CPN IDE",
   "description": "Edit, validate and simulate Coloured Petri Nets (CPN Tools .cpn models or plain-text .petri.json) with the bundled CPN IDE editor and simulator.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publisher": "AleFire99",
   "license": "AGPL-3.0",
   "repository": {
@@ -144,6 +144,11 @@
         "icon": "$(export)"
       },
       {
+        "command": "cpnIde.analyse",
+        "title": "CPN IDE: Analyse",
+        "icon": "$(play)"
+      },
+      {
         "command": "cpnIde.checkModel",
         "title": "CPN IDE: Check Model",
         "icon": "$(check)"
@@ -184,112 +189,119 @@
         "icon": "$(gear)"
       }
     ],
-    "configuration": {
-      "title": "CPN IDE",
-      "properties": {
-        "cpnIde.eventLog.caseId": {
-          "type": "string",
-          "default": "i",
-          "markdownDescription": "Name of the case id variable used when exporting an event log (play-out)."
-        },
-        "cpnIde.eventLog.startDateTime": {
-          "type": "string",
-          "default": "2022-01-01T00:00",
-          "markdownDescription": "Start date and time of the exported event log, as `YYYY-MM-DDTHH:mm`."
-        },
-        "cpnIde.eventLog.timeUnit": {
-          "type": "string",
-          "default": "hours",
-          "enum": [
-            "years",
-            "months",
-            "weeks",
-            "days",
-            "hours",
-            "minutes",
-            "seconds"
-          ],
-          "markdownDescription": "What one simulated time unit means in the exported event log."
-        },
-        "cpnIde.eventLog.recordedEvents": {
-          "type": "string",
-          "default": "start+complete",
-          "enum": [
-            "start",
-            "complete",
-            "start+complete",
-            "in transition name"
-          ],
-          "markdownDescription": "Which lifecycle events the exported event log records."
-        },
-        "cpnIde.eventLog.informationLevelIsEvent": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Event-level (on) or case-level (off) information in the exported event log."
-        },
-        "cpnIde.codeLens.enabled": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Show the **Simulate**, **Open in CPN IDE** and **Export .cpn** CodeLenses at the top of `*.petri.json` files."
-        },
-        "cpnIde.backendUrl": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "URL of an external CPN IDE backend (for example the Docker image `ghcr.io/alefire99/cpn-ide-backend`). Leave empty to use the bundled local backend."
-        },
-        "cpnIde.javaPath": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "Path to a Java 17+ executable. Leave empty to use `JAVA_HOME`, `java` on the PATH, or an automatically downloaded runtime."
-        },
-        "cpnIde.stateSpace.maxStates": {
-          "type": "number",
-          "default": 100000,
-          "minimum": 1,
-          "markdownDescription": "Analyse State Space stops after this many states and reports a partial result."
-        },
-        "cpnIde.stateSpace.timeoutSeconds": {
-          "type": "number",
-          "default": 30,
-          "minimum": 1,
-          "markdownDescription": "Analyse State Space stops after this many seconds and reports a partial result."
-        },
-        "cpnIde.port": {
-          "type": "number",
-          "default": 0,
-          "markdownDescription": "Port for the local backend. `0` picks a free port automatically."
-        },
-        "cpnIde.simulation.stepDelayMs": {
-          "type": "number",
-          "default": 100,
-          "minimum": 0,
-          "markdownDescription": "Delay in milliseconds between steps of a multi-step simulation in the CPN IDE UI (upstream: 500). Applies when an editor is (re)opened."
-        },
-        "cpnIde.simulation.animate": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Animate token movement during simulation in the CPN IDE UI. Turn off for faster simulation. Applies when an editor is (re)opened."
-        },
-        "cpnIde.theme": {
-          "type": "string",
-          "enum": [
-            "auto",
-            "light"
-          ],
-          "enumDescriptions": [
-            "Follow the VS Code colour theme: dark and high-contrast themes get a dark canvas, panels and toolbar.",
-            "Always use the CPN IDE's own light look, even in a dark VS Code theme."
-          ],
-          "default": "auto",
-          "markdownDescription": "Colour theme of the CPN IDE UI. Applies when an editor is (re)opened."
-        },
-        "cpnIde.debug": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Keep the CPN IDE UI's verbose `console.log` output (full request/response payloads) in the webview developer tools."
+    "configuration": [
+      {
+        "title": "CPN IDE",
+        "properties": {
+          "cpnIde.eventLog.caseId": {
+            "type": "string",
+            "default": "i",
+            "markdownDescription": "Name of the case id variable used when exporting an event log (play-out)."
+          },
+          "cpnIde.eventLog.startDateTime": {
+            "type": "string",
+            "default": "2022-01-01T00:00",
+            "markdownDescription": "Start date and time of the exported event log, as `YYYY-MM-DDTHH:mm`."
+          },
+          "cpnIde.eventLog.timeUnit": {
+            "type": "string",
+            "default": "hours",
+            "enum": [
+              "years",
+              "months",
+              "weeks",
+              "days",
+              "hours",
+              "minutes",
+              "seconds"
+            ],
+            "markdownDescription": "What one simulated time unit means in the exported event log."
+          },
+          "cpnIde.eventLog.recordedEvents": {
+            "type": "string",
+            "default": "start+complete",
+            "enum": [
+              "start",
+              "complete",
+              "start+complete",
+              "in transition name"
+            ],
+            "markdownDescription": "Which lifecycle events the exported event log records."
+          },
+          "cpnIde.eventLog.informationLevelIsEvent": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Event-level (on) or case-level (off) information in the exported event log."
+          },
+          "cpnIde.codeLens.enabled": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Show the **Simulate**, **Open in CPN IDE** and **Export .cpn** CodeLenses at the top of `*.petri.json` files."
+          },
+          "cpnIde.stateSpace.maxStates": {
+            "type": "number",
+            "default": 100000,
+            "minimum": 1,
+            "markdownDescription": "Analyse State Space stops after this many states and reports the result as Inconclusive."
+          },
+          "cpnIde.stateSpace.timeoutSeconds": {
+            "type": "number",
+            "default": 30,
+            "minimum": 1,
+            "markdownDescription": "Analyse State Space stops after this many seconds and reports the result as Inconclusive."
+          },
+          "cpnIde.simulation.animate": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Animate token movement during simulation in the CPN IDE UI. Turn off for faster simulation. Applies when an editor is (re)opened."
+          },
+          "cpnIde.theme": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "light"
+            ],
+            "enumDescriptions": [
+              "Follow the VS Code colour theme: dark and high-contrast themes get a dark canvas, panels and toolbar.",
+              "Always use the CPN IDE's own light look, even in a dark VS Code theme."
+            ],
+            "default": "auto",
+            "markdownDescription": "Colour theme of the CPN IDE UI. Applies when an editor is (re)opened."
+          }
+        }
+      },
+      {
+        "title": "CPN IDE: Advanced",
+        "properties": {
+          "cpnIde.debug": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Keep the CPN IDE UI's verbose `console.log` output (full request/response payloads) in the webview developer tools."
+          },
+          "cpnIde.port": {
+            "type": "number",
+            "default": 0,
+            "markdownDescription": "Port for the local backend. `0` picks a free port automatically."
+          },
+          "cpnIde.javaPath": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Path to a Java 17+ executable. Leave empty to use `JAVA_HOME`, `java` on the PATH, or an automatically downloaded runtime."
+          },
+          "cpnIde.backendUrl": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "URL of an external CPN IDE backend (for example the Docker image `ghcr.io/alefire99/cpn-ide-backend`). Leave empty to use the bundled local backend."
+          },
+          "cpnIde.simulation.stepDelayMs": {
+            "type": "number",
+            "default": 100,
+            "minimum": 0,
+            "markdownDescription": "Delay in milliseconds between steps of a multi-step simulation in the CPN IDE UI (upstream: 500). Applies when an editor is (re)opened."
+          }
         }
       }
-    },
+    ],
     "jsonValidation": [
       {
         "fileMatch": "*.petri.json",
@@ -353,24 +365,13 @@
           "id": "cpnIde.analysis",
           "name": "Analysis",
           "icon": "media/activity-icon.svg"
-        },
-        {
-          "id": "cpnIde.backend",
-          "name": "Backend",
-          "icon": "media/activity-icon.svg"
-        },
-        {
-          "id": "cpnIde.start",
-          "name": "Get Started",
-          "visibility": "collapsed",
-          "icon": "media/activity-icon.svg"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "cpnIde.analysis",
-        "contents": "No results yet. Open a .cpn or .petri.json model and check it against the CPN IDE validator, or analyse its structure.\n[Check Model](command:cpnIde.checkModel)\n[Structural Analysis](command:cpnIde.structuralAnalysis)\n[Analyse State Space](command:cpnIde.analyseStateSpace)"
+        "contents": "No results yet. Open a .cpn or .petri.json model, then run all the checks in one go: validation, structural analysis and the state space.\n[Analyse](command:cpnIde.analyse)"
       },
       {
         "view": "cpnIde.net",
@@ -429,9 +430,10 @@
           {
             "id": "analyse",
             "title": "Analyse your net",
-            "description": "Open the CPN IDE sidebar and use the **Analysis** view: check the model, run the structural analysis (no backend needed) and explore the state space. Try it on the dining philosophers example.\n[Open an Example](command:cpnIde.openExample)",
+            "description": "Open the **Analysis** view in the CPN IDE sidebar and press **Analyse**: it checks the model, runs the structural analysis and explores the state space, stopping early if the check finds errors. Try it on 05-dining-philosophers (a dead marking) or 06-unbounded-producer (an unbounded place).\n[Open an Example](command:cpnIde.openExample)",
             "media": {
-              "markdown": "media/walkthrough/analysis.md"
+              "image": "media/walkthrough/analysis.png",
+              "altText": "The Analysis view reporting an unbounded place in the unbounded producer example"
             }
           },
           {
@@ -484,11 +486,6 @@
           "command": "cpnIde.exportCpn",
           "when": "resourceFilename =~ /\\.petri\\.json$/i",
           "group": "navigation@2"
-        },
-        {
-          "command": "cpnIde.openSettings",
-          "when": "view == cpnIde.backend",
-          "group": "navigation@1"
         }
       ],
       "explorer/context": [
@@ -542,38 +539,52 @@
         {
           "command": "cpnIde.openSettings",
           "when": "false"
+        },
+        {
+          "command": "cpnIde.startBackend",
+          "when": "false"
+        },
+        {
+          "command": "cpnIde.stopBackend",
+          "when": "false"
+        },
+        {
+          "command": "cpnIde.restartBackend",
+          "when": "false"
+        },
+        {
+          "command": "cpnIde.startDockerBackend",
+          "when": "false"
+        },
+        {
+          "command": "cpnIde.stopDockerBackend",
+          "when": "false"
+        },
+        {
+          "command": "cpnIde.open",
+          "when": "false"
         }
       ],
       "view/title": [
         {
-          "command": "cpnIde.checkModel",
+          "command": "cpnIde.analyse",
           "when": "view == cpnIde.analysis",
           "group": "navigation@1"
         },
         {
-          "command": "cpnIde.structuralAnalysis",
+          "command": "cpnIde.saveAnalysisReport",
           "when": "view == cpnIde.analysis",
           "group": "navigation@2"
         },
         {
-          "command": "cpnIde.analyseStateSpace",
-          "when": "view == cpnIde.analysis",
-          "group": "navigation@3"
-        },
-        {
-          "command": "cpnIde.saveAnalysisReport",
-          "when": "view == cpnIde.analysis",
-          "group": "navigation@4"
-        },
-        {
           "command": "cpnIde.runReplications",
           "when": "view == cpnIde.analysis",
-          "group": "navigation@5"
+          "group": "analysis@1"
         },
         {
           "command": "cpnIde.exportEventLog",
           "when": "view == cpnIde.analysis",
-          "group": "navigation@6"
+          "group": "analysis@2"
         },
         {
           "command": "cpnIde.newNet",
@@ -584,11 +595,6 @@
           "command": "cpnIde.refreshModels",
           "when": "view == cpnIde.models",
           "group": "navigation@2"
-        },
-        {
-          "command": "cpnIde.openSettings",
-          "when": "view == cpnIde.backend",
-          "group": "navigation@1"
         }
       ],
       "view/item/context": [

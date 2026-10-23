@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PTNet } from '../../src/analysis/ptnet';
 import type { StateSpaceResult } from '../../src/runtime/explore-core';
-import { analyseStructure, reportText, rowsToText, stateSpaceRows, strengthLabel, structuralRows } from '../../src/views/analysis-core';
+import { analyseStructure, onlyPlainTokens, runAnalyse, reportText, rowsToText, stateSpaceRows, strengthLabel, structuralRows } from '../../src/views/analysis-core';
 
 const mk = (places: string[], trans: [string, Record<string, number>, Record<string, number>][], m0: Record<string, number>, exact = true): PTNet => {
   const row = (m: Record<string, number>) => places.map((p) => m[p] ?? 0);
@@ -74,9 +74,15 @@ describe('structuralRows', () => {
     expect(a?.children?.[0]).toMatchObject({ label: 'Page/arc', description: 'approximate · variable arc' });
   });
 
-  it('shows the state space bounds next to the structural ones, as lower bounds when incomplete', () => {
-    const rows = structuralRows(analyseStructure(cycle), ss({ complete: false }));
-    expect(find(rows, 'Boundedness', /^a$/)?.description).toBe('proved · at most 1 · reached 0..1 (lower bound)');
+  it('shows the state space bounds next to the structural ones only when the search completed', () => {
+    const net = analyseStructure(cycle);
+    expect(find(structuralRows(net, ss({ complete: true })), 'Boundedness', /^a$/)?.description).toBe('proved · at most 1 · reached 0..1');
+    expect(find(structuralRows(net, ss({ complete: false })), 'Boundedness', /^a$/)?.description).toBe('proved · at most 1');
+  });
+
+  it('marks the place of an unbounded witness', () => {
+    const rows = structuralRows(analyseStructure(cycle), ss({ complete: false, unbounded: { place: 'a', trace: ['t'] } }));
+    expect(find(rows, 'Boundedness', /^a$/)?.description).toBe('proved · at most 1 · grows without bound in the state space');
   });
 });
 
@@ -91,9 +97,34 @@ describe('stateSpaceRows', () => {
 
   it('labels an incomplete result as up to N states, with lower bounds and "not fired within"', () => {
     const text = rowsToText(stateSpaceRows(ss({ complete: false, nodes: 500, deadTransitions: ['P/t'] }))).join('\n');
-    expect(text).toContain('Not fired within 500 states: up to 500 states · P/t');
-    expect(text).not.toContain('Dead transitions');
-    expect(text).toContain('a: up to 500 states · 0..1 (lower bound)');
+    expect(text).toContain('Inconclusive: stopped at the state cap or timeout');
+    expect(text).not.toMatch(/dead marking|Dead transitions|Not fired|lower bound|0\.\.1/);
+    expect(stateSpaceRows(ss({ complete: false })).map((r) => r.label)).toEqual(['State space']);
+  });
+
+  it('puts an unbounded finding first: proved when exact, approximate otherwise', () => {
+    const u = ss({ complete: false, unbounded: { place: 'a', trace: ['t', 'u'] } });
+    const exact = rowsToText(stateSpaceRows(u, true, true)).join('\n');
+    expect(exact).toContain('Unbounded: place a: proved · reached by t > u');
+    expect(exact).not.toContain('Inconclusive');
+    expect(exact).not.toContain('dead marking');
+    const approx = rowsToText(stateSpaceRows(u, false)).join('\n');
+    expect(approx).toContain('Likely unbounded: place a');
+    expect(approx).toContain('approximate');
+  });
+
+  it('does not prove unboundedness when tokens are coloured, even on an exact net', () => {
+    const u = ss({ complete: false, unbounded: { place: 'a', trace: ['t'] } });
+    const text = rowsToText(stateSpaceRows(u, true, false)).join('\n');
+    expect(text).toContain('Likely unbounded: place a');
+    expect(text).not.toContain('Unbounded: place a: proved');
+    expect(reportText('m', undefined, u, false)).toContain('Likely unbounded');
+    expect(reportText('m', undefined, u, true)).toContain('Unbounded: place a: proved');
+  });
+
+  it('reports the same in the saved text', () => {
+    expect(reportText('m', undefined, ss({ complete: false }))).toContain('Inconclusive');
+    expect(reportText('m', undefined, ss({ complete: false, unbounded: { place: 'a', trace: ['t'] } }), true)).toContain('Unbounded: place a');
   });
 });
 
@@ -104,5 +135,43 @@ describe('reportText', () => {
     expect(t).toContain('Structural analysis');
     expect(t).toContain('State space: 2 nodes, 1 arcs');
     expect(reportText('x')).toContain('No results yet.');
+  });
+});
+
+describe('onlyPlainTokens', () => {
+  const spec = (...types: string[]) => ({ version: 1 as const, pages: [{ name: 'P', places: types.map((type, i) => ({ name: `p${i}`, type })) }] });
+  it('is true when every place is UNIT or a unit alias', () => {
+    expect(onlyPlainTokens(spec('UNIT', 'UNIT'), '')).toBe(true);
+    expect(onlyPlainTokens(spec('U', 'UNIT'), 'colset U = unit;')).toBe(true);
+  });
+  it('is false for any other colour set', () => {
+    expect(onlyPlainTokens(spec('UNIT', 'INT'), '')).toBe(false);
+    expect(onlyPlainTokens(spec('U'), 'colset U = int;')).toBe(false);
+  });
+});
+
+describe('runAnalyse', () => {
+  const steps = (check: boolean | undefined) => {
+    const calls: string[] = [];
+    return {
+      calls,
+      s: {
+        check: async () => (calls.push('check'), check),
+        structural: async () => void calls.push('structural'),
+        stateSpace: async () => (calls.push('stateSpace'), ['done']),
+      },
+    };
+  };
+  it('runs check, structural, then state space', async () => {
+    const t = steps(true);
+    expect(await runAnalyse(t.s)).toEqual(['done']);
+    expect(t.calls).toEqual(['check', 'structural', 'stateSpace']);
+  });
+  it('stops after the check when it finds errors or does not complete', async () => {
+    for (const c of [false, undefined]) {
+      const t = steps(c);
+      expect(await runAnalyse(t.s)).toBeUndefined();
+      expect(t.calls).toEqual(['check']);
+    }
   });
 });
