@@ -119,6 +119,16 @@ describe('exploreStateSpace', () => {
 });
 
 describe('parseReport / formatStateSpace', () => {
+  it('parses the unbounded witness with and without a trace', () => {
+    const base = 'nodes 5\narcs 4\ncomplete 0\nfired A\'T1\nalltrans A\'T1\nbound p 0 3\nbound q 0 1\n';
+    const r = parseReport(base + 'unbounded q A\'T1,A\'T2', ['A/p', 'A/q'], 7);
+    expect(r.unbounded).toEqual({ place: 'A/q', trace: ['A/T1', 'A/T2'] });
+    expect(r.complete).toBe(false);
+    expect(formatStateSpace(r).join('\n')).toContain('Unbounded: place A/q grows along A/T1, A/T2');
+    expect(parseReport(base + 'unbounded p ', ['A/p', 'A/q'], 7).unbounded).toEqual({ place: 'A/p', trace: [] });
+    expect(parseReport(base, ['A/p', 'A/q'], 7).unbounded).toBeUndefined();
+  });
+
   it('derives dead transitions and flags incomplete runs', () => {
     const r = parseReport('nodes 5\narcs 4\ncomplete 0\nfired A\'T1\nalltrans A\'T1,A\'T2\nbound p 0 3\nbound q 1000000000 0\ndead 2  # 1`a | empty', ['A/p', 'A/q'], 7);
     expect(r.complete).toBe(false);

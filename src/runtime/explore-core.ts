@@ -32,6 +32,8 @@ export interface StateSpaceResult {
   /** Token count range per place name. */
   bounds: Record<string, PlaceBound>;
   deadTransitions: string[];
+  /** Set when a covering check proved the net unbounded: the place that grows and the firing sequence reaching the covering marking. */
+  unbounded?: { place: string; trace: string[] };
 }
 
 export type ExploreOutcome = { ok: false; issues: Record<string, unknown> } | { ok: true; result: StateSpaceResult };
@@ -167,6 +169,12 @@ export function parseReport(extraInfo: string, placeNames: string[], elapsedMs: 
       deadMarkings.push({ node: Number(d[1]), trace: list(d[2]), marking });
     }
   }
+  let unbounded: { place: string; trace: string[] } | undefined;
+  const u = /^unbounded (\S+)(?: (\S*))?$/m.exec(extraInfo);
+  if (u) {
+    const i = idIndex.get(u[1]);
+    unbounded = { place: i !== undefined ? (placeNames[i] ?? u[1]) : u[1], trace: list(u[2]) };
+  }
   return {
     complete: field('complete') === '1',
     nodes: Number(field('nodes') ?? 0),
@@ -175,12 +183,14 @@ export function parseReport(extraInfo: string, placeNames: string[], elapsedMs: 
     deadMarkings,
     bounds,
     deadTransitions: list(field('alltrans')).filter((t) => !fired.has(t)),
+    ...(unbounded ? { unbounded } : {}),
   };
 }
 
 /** Summary lines for an output channel. */
 export function formatStateSpace(r: StateSpaceResult): string[] {
   const lines = [`State space: ${r.nodes} nodes, ${r.arcs} arcs in ${r.elapsedMs} ms${r.complete ? '' : ' (incomplete: stopped at a cap or cancelled)'}`];
+  if (r.unbounded) lines.push(`Unbounded: place ${r.unbounded.place} grows along ${r.unbounded.trace.join(', ') || '(initial)'}`);
   lines.push(`Dead markings: ${r.deadMarkings.length}`);
   for (const d of r.deadMarkings) lines.push(`  node ${d.node} after ${d.trace.join(' > ') || '(initial)'}`);
   lines.push(`Dead transitions: ${r.deadTransitions.join(', ') || 'none'}`);

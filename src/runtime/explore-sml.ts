@@ -49,6 +49,9 @@ let
   val fired : string list ref = ref [];
   val dead : (int * string) list ref = ref [];
   val complete = ref true;
+  val cnt = Array.array ((maxNodes + 2) * np, 0);
+  val wit : (int * string list) option ref = ref NONE;
+  fun found () = (case !wit of NONE => false | SOME _ => true);
   val info = List.map (fn id => valOf (HashTable.find CPN'Place.instances id)) pids;
   val front : (int * CPNToolsState.state * CPNToolsModel.event list) list ref = ref [];
   val back : (int * CPNToolsState.state * CPNToolsModel.event list) list ref = ref [];
@@ -59,6 +62,23 @@ let
           (if n < Array.sub (lo, k) then Array.update (lo, k, n) else ());
           (if n > Array.sub (hi, k) then Array.update (hi, k, n) else ());
           k + 1 end) 0 info));
+  fun record (id, s) =
+    (CPNToolsState.setState s;
+     ignore (List.foldl (fn (i, k) => (Array.update (cnt, id * np + k, #size i 1); k + 1)) 0 info));
+  fun trace id = if id <= 1 orelse Array.sub (parent, id) < 0 then [] else List.@ (trace (Array.sub (parent, id)), [Array.sub (pev, id)]);
+  (* Karp-Miller style: an ancestor that is <= in every place and < in some one is covered, so the net is unbounded *)
+  fun cover (id, s) =
+    (record (id, s);
+     if np = 0 orelse found () then () else
+     let fun grown (a, k) =
+           if k >= np then ~1 else
+           if Array.sub (cnt, a * np + k) < Array.sub (cnt, id * np + k) then k else grown (a, k + 1);
+         fun leq (a, k) = k >= np orelse (Array.sub (cnt, a * np + k) <= Array.sub (cnt, id * np + k) andalso leq (a, k + 1));
+         fun walk a =
+           if a < 1 then () else
+           if leq (a, 0) andalso grown (a, 0) >= 0 then wit := SOME (grown (a, 0), trace id)
+           else walk (Array.sub (parent, a))
+     in walk (Array.sub (parent, id)) end);
   fun lookup (s, p, e) =
     let val key = CPNToolsState.toString s;
         val h = ssHash key;
@@ -68,9 +88,8 @@ let
        | NONE => if !nodes >= maxNodes then (complete := false; (~1, false))
                  else let val id = !nodes + 1 in
                         nodes := id; Array.update (tbl, h, (key, id) :: b);
-                        Array.update (parent, id, p); Array.update (pev, id, e); (id, true) end
+                        Array.update (parent, id, p); Array.update (pev, id, e); cover (id, s); (id, true) end
     end;
-  fun trace id = if id <= 1 orelse Array.sub (parent, id) < 0 then [] else List.@ (trace (Array.sub (parent, id)), [Array.sub (pev, id)]);
   fun process (id, s, evs) =
     (visit s;
      (case evs of
@@ -90,11 +109,12 @@ let
     let val f = TextIO.openOut outFile;
         fun w s = TextIO.output (f, s ^ "\n");
     in w ("nodes " ^ Int.toString (!nodes)); w ("arcs " ^ Int.toString (!arcs));
-       w ("complete " ^ (if !complete andalso List.null (!front) andalso List.null (!back) then "1" else "0"));
+       w ("complete " ^ (if found () then "0" else if !complete andalso List.null (!front) andalso List.null (!back) then "1" else "0"));
        w ("ms " ^ LargeInt.toString (Time.toMilliseconds (Time.- (Time.now (), t0))));
        w ("fired " ^ String.concatWith "," (!fired));
        w ("alltrans " ^ String.concatWith "," CPN'SSNames.all);
        List.tabulate (np, fn i => w ("bound " ^ List.nth (pids, i) ^ " " ^ Int.toString (Array.sub (lo, i)) ^ " " ^ Int.toString (Array.sub (hi, i))));
+       (case !wit of SOME (k, tr) => w ("unbounded " ^ List.nth (pids, k) ^ " " ^ String.concatWith "," tr) | NONE => ());
        List.app (fn (id, m) => w ("dead " ^ Int.toString id ^ " " ^ String.concatWith "," (trace id) ^ " # " ^ m)) (List.rev (!dead));
        TextIO.closeOut f
     end;
@@ -110,7 +130,7 @@ let
         fun go () =
           (case !front of
              [] => (case !back of [] => (finish (); true) | b => (front := List.rev b; back := []; go ()))
-           | x :: rest => if expired () then (progress (); false) else (front := rest; process x; go ()))
+           | x :: rest => if found () then (finish (); true) else if expired () then (progress (); false) else (front := rest; process x; go ()))
     in go () end;
   val _ = List.app (fn (s, evs) => case lookup (s, ~1, "") of (id, true) => back := (id, s, evs) :: !back | _ => ()) (CPNToolsModel.getInitialStates ());
 in (ssSlice := slice; ssFin := finish) end;`;
