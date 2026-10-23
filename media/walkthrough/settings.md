@@ -6,5 +6,8 @@
 | `cpnIde.simulation.animate` | Animate tokens moving during simulation |
 | `cpnIde.javaPath` | Use a specific Java 17+ instead of the detected or downloaded one |
 | `cpnIde.backendUrl` | Use an external backend, e.g. the Docker image |
+| `cpnIde.stateSpace.maxStates` / `timeoutSeconds` | Limits of Analyse State Space; a search that hits one is Inconclusive |
 
 Simulation settings apply when a CPN IDE tab is (re)opened.
+
+The step delay, Java, backend URL, port and debug settings are under **CPN IDE: Advanced**.

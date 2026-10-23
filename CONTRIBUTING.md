@@ -89,6 +89,33 @@ npm run test:integration                 # VS Code integration suite (CPN_IT=1 a
 The simulator daemon uses the fixed port 20001, so real-backend tests need it free (and run one file at a time). To run
 them next to a running CPN IDE, use a network namespace: `unshare -rn sh -c 'ip link set lo up; CPN_IT=1 npx vitest run'`.
 
+## Continuous integration
+
+The `ci` workflow runs on every PR and on pushes to `develop` and `main`:
+
+- `fetch-installer` downloads the CPN IDE installer once (cached by its SHA-256) and shares it with the other jobs.
+- `lint-test` runs lint, typecheck and the unit tests, fetches the binaries and runs the VS Code integration suite.
+- `backend-it (<shard>)` runs the real-backend tests (`CPN_IT=1`) in the `eclipse-temurin:17-jre-jammy` container. The
+  simulator always binds port 20001, which stays in TIME-WAIT for about a minute, so each shard is a separate matrix
+  job with its own container network instead of files waiting for one another.
+- `backend-it` is the required check. It aggregates the shards and passes only when all of them did.
+- `build-vsix` builds the `linux-x64` and `win32-x64` VSIX files and checks that the socket shim is in the Linux one.
+
+### Adding a real-backend test
+
+Name the file `test/unit/<name>.integration.test.ts`. Then add a matrix entry under `backend-it-shard` in
+`.github/workflows/ci.yml`:
+
+```yaml
+- shard: my-feature
+  args: test/unit/my-feature.integration.test.ts
+```
+
+The `rest` shard runs `--exclude "test/unit/*.integration.test.ts"`, so a `*.integration.test.ts` file in `test/unit/`
+without its own entry runs in no shard at all. Other tests with `CPN_IT=1` run together in `rest`, which is only safe
+when they do not need the simulator port at the same time. The required `backend-it` check does not change when you add
+a shard.
+
 If you use Python tooling, manage it with `uv`: create environments with `uv venv` and run commands with `uv run`.
 
 ## Commit messages
