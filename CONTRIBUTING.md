@@ -112,7 +112,7 @@ Name the file `test/unit/<name>.integration.test.ts`. Then add a matrix entry un
 ```
 
 The `rest` shard runs `--exclude "test/unit/*.integration.test.ts"`, so a `*.integration.test.ts` file in `test/unit/`
-without its own entry runs in no shard at all. Other tests with `CPN_IT=1` run together in `rest`, which is only safe
+without its own entry would run in no shard; `test/unit/ci-shards.test.ts` fails until you add it. Other tests with `CPN_IT=1` run together in `rest`, which is only safe
 when they do not need the simulator port at the same time. The required `backend-it` check does not change when you add
 a shard.
 
