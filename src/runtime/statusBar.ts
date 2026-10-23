@@ -31,12 +31,18 @@ export function createStatusBar(backend: BackendManager): vscode.Disposable {
 
   const menu = async () => {
     const running = backend.status.kind !== 'stopped';
+    const kind = backend.status.kind;
+    const dockerActions = process.platform === 'darwin' || !!vscode.workspace.getConfiguration('cpnIde').get<string>('backendUrl')?.trim() || kind === 'error' || kind === 'simulatorDown';
     const picks: (vscode.QuickPickItem & { run: () => unknown })[] = [
       { label: '$(output) Show Backend Log', run: () => backend.showLog() },
       running
         ? { label: '$(debug-restart) Restart Backend', run: () => backend.retry() }
         : { label: '$(play) Start Backend', run: () => backend.ensureStarted().catch(() => undefined) },
       ...(running ? [{ label: '$(debug-stop) Stop Backend', run: () => backend.stop() }] : []),
+      ...(dockerActions ? [
+        { label: '$(vm) Start Docker Backend', run: () => vscode.commands.executeCommand('cpnIde.startDockerBackend') },
+        { label: '$(vm-outline) Stop Docker Backend', run: () => vscode.commands.executeCommand('cpnIde.stopDockerBackend') },
+      ] : []),
       { label: '$(gear) Settings', run: () => vscode.commands.executeCommand('workbench.action.openSettings', 'cpnIde') },
     ];
     const pick = await vscode.window.showQuickPick(picks, { placeHolder: presentStatus(backend.status).tooltip.replace(/\n/g, ' · ') });
