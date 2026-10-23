@@ -8,7 +8,7 @@ import { expect, it } from 'vitest';
 it('builds a bundle that loads on its own', () => {
   const root = path.resolve(__dirname, '../..');
   const bundle = path.join(root, 'dist/extension.js');
-  execFileSync(process.execPath, ['esbuild.mjs'], { cwd: root, stdio: 'pipe' });
+  execFileSync(process.execPath, ['scripts/esbuild.mjs'], { cwd: root, stdio: 'pipe' });
   const stub: unknown = new Proxy(() => stub, { get: () => stub, apply: () => stub, construct: () => stub as object });
   const mod = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown };
   const load = mod._load;

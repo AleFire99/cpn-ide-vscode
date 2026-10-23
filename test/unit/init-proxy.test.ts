@@ -6,6 +6,10 @@ import { InitProxy, LOCK_HEADER } from '../../src/runtime/init-proxy';
 const INIT = '/api/v2/cpn/init';
 const SIM_INIT = '/api/v2/cpn/sim/init';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Wait for a condition instead of a fixed delay, so a slow runner cannot reorder the events. */
+async function until(cond: () => boolean, ms = 5000): Promise<void> {
+  for (const end = Date.now() + ms; !cond(); await sleep(5)) if (Date.now() > end) throw new Error('timed out waiting');
+}
 
 describe('InitProxy', () => {
   let upstream: http.Server;
@@ -75,14 +79,27 @@ describe('InitProxy', () => {
   });
 
   it('serializes concurrent inits but not other routes', async () => {
+    // The upstream holds each init until the test releases it.
+    const pending: (() => void)[] = [];
+    initHandler = (_req, res, n) => {
+      events.push(`start${n}`);
+      pending.push(() => {
+        events.push(`end${n}`);
+        res.end('{"success":true}');
+      });
+    };
     const init = (s: string) => fetch(`${url}${INIT}`, { method: 'POST', headers: { 'X-SessionId': s }, body: '{}' });
     const a = init('a');
     const b = init('b');
-    await sleep(30);
+    await until(() => events.length > 0);
     const other = await fetch(`${url}/api/v2/cpn/other`);
     expect(other.status).toBe(201);
+    await sleep(50);
     expect(events).toEqual(['start1']);
+    pending.shift()?.();
     expect((await a).status).toBe(200);
+    await until(() => pending.length > 0);
+    pending.shift()?.();
     expect((await b).status).toBe(200);
     expect(events).toEqual(['start1', 'end1', 'start2', 'end2']);
   });
@@ -94,7 +111,7 @@ describe('InitProxy', () => {
     };
     const ac = new AbortController();
     const a = fetch(`${url}${INIT}`, { method: 'POST', body: '{}', signal: ac.signal }).catch(() => undefined);
-    await sleep(50);
+    await until(() => events.length > 0);
     const b = fetch(`${url}${INIT}`, { method: 'POST', body: '{}' });
     await sleep(50);
     expect(events).toEqual(['start1']);

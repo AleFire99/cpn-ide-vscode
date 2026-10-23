@@ -14,7 +14,6 @@ images/**
 **/*.ts
 **/*.map
 tsconfig.json
-esbuild.mjs
 eslint.config.mjs
 vitest.config.mts
 !resources/**
