@@ -152,9 +152,11 @@ export function structuralRows(r: StructuralResults, ss?: StateSpaceResult): Ana
   net.places.forEach((pl, p) => {
     const cands = [r.invBounds[p], r.lp[p]].filter((x): x is number => x !== undefined && Number.isFinite(x));
     const ub = cands.length ? Math.min(...cands) : undefined;
-    const seen = ss?.bounds[pl.label];
-    const reached = seen ? `reached ${seen.min}..${seen.max}${ss && !ss.complete ? ' (lower bound)' : ''}` : undefined;
-    const detail = [ub === undefined ? 'no bound' : `at most ${ub}`, reached].filter(Boolean).join(' · ');
+    // A cut-short search only gives partial figures, so show reached bounds from a complete one only.
+    const seen = ss?.complete ? ss.bounds[pl.label] : undefined;
+    const reached = seen ? `reached ${seen.min}..${seen.max}` : undefined;
+    const grows = ss?.unbounded?.place === pl.label ? 'grows without bound in the state space' : undefined;
+    const detail = [ub === undefined ? 'no bound' : `at most ${ub}`, reached, grows].filter(Boolean).join(' · ');
     bound.push(result(pl.label, ub === undefined ? { kind: 'inconclusive' } : { kind: 'proved' }, approx, detail));
   });
   sections.push(section('Boundedness', 'graph', bound));
