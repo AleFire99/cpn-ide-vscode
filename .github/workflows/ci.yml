@@ -66,9 +66,13 @@ jobs:
           name: cpn-installer
           path: .cache
       - name: Install system packages (innoextract, xvfb)
+        # A stalled mirror once cost 9 min: give each attempt a deadline and retry.
         run: |
-          sudo apt-get update
-          sudo apt-get install -y innoextract xvfb gcc-multilib
+          for i in 1 2 3; do
+            sudo timeout 180 apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 update && sudo timeout 300 apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y innoextract xvfb gcc-multilib && exit 0
+            echo "apt attempt $i failed, retrying"
+          done
+          exit 1
 
       - name: Fetch CPN IDE binaries
         run: scripts/fetch-cpn.sh
@@ -82,18 +86,43 @@ jobs:
   # fails to load), but works in this container, the same base as docker/Dockerfile.
   # Docker >= 29's default seccomp profile blocks the i386 socketcall(2) the simulator's glibc uses (#119);
   # the container runs under the default profile and relies on the shim scripts/build-sockshim.sh builds (#126).
-  backend-it:
-    name: backend-it
+  # The simulator always binds port 20001, which stays in TIME-WAIT ~60 s after it stops, so in one job the
+  # real-backend files run one at a time and mostly wait. Each shard has its own container network instead.
+  backend-it-shard:
+    name: backend-it (${{ matrix.shard }})
     needs: fetch-installer
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: backend-start
+            args: test/unit/backend.integration.test.ts -t "starts, binds"
+          - shard: backend-foreign
+            args: test/unit/backend.integration.test.ts -t "detects a foreign"
+          - shard: backend-overlap
+            args: test/unit/backend.integration.test.ts -t "survives overlapping"
+          - shard: headless-race
+            args: test/unit/headless-race.integration.test.ts
+          - shard: init-proxy
+            args: test/unit/init-proxy.integration.test.ts
+          - shard: examples
+            args: test/unit/examples.integration.test.ts
+          - shard: explore
+            args: test/unit/explore.integration.test.ts
+          - shard: rest
+            args: --exclude "test/unit/*.integration.test.ts"
     container:
       image: eclipse-temurin:17-jre-jammy
     steps:
       - name: Install system packages
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends ca-certificates curl innoextract libc6-i386 git zip unzip gcc gcc-multilib
+          for i in 1 2 3; do
+            timeout 180 apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 update && timeout 300 apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y --no-install-recommends ca-certificates curl innoextract libc6-i386 git zip unzip gcc gcc-multilib && exit 0
+            echo "apt attempt $i failed, retrying"
+          done
+          exit 1
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
@@ -110,13 +139,22 @@ jobs:
         env:
           REQUIRE_SOCKSHIM: "1"
       - name: Backend integration test
-        run: npm test
+        run: npx vitest run ${{ matrix.args }}
         env:
           CPN_IT: "1"
 
+  # The required check: passes only when every shard passed.
+  backend-it:
+    name: backend-it
+    needs: backend-it-shard
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.backend-it-shard.result }}" = success
+
   build-vsix:
     name: build-vsix
-    needs: [fetch-installer, lint-test]
+    needs: fetch-installer
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -136,8 +174,11 @@ jobs:
           path: .cache
       - name: Install innoextract
         run: |
-          sudo apt-get update
-          sudo apt-get install -y innoextract gcc-multilib
+          for i in 1 2 3; do
+            sudo timeout 180 apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 update && sudo timeout 300 apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y innoextract gcc-multilib && exit 0
+            echo "apt attempt $i failed, retrying"
+          done
+          exit 1
 
       - name: Fetch CPN IDE binaries
         run: scripts/fetch-cpn.sh
