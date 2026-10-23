@@ -7,7 +7,7 @@ const root = join(__dirname, '..', '..');
 type Json = any;
 const readJson = (p: string): Json => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
-const grammar = readJson('syntaxes/cpnml.tmLanguage.json');
+const grammar = readJson('language/cpnml.tmLanguage.json');
 const repo: Record<string, Json> = grammar.repository;
 
 /** Every rule object in the grammar, however deeply nested. */
@@ -52,11 +52,11 @@ describe('CPN ML grammar', () => {
       expect.objectContaining({ language: 'cpnml', scopeName: 'source.cpnml' }),
     );
     const ignore = readFileSync(join(root, '.vscodeignore'), 'utf8');
-    expect(ignore).not.toMatch(/syntaxes|language-configuration/);
+    expect(ignore).not.toMatch(/language/);
   });
 
   it('has a language configuration', () => {
-    const cfg = readJson('language-configuration.cpnml.json');
+    const cfg = readJson('language/cpnml.language-configuration.json');
     expect(cfg.comments.blockComment).toEqual(['(*', '*)']);
     expect(cfg.brackets.length).toBeGreaterThan(0);
     expect(cfg.autoClosingPairs.length).toBeGreaterThan(0);

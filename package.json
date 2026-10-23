@@ -58,14 +58,14 @@
         "extensions": [
           ".sml"
         ],
-        "configuration": "./language-configuration.cpnml.json"
+        "configuration": "./language/cpnml.language-configuration.json"
       }
     ],
     "grammars": [
       {
         "language": "cpnml",
         "scopeName": "source.cpnml",
-        "path": "./syntaxes/cpnml.tmLanguage.json"
+        "path": "./language/cpnml.tmLanguage.json"
       }
     ],
     "commands": [
@@ -311,11 +311,11 @@
     "snippets": [
       {
         "language": "json",
-        "path": "./snippets/petri.code-snippets"
+        "path": "./language/petri.code-snippets"
       },
       {
         "language": "cpnml",
-        "path": "./snippets/cpnml.json"
+        "path": "./language/cpnml.code-snippets.json"
       }
     ],
     "customEditors": [
@@ -637,14 +637,14 @@
     }
   },
   "scripts": {
-    "build": "node esbuild.mjs",
-    "watch": "node esbuild.mjs --watch",
+    "build": "node scripts/esbuild.mjs",
+    "watch": "node scripts/esbuild.mjs --watch",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "package": "vsce package --no-dependencies",
     "compile:test": "tsc -p test/integration/tsconfig.json",
-    "test:integration": "node esbuild.mjs && tsc -p test/integration/tsconfig.json && node out/test/integration/run.js"
+    "test:integration": "node scripts/esbuild.mjs && tsc -p test/integration/tsconfig.json && node out/test/integration/run.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

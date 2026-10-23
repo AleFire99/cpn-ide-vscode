@@ -11,7 +11,7 @@ interface Snippet {
 }
 
 function load(file: string): Record<string, Snippet> {
-  return JSON.parse(fs.readFileSync(path.join(root, 'snippets', file), 'utf8')) as Record<string, Snippet>;
+  return JSON.parse(fs.readFileSync(path.join(root, 'language', file), 'utf8')) as Record<string, Snippet>;
 }
 
 /** Body as text, with `${n:default}` replaced by its default and bare `$n` / `$0` removed. */
@@ -20,7 +20,7 @@ function expand(snippet: Snippet): string {
   return text.replace(/\$\{\d+:([^}]*)\}/g, '$1').replace(/\$\d+/g, '');
 }
 
-describe('snippets/petri.code-snippets', () => {
+describe('language/petri.code-snippets', () => {
   const snippets = load('petri.code-snippets');
 
   it('parses with a prefix and body for every snippet', () => {
@@ -44,8 +44,8 @@ describe('snippets/petri.code-snippets', () => {
   });
 });
 
-describe('snippets/cpnml.json', () => {
-  const snippets = load('cpnml.json');
+describe('language/cpnml.code-snippets.json', () => {
+  const snippets = load('cpnml.code-snippets.json');
 
   it('parses and offers colset, var, fun and block', () => {
     const prefixes = Object.values(snippets).map((s) => s.prefix).sort();
@@ -70,8 +70,8 @@ describe('snippet registration in package.json', () => {
     };
     expect(pkg.contributes.snippets).toEqual(
       expect.arrayContaining([
-        { language: 'json', path: './snippets/petri.code-snippets' },
-        { language: 'cpnml', path: './snippets/cpnml.json' },
+        { language: 'json', path: './language/petri.code-snippets' },
+        { language: 'cpnml', path: './language/cpnml.code-snippets.json' },
       ]),
     );
     expect(pkg.contributes.languages).toEqual(
