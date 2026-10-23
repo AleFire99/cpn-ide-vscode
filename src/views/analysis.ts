@@ -172,13 +172,12 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
       // Gate: a net that may be unbounded can have an infinite state space; ask before spending the budget.
       try {
         const net = toPTNet(spec, sml);
-        const lp = this.structural ? this.structural.lp : lpBounds(net);
+        // The cached structural result may belong to another model.
+        const cached = this.structural && this.resultModel?.toString() === uri.toString();
+        const lp = cached && this.structural ? this.structural.lp : lpBounds(net);
         const p = lp.findIndex((b) => b === Infinity);
-        if (p >= 0 || !net.exact) {
-          const why =
-            p >= 0
-              ? `The net may be unbounded: place ${net.places[p].label} has no finite bound, so its state space may be infinite.`
-              : 'The net is only approximated for analysis (timed or non-countable tokens), so its state space may be infinite.';
+        if (p >= 0) {
+          const why = `The net may be unbounded: place ${net.places[p].label} has no finite bound, so its state space may be infinite.`;
           const pick = await vscode.window.showWarningMessage(why, { modal: true }, 'Explore anyway (capped)');
           if (!pick) return;
         }
