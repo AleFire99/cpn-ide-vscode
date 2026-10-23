@@ -74,9 +74,15 @@ describe('structuralRows', () => {
     expect(a?.children?.[0]).toMatchObject({ label: 'Page/arc', description: 'approximate · variable arc' });
   });
 
-  it('shows the state space bounds next to the structural ones, as lower bounds when incomplete', () => {
-    const rows = structuralRows(analyseStructure(cycle), ss({ complete: false }));
-    expect(find(rows, 'Boundedness', /^a$/)?.description).toBe('proved · at most 1 · reached 0..1 (lower bound)');
+  it('shows the state space bounds next to the structural ones only when the search completed', () => {
+    const net = analyseStructure(cycle);
+    expect(find(structuralRows(net, ss({ complete: true })), 'Boundedness', /^a$/)?.description).toBe('proved · at most 1 · reached 0..1');
+    expect(find(structuralRows(net, ss({ complete: false })), 'Boundedness', /^a$/)?.description).toBe('proved · at most 1');
+  });
+
+  it('marks the place of an unbounded witness', () => {
+    const rows = structuralRows(analyseStructure(cycle), ss({ complete: false, unbounded: { place: 'a', trace: ['t'] } }));
+    expect(find(rows, 'Boundedness', /^a$/)?.description).toBe('proved · at most 1 · grows without bound in the state space');
   });
 });
 
