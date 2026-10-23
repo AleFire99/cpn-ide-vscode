@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 — 2026-10-23
+
+A leaner workflow: one **Analyse** button runs the whole analysis, the sidebar is down to Models, Net and Analysis, and the backend controls live in the status bar. The state space search no longer burns its budget on unbounded nets: it asks first, stops with a witness when a place keeps growing, and never shows partial figures as results.
 
 ### New
 
@@ -13,10 +15,13 @@
 - **A `.cpn` with a `.petri.json` twin is hidden** from the Models view. (#135)
 - **"Unbounded" is only proved for nets with plain (`UNIT`) tokens**; otherwise the state space says "Likely unbounded". (#136)
 - **CI runs in about 3 minutes.** (#142)
+- **README, walkthrough and screenshots** updated for the new workflow. (#145)
+- **Tidier dining philosophers example**: the three philosophers sit in a ring with the forks between them, without crossing arcs. (#150)
 
 ### Fixed
 
 - **State space stops with an unbounded witness.** Exploring an unbounded net no longer runs to the cap: it stops as soon as a reached marking covers an earlier one on its path (a place keeps growing) and shows the firing sequence. (#132)
+- **No partial bounds next to the structural ones.** The Boundedness section shows reached bounds only from a complete state space, and marks the place of an unbounded witness. (#146)
 
 ## 0.7.0 — 2026-10-22
 
