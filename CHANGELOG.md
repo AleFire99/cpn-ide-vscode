@@ -16,7 +16,7 @@
 
 ### Fixed
 
-- **State space stops with an unbounded witness.** Exploring an unbounded net no longer runs to the cap: it stops as soon as a place provably grows without limit and shows the firing sequence. (#132)
+- **State space stops with an unbounded witness.** Exploring an unbounded net no longer runs to the cap: it stops as soon as a reached marking covers an earlier one on its path (a place keeps growing) and shows the firing sequence. (#132)
 
 ## 0.7.0 — 2026-10-22
 

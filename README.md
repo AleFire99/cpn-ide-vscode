@@ -69,14 +69,14 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   equation) and P/T-invariants in sections. **Analyse State Space** explores the reachable markings on the backend
   (cancellable; limits `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`) and shows bounds, dead
   markings and dead transitions, confirming or refuting the structural deadlock candidate. If the net may be unbounded
-  it asks first, and the search stops with a witness as soon as a place provably grows without limit; a search cut
+  it asks first, and the search stops with a witness as soon as a reached marking covers an earlier one on its path (a place keeps growing); a search cut
   short by the cap or timeout reports Inconclusive instead of partial figures. Every row carries a badge:
   proved, up to N, candidate, inconclusive or approximate (the net has arcs whose token count is not fixed). "Unbounded"
   is only proved for nets whose places all have colour set `UNIT`; otherwise it is "Likely unbounded".
   Caveats: the state space is for untimed nets only; monitors are ignored; and the structural analysis counts tokens
   without their colours, so its results are approximate whenever an arc's token count is not fixed (the badge says so).
-- **Backend controls** are in the status bar menu (click the CPN IDE item): Start/Restart, Stop, Show Log and the
-  Docker actions. Advanced options are in the settings under **Advanced**.
+- **Backend controls** are in the status bar menu (click the CPN IDE item): Start/Restart, Stop, Show Log, Settings, and
+  the Docker actions (on macOS, when `cpnIde.backendUrl` is set, or after a failure). Advanced options are in the settings under **Advanced**.
 
 A `.cpn` that has a `.petri.json` twin next to it is hidden from the **Models** view; open the text model instead.
 
