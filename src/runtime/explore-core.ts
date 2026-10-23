@@ -32,6 +32,8 @@ export interface StateSpaceResult {
   /** Token count range per place name. */
   bounds: Record<string, PlaceBound>;
   deadTransitions: string[];
+  /** Set when the search found a place that grows without bound: its id or name and the firing sequence from the initial marking. */
+  unbounded?: { place: string; trace: string[] };
 }
 
 export type ExploreOutcome = { ok: false; issues: Record<string, unknown> } | { ok: true; result: StateSpaceResult };
