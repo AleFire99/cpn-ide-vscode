@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- **One Analyse action.** The Analysis view has a single **Analyse** button that checks the model, runs the structural analysis and explores the state space, with the results in one place. If the check finds errors it stops there. **Save Report** sits next to it; Run Replications and Export Event Log moved to the `...` menu. The individual commands stay in the Command Palette. (#136)
+
+### Changed
+
+- **Analyse State Space asks before exploring a possibly unbounded net**, and reports Inconclusive instead of partial figures when the search is cut short. (#133)
+- **Sidebar trimmed.** The Backend and Get Started views are gone; the Docker actions are in the status bar menu, and the settings have an Advanced section. (#134)
+- **A `.cpn` with a `.petri.json` twin is hidden** from the Models view. (#135)
+- **"Unbounded" is only proved for nets with plain (`UNIT`) tokens**; otherwise the state space says "Likely unbounded". (#136)
+- **CI runs in about 3 minutes.** (#142)
+
+### Fixed
+
+- **State space stops with an unbounded witness.** Exploring an unbounded net no longer runs to the cap: it stops as soon as a reached marking covers an earlier one on its path (a place keeps growing) and shows the firing sequence. (#132)
+
 ## 0.7.0 — 2026-10-22
 
 The CPN IDE sidebar gets an **Analysis** view: check a model on demand, prove properties with linear algebra (invariants, bounds, boundedness, deadlock freedom) without running anything, explore the state space in the bundled simulator to confirm or refute deadlocks, and run replications or export event logs without opening the canvas. The simulator also works again under Docker 29's default sandbox, both in the Docker image and in dev containers.
