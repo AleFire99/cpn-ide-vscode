@@ -28,8 +28,11 @@ downloaded on first use if you don't already have one.
 - **Convert both ways**: turn an existing `.cpn` into a text model, or export a text model to `.cpn`.
 - **Headless runs**: simulate a model for N steps without the UI and print the final marking.
 - **Hierarchy**: subpages, substitution transitions with port/socket assignments, and fusion places.
-- **CPN IDE sidebar**: an Activity Bar icon lists the models in your workspace and the structure of the open one, and
-  holds the Analysis view. The backend controls (Start, Restart, Stop, Show Log, Docker) are in the status bar menu.
+- **CPN IDE sidebar**: an Activity Bar icon lists the models in your workspace (**Models**), the structure of the open
+  one (**Net**) and the **Analysis** view. The backend controls (Start, Restart, Stop, Show Log, Docker) are in the
+  status bar menu.
+
+![The CPN IDE sidebar with Models, Net and Analysis next to the canvas](images/sidebar.png)
 
 ## Getting started
 
@@ -47,7 +50,7 @@ net, step by step.
 4. The first time, the extension starts its local backend (and downloads Java if needed). This takes a few seconds; the
    project console at the bottom of the canvas reports **"Model is correct"** once the model has been validated.
 
-The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
+The **CPN IDE** icon in the Activity Bar opens a sidebar with three views:
 
 - **Models**: one row per net. `NAME.cpn`, `NAME.petri.json` and `NAME.sml` in the same folder are grouped; click the
   row to open the text model (or the `.cpn`) in the canvas, or expand it for the files, whose buttons run a headless
@@ -60,6 +63,9 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   The results accumulate in the one view. **Save Report** (next to it) writes them to a text file; **Run Replications**
   and **Export Event Log** are in the `...` menu. The three steps are also separate commands in the Command Palette
   (**CPN IDE: Check Model**, **Structural Analysis**, **Analyse State Space**).
+
+  ![Analysis results for the dining philosophers](images/analysis.png)
+
   **Run Replications** runs N replications on the backend with a progress notification and opens the text
   `replication_report.txt` (a remote or Docker backend keeps it on its own machine, the notification says where).
   **Export Event Log** simulates the model while recording events and writes an XES or CSV event log to a `play_out`
@@ -68,17 +74,23 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   **Structural Analysis** needs no backend: it shows boundedness, deadlock freedom / liveness (Commoner and the state
   equation) and P/T-invariants in sections. **Analyse State Space** explores the reachable markings on the backend
   (cancellable; limits `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`) and shows bounds, dead
-  markings and dead transitions, confirming or refuting the structural deadlock candidate. If the net may be unbounded
-  it asks first, and the search stops with a witness as soon as a reached marking covers an earlier one on its path (a place keeps growing); a search cut
-  short by the cap or timeout reports Inconclusive instead of partial figures. Every row carries a badge:
-  proved, up to N, candidate, inconclusive or approximate (the net has arcs whose token count is not fixed). "Unbounded"
-  is only proved for nets whose places all have colour set `UNIT`; otherwise it is "Likely unbounded".
+  markings and dead transitions, confirming or refuting the structural deadlock candidate. If the structural analysis
+  finds a place whose bound is infinite, it first asks (modal, **Explore anyway (capped)**) before exploring. The search
+  stops with a witness (the place and the firing path) as soon as a reached marking covers an earlier one on its path,
+  i.e. a place keeps growing. A search cut short by the cap or the timeout reports Inconclusive instead of partial
+  figures. Every row carries a badge: proved, up to N, candidate, inconclusive or approximate (the net has arcs whose
+  token count is not fixed). "Unbounded" is only proved when every place has colour set `UNIT`; otherwise it is "Likely
+  unbounded".
   Caveats: the state space is for untimed nets only; monitors are ignored; and the structural analysis counts tokens
   without their colours, so its results are approximate whenever an arc's token count is not fixed (the badge says so).
-- **Backend controls** are in the status bar menu (click the CPN IDE item): Start/Restart, Stop, Show Log, Settings, and
-  the Docker actions (on macOS, when `cpnIde.backendUrl` is set, or after a failure). Advanced options are in the settings under **Advanced**.
 
-A `.cpn` that has a `.petri.json` twin next to it is hidden from the **Models** view; open the text model instead.
+The **backend controls** are in the status bar menu (click the CPN IDE item): Start/Restart, Stop, Show Log, Settings,
+and the Docker actions (on macOS, when `cpnIde.backendUrl` is set, or after a failure). The settings are split into
+**CPN IDE** and **CPN IDE: Advanced** (`cpnIde.debug`, `cpnIde.port`, `cpnIde.javaPath`, `cpnIde.backendUrl`,
+`cpnIde.simulation.stepDelayMs`).
+
+A `.cpn` that has a `.petri.json` twin next to it is hidden from the **Models** view; open the text model instead. A
+`.cpn` on its own shows as "CPN Tools model", with a **Convert to Text Model** button.
 
 To start from scratch, run **CPN IDE: New Net** from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`), or
 right-click a folder in the Explorer. It asks for a name, writes `NAME.petri.json` and `NAME.sml` with a small starter
@@ -198,26 +210,40 @@ opens a file as text without prompting. Diff views (for example the Git diff) al
 | CPN IDE: Open in CPN IDE | ▶ in the editor title, Explorer menu, sidebar | Open a `.cpn` / `.petri.json` in the CPN IDE canvas |
 | CPN IDE: Reopen as XML Text | editor title | Show the file as text again |
 | CPN IDE: New Net | Command Palette, Explorer folder menu, sidebar | Create `NAME.petri.json` + `NAME.sml` with a starter net and open it |
-| CPN IDE: Open Blank Panel | Command Palette | Open CPN IDE in a panel that is not tied to a file |
 | CPN IDE: Convert to Text Model | `.cpn` editor title, Explorer menu | Write `.petri.json` + `.sml` from a `.cpn` |
 | CPN IDE: Export .cpn | `.petri.json` editor title, Explorer menu | Write a `.cpn` from a text model |
 | CPN IDE: Run Simulation (No UI) | Explorer menu, sidebar | Simulate N steps and print the final marking |
 | Simulate 100 steps (CodeLens) | top of a `.petri.json` | Run 100 headless steps and show each place's final marking inline until you edit the file; **Clear results** removes it. Also has **Open in CPN IDE** and **Export .cpn** lenses |
-| CPN IDE: Show Backend Log | Command Palette | Open the backend and simulator log |
-| CPN IDE: Start Backend | Command Palette, status bar, sidebar | Start the backend without opening a model |
-| CPN IDE: Stop Backend | Command Palette, sidebar | Stop the backend and simulator |
-| CPN IDE: Start Docker Backend | Command Palette, macOS walkthrough | Run the Docker backend as container `cpn-ide-backend`, set `cpnIde.backendUrl` and reconnect open tabs |
-| CPN IDE: Stop Docker Backend | Command Palette | Stop the `cpn-ide-backend` container |
-| CPN IDE: Restart Backend | Command Palette, status bar | Restart the backend and reload open CPN IDE tabs |
+| CPN IDE: Analyse | Analysis view title, Command Palette | Check the model, run the structural analysis and explore the state space |
+| CPN IDE: Check Model / Structural Analysis / Analyse State Space | Command Palette | Run one step of the analysis on its own |
+| CPN IDE: Save Analysis Report | Analysis view title, Command Palette | Write the results in the Analysis view to a text file |
+| CPN IDE: Run Replications | Analysis view `...` menu, Command Palette | Run N replications and open the replication report |
+| CPN IDE: Export Event Log (CSV/XES) | Analysis view `...` menu, Command Palette | Simulate while recording events and write an event log to `play_out` |
+| CPN IDE: Backend Status | status bar, Command Palette | Menu with Start/Restart, Stop, Show Log, Settings and the Docker actions |
+| CPN IDE: Show Backend Log | Command Palette, status bar menu | Open the backend and simulator log |
+| CPN IDE: Start / Restart / Stop Backend | status bar menu | Start the backend without opening a model, restart it and reload open CPN IDE tabs, or stop it and the simulator |
+| CPN IDE: Start Docker Backend | status bar menu, macOS walkthrough | Run the Docker backend as container `cpn-ide-backend`, set `cpnIde.backendUrl` and reconnect open tabs |
+| CPN IDE: Stop Docker Backend | status bar menu | Stop the `cpn-ide-backend` container |
+
+Start, Restart, Stop and the Docker commands are not in the Command Palette; use the status bar menu
+(**CPN IDE: Backend Status**).
 
 ## Settings
 
 | Setting | Default | Description |
 |---|---|---|
-| `cpnIde.simulation.stepDelayMs` | `100` | Delay between steps of a multi-step run, in ms (CPN IDE itself uses 500) |
 | `cpnIde.simulation.animate` | `true` | Animate tokens moving during simulation |
 | `cpnIde.theme` | `auto` | `auto` makes the canvas, panels and toolbar follow a dark or high-contrast VS Code theme; `light` always keeps the UI's own light look. Applies when an editor is (re)opened |
 | `cpnIde.codeLens.enabled` | `true` | Show the Simulate / Open in CPN IDE / Export .cpn CodeLenses at the top of `.petri.json` files |
+| `cpnIde.stateSpace.maxStates` | `100000` | Analyse State Space stops after this many states and reports Inconclusive |
+| `cpnIde.stateSpace.timeoutSeconds` | `30` | Analyse State Space stops after this many seconds and reports Inconclusive |
+| `cpnIde.eventLog.*` | | Case id, start time, time unit and recorded events of **Export Event Log** |
+
+Under **CPN IDE: Advanced**:
+
+| Setting | Default | Description |
+|---|---|---|
+| `cpnIde.simulation.stepDelayMs` | `100` | Delay between steps of a multi-step run, in ms (CPN IDE itself uses 500) |
 | `cpnIde.javaPath` | | Java 17+ executable. Empty: use `JAVA_HOME`, `java` on the PATH, or a downloaded runtime |
 | `cpnIde.backendUrl` | | URL of an external backend, e.g. the Docker image below. Empty: use the bundled one |
 | `cpnIde.port` | `0` | Port of the local backend (`0` = any free port) |
@@ -231,28 +257,29 @@ Simulation and debug settings apply when a CPN IDE tab is (re)opened.
 |---|---|---|
 | Windows x64 | yes | |
 | Linux x64 | yes | needs 32-bit glibc: `sudo apt install libc6:i386` (Debian/Ubuntu) or `sudo dnf install glibc.i686` (Fedora) |
-| macOS | no | the CPN simulator is a 32-bit binary; run **CPN IDE: Start Docker Backend** (see [Docker backend](#docker-backend)) |
+| macOS | no | the CPN simulator is a 32-bit binary; use **Start Docker Backend** in the status bar menu (see [Docker backend](#docker-backend)) |
 
 ## Troubleshooting
 
 The **CPN IDE** item in the status bar shows the backend state: ○ not running, spinning while it
-starts, ✓ ready, red when the backend or the simulator failed. Click it to show the log, restart or stop the backend.
+starts, ✓ ready, red when the backend or the simulator failed. Click it for the menu: show the log, restart or stop the
+backend, open the settings, or use the Docker backend.
 
 - **"The CPN simulator needs 32-bit glibc"** (Linux): the extension checks for `/lib/ld-linux.so.2` before starting and
   shows the install command for your distribution, with **Copy command** and **Use Docker backend** buttons. Debian/Ubuntu:
   `sudo dpkg --add-architecture i386 && sudo apt update && sudo apt install libc6:i386`; Fedora:
   `sudo dnf install glibc.i686`; openSUSE: `sudo zypper install glibc-32bit`; Arch: `sudo pacman -S lib32-glibc`
   (needs multilib); Fedora Silverblue/Kinoite: `rpm-ostree install glibc.i686`, then reboot.
-- **"The simulator could not start"**: on Linux, check the 32-bit glibc above. Otherwise click **Show Log** (or run
-  **CPN IDE: Show Backend Log**) to see why.
+- **"The simulator could not start"**: on Linux, check the 32-bit glibc above. Otherwise click **Show Log** (or choose it in
+  the status bar menu) to see why.
 - **"Function not implemented" in `cpnmld.log`** (VS Code inside a container, Docker 29 or later): the container's default
   seccomp profile blocks the 32-bit socket call the simulator uses. The Linux VSIX preloads a shim for this
   (`resources/backend/shim`); if you built the extension yourself, run `scripts/build-sockshim.sh` (needs `gcc-multilib`).
 - **A simulator is already running on port 20001**: the CPN simulator always uses this port, so only one can run per
   machine. A second VS Code window shares the first one's simulator. If a crashed window left one behind, the extension
   offers to stop it.
-- **Validation never finishes**: after 60 s the extension reports the hang. Run **CPN IDE: Stop Backend** and reopen the
-  model.
+- **Validation never finishes**: after 60 s the extension reports the hang. Choose **Stop** in the status bar menu and
+  reopen the model.
 - **Java download blocked** (offline or behind a proxy): install a Java 17+ runtime yourself and set `cpnIde.javaPath`.
 
 ## Examples
@@ -280,7 +307,7 @@ time, because two at once can hang the upstream backend.
 
 ## Docker backend
 
-On macOS, or to keep the simulator off your machine, run **CPN IDE: Start Docker Backend**. It starts the image as the container `cpn-ide-backend` on a free local port, sets `cpnIde.backendUrl` (workspace or user) and reconnects open tabs. It offers once to stop the container when VS Code exits, and on macOS it is also offered the first time you open a model. Docker must be installed and running. **CPN IDE: Stop Docker Backend** stops the container.
+On macOS, or to keep the simulator off your machine, choose **Start Docker Backend** in the status bar menu (or from the macOS walkthrough). It starts the image as the container `cpn-ide-backend` on a free local port, sets `cpnIde.backendUrl` (workspace or user) and reconnects open tabs. It offers once to stop the container when VS Code exits, and on macOS it is also offered the first time you open a model. Docker must be installed and running. **Stop Docker Backend** in the same menu stops the container.
 
 Manually:
 
