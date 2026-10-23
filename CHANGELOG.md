@@ -16,6 +16,7 @@ A leaner workflow: one **Analyse** button runs the whole analysis, the sidebar i
 - **"Unbounded" is only proved for nets with plain (`UNIT`) tokens**; otherwise the state space says "Likely unbounded". (#136)
 - **CI runs in about 3 minutes.** (#142)
 - **README, walkthrough and screenshots** updated for the new workflow. (#145)
+- **Tidier dining philosophers example**: the three philosophers sit in a ring with the forks between them, without crossing arcs. (#150)
 
 ### Fixed
 
