@@ -11,6 +11,7 @@ import { registerReplicationCommands } from './analysis-replication';
 // #107 (structural analysis and state space)
 import { randomUUID } from 'node:crypto';
 import { toPTNet } from '../analysis/abstract';
+import { lpBounds } from '../analysis/stateEquation';
 import { decompile } from '../model/decompile';
 import type { PetriSpec } from '../model/types';
 import { exploreStateSpace, DEFAULT_MAX_NODES, DEFAULT_MAX_MS, type StateSpaceResult } from '../runtime/explore-core';
@@ -101,7 +102,7 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
   private resultSections(): AnalysisRow[] {
     const out: AnalysisRow[] = [];
     if (this.structural) out.push(...structuralRows(this.structural, this.stateSpace));
-    if (this.stateSpace) out.push(...stateSpaceRows(this.stateSpace));
+    if (this.stateSpace) out.push(...stateSpaceRows(this.stateSpace, this.structural?.net.exact ?? true));
     return out;
   }
 
@@ -167,6 +168,21 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
       if (!xml) {
         void vscode.window.showErrorMessage('CPN IDE: the model does not compile; fix its errors first (Check Model).');
         return;
+      }
+      // Gate: a net that may be unbounded can have an infinite state space; ask before spending the budget.
+      try {
+        const net = toPTNet(spec, sml);
+        // The cached structural result may belong to another model.
+        const cached = this.structural && this.resultModel?.toString() === uri.toString();
+        const lp = cached && this.structural ? this.structural.lp : lpBounds(net);
+        const p = lp.findIndex((b) => b === Infinity);
+        if (p >= 0) {
+          const why = `The net may be unbounded: place ${net.places[p].label} has no finite bound, so its state space may be infinite.`;
+          const pick = await vscode.window.showWarningMessage(why, { modal: true }, 'Explore anyway (capped)');
+          if (!pick) return;
+        }
+      } catch {
+        // Cannot abstract the net: explore as before.
       }
       const outcome = await vscode.window.withProgress(
         { location: vscode.ProgressLocation.Notification, title: 'CPN IDE: exploring the state space', cancellable: true },
