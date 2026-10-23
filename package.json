@@ -433,7 +433,7 @@
             "description": "Open the **Analysis** view in the CPN IDE sidebar and press **Analyse**: it checks the model, runs the structural analysis and explores the state space, stopping early if the check finds errors. Try it on 05-dining-philosophers (a dead marking) or 06-unbounded-producer (an unbounded place).\n[Open an Example](command:cpnIde.openExample)",
             "media": {
               "image": "media/walkthrough/analysis.png",
-              "altText": "Analysis results for the dining philosophers"
+              "altText": "The Analysis view reporting an unbounded place in the unbounded producer example"
             }
           },
           {
