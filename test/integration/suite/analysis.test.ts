@@ -31,4 +31,14 @@ suite('CPN IDE Analysis view', () => {
     assert.match(all, /Deadlock confirmed by the state space/, all);
     assert.match(all, /State space/);
   });
+
+  test('Analyse runs check, structural analysis and state space in one go (real backend)', async function () {
+    if (!process.env.CPN_IT) this.skip();
+    this.timeout(240000);
+    await vscode.window.showTextDocument(philosophers());
+    const text = (await vscode.commands.executeCommand<string[]>('cpnIde.analyse')) ?? [];
+    const all = text.join('\n');
+    assert.match(all, /Boundedness/, all);
+    assert.match(all, /Deadlock confirmed by the state space/, all);
+  });
 });

@@ -15,7 +15,7 @@ import { lpBounds } from '../analysis/stateEquation';
 import { decompile } from '../model/decompile';
 import type { PetriSpec } from '../model/types';
 import { exploreStateSpace, DEFAULT_MAX_NODES, DEFAULT_MAX_MS, type StateSpaceResult } from '../runtime/explore-core';
-import { analyseStructure, reportText, rowsToText, stateSpaceRows, structuralRows, type StructuralResults } from './analysis-core';
+import { analyseStructure, onlyPlainTokens, runAnalyse, reportText, rowsToText, stateSpaceRows, structuralRows, type StructuralResults } from './analysis-core';
 
 /** Where a finding's text lives. */
 interface Files {
@@ -44,6 +44,8 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
   private structural: StructuralResults | undefined;
   private stateSpace: StateSpaceResult | undefined;
   private resultModel: vscode.Uri | undefined;
+  /** Every place of the result model has colour set UNIT. */
+  private plainTokens = false;
 
   constructor() {
     this.view = vscode.window.createTreeView('cpnIde.analysis', { treeDataProvider: this });
@@ -73,7 +75,7 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
   }
 
   /** Validate the active model (or the last one seen) and show the findings. */
-  async check(): Promise<void> {
+  async check(): Promise<boolean | undefined> {
     const uri = activeModel() ?? this.lastModel;
     if (!uri) {
       void vscode.window.showInformationMessage('CPN IDE: open a .cpn or .petri.json model to check.');
@@ -85,14 +87,15 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
       const pick = await vscode.window.showInformationMessage('CPN IDE: the backend is not running.', 'Start Backend');
       if (pick !== 'Start Backend') return;
     }
-    await vscode.window.withProgress({ location: { viewId: 'cpnIde.analysis' }, title: 'Checking model' }, async () => {
+    return vscode.window.withProgress({ location: { viewId: 'cpnIde.analysis' }, title: 'Checking model' }, async () => {
       try {
         url ??= await backend.ensureStarted();
-        await this.run(uri, url);
+        return await this.run(uri, url);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         backend.output.appendLine(`[analysis] ${uri.fsPath}: ${msg}`);
         void vscode.window.showErrorMessage(`CPN IDE: Check Model failed: ${msg}`);
+        return undefined;
       }
     });
   }
@@ -102,7 +105,7 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
   private resultSections(): AnalysisRow[] {
     const out: AnalysisRow[] = [];
     if (this.structural) out.push(...structuralRows(this.structural, this.stateSpace));
-    if (this.stateSpace) out.push(...stateSpaceRows(this.stateSpace, this.structural?.net.exact ?? true));
+    if (this.stateSpace) out.push(...stateSpaceRows(this.stateSpace, this.structural?.net.exact ?? true, this.plainTokens));
     return out;
   }
 
@@ -148,6 +151,7 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
     try {
       const { spec, sml } = await this.source(uri);
       this.adopt(uri);
+      this.plainTokens = onlyPlainTokens(spec, sml);
       this.structural = analyseStructure(toPTNet(spec, sml));
       this.show(uri);
       return this.text();
@@ -209,6 +213,7 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
         return;
       }
       this.adopt(uri);
+      this.plainTokens = onlyPlainTokens(spec, sml);
       this.stateSpace = outcome.result;
       // Show the structural results next to it, so a deadlock candidate is confirmed or refuted in place.
       if (!this.structural) {
@@ -239,11 +244,21 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
       filters: { Text: ['txt'] },
     });
     if (!target) return;
-    await vscode.workspace.fs.writeFile(target, Buffer.from(reportText(name, this.structural, this.stateSpace), 'utf8'));
+    await vscode.workspace.fs.writeFile(target, Buffer.from(reportText(name, this.structural, this.stateSpace, this.plainTokens), 'utf8'));
     void vscode.window.showInformationMessage(`CPN IDE: report saved to ${target.fsPath}`);
   }
 
-  private async run(uri: vscode.Uri, url: string): Promise<void> {
+  /** Check Model, Structural Analysis and Analyse State Space in one go; stops when the check finds errors. */
+  async analyse(): Promise<string[] | undefined> {
+    return runAnalyse({
+      check: () => this.check(),
+      structural: () => this.structuralAnalysis(),
+      stateSpace: () => this.analyseStateSpace(),
+    });
+  }
+
+  /** Returns true when the model has no errors. */
+  private async run(uri: vscode.Uri, url: string): Promise<boolean> {
     const fetchFn = fetch as unknown as FetchLike;
     let findings: Finding[];
     if (isSpecFile(uri.path)) {
@@ -266,6 +281,7 @@ class AnalysisProvider implements vscode.TreeDataProvider<AnalysisRow>, vscode.D
     this.rows = findingsToRows(findings);
     this.view.description = uri.path.slice(uri.path.lastIndexOf('/') + 1);
     this.changed.fire();
+    return !findings.some((f) => f.severity === 'error');
   }
 }
 
@@ -287,7 +303,8 @@ export function registerAnalysisView(): vscode.Disposable {
   const provider = new AnalysisProvider();
   return vscode.Disposable.from(
     provider,
-    vscode.commands.registerCommand('cpnIde.checkModel', () => provider.check()),
+    vscode.commands.registerCommand('cpnIde.checkModel', async () => void (await provider.check())),
+    vscode.commands.registerCommand('cpnIde.analyse', () => provider.analyse()),
     vscode.commands.registerCommand('cpnIde.analysis.reveal', reveal),
     registerReplicationCommands(),
     // #107

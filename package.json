@@ -144,6 +144,11 @@
         "icon": "$(export)"
       },
       {
+        "command": "cpnIde.analyse",
+        "title": "CPN IDE: Analyse",
+        "icon": "$(play)"
+      },
+      {
         "command": "cpnIde.checkModel",
         "title": "CPN IDE: Check Model",
         "icon": "$(check)"
@@ -366,7 +371,7 @@
     "viewsWelcome": [
       {
         "view": "cpnIde.analysis",
-        "contents": "No results yet. Open a .cpn or .petri.json model and check it against the CPN IDE validator, or analyse its structure.\n[Check Model](command:cpnIde.checkModel)\n[Structural Analysis](command:cpnIde.structuralAnalysis)\n[Analyse State Space](command:cpnIde.analyseStateSpace)"
+        "contents": "No results yet. Open a .cpn or .petri.json model, then run all the checks in one go: validation, structural analysis and the state space.\n[Analyse](command:cpnIde.analyse)"
       },
       {
         "view": "cpnIde.net",
@@ -425,7 +430,7 @@
           {
             "id": "analyse",
             "title": "Analyse your net",
-            "description": "Open the CPN IDE sidebar and use the **Analysis** view: check the model, run the structural analysis (no backend needed) and explore the state space. Try it on the dining philosophers example.\n[Open an Example](command:cpnIde.openExample)",
+            "description": "Open the CPN IDE sidebar and use the **Analysis** view and press **Analyse**: it checks the model, runs the structural analysis and explores the state space. Try it on the dining philosophers example.\n[Open an Example](command:cpnIde.openExample)",
             "media": {
               "markdown": "media/walkthrough/analysis.md"
             }
@@ -561,34 +566,24 @@
       ],
       "view/title": [
         {
-          "command": "cpnIde.checkModel",
+          "command": "cpnIde.analyse",
           "when": "view == cpnIde.analysis",
           "group": "navigation@1"
         },
         {
-          "command": "cpnIde.structuralAnalysis",
+          "command": "cpnIde.saveAnalysisReport",
           "when": "view == cpnIde.analysis",
           "group": "navigation@2"
         },
         {
-          "command": "cpnIde.analyseStateSpace",
-          "when": "view == cpnIde.analysis",
-          "group": "navigation@3"
-        },
-        {
-          "command": "cpnIde.saveAnalysisReport",
-          "when": "view == cpnIde.analysis",
-          "group": "navigation@4"
-        },
-        {
           "command": "cpnIde.runReplications",
           "when": "view == cpnIde.analysis",
-          "group": "navigation@5"
+          "group": "analysis@1"
         },
         {
           "command": "cpnIde.exportEventLog",
           "when": "view == cpnIde.analysis",
-          "group": "navigation@6"
+          "group": "analysis@2"
         },
         {
           "command": "cpnIde.newNet",

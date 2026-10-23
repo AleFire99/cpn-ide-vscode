@@ -28,8 +28,8 @@ downloaded on first use if you don't already have one.
 - **Convert both ways**: turn an existing `.cpn` into a text model, or export a text model to `.cpn`.
 - **Headless runs**: simulate a model for N steps without the UI and print the final marking.
 - **Hierarchy**: subpages, substitution transitions with port/socket assignments, and fusion places.
-- **CPN IDE sidebar**: an Activity Bar icon lists the models in your workspace, shows the backend state with its
-  controls, and offers the bundled examples.
+- **CPN IDE sidebar**: an Activity Bar icon lists the models in your workspace and the structure of the open one, and
+  holds the Analysis view. The backend controls (Start, Restart, Stop, Show Log, Docker) are in the status bar menu.
 
 ## Getting started
 
@@ -54,8 +54,12 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   simulation and convert (`.cpn` → text) or export (text → `.cpn`). The active model is selected as you switch tabs.
 - **Net**: the pages, places, transitions and arcs of the open text model (or of the `.petri.json` next to an open
   `.cpn` / `.sml`). Click one to jump to it in the JSON.
-- **Analysis**: **Check Model** (the check button in the view title) validates the open `.cpn` or `.petri.json` with the
-  CPN IDE validator and lists the errors with their location; click one to open its source.
+- **Analysis**: **Analyse** (the play button in the view title) runs three steps on the open `.cpn` or `.petri.json`:
+  **Check Model** validates it with the CPN IDE validator and lists the errors with their location (click one to open
+  its source; if there are errors, the run stops there), then **Structural Analysis**, then **Analyse State Space**.
+  The results accumulate in the one view. **Save Report** (next to it) writes them to a text file; **Run Replications**
+  and **Export Event Log** are in the `...` menu. The three steps are also separate commands in the Command Palette
+  (**CPN IDE: Check Model**, **Structural Analysis**, **Analyse State Space**).
   **Run Replications** runs N replications on the backend with a progress notification and opens the text
   `replication_report.txt` (a remote or Docker backend keeps it on its own machine, the notification says where).
   **Export Event Log** simulates the model while recording events and writes an XES or CSV event log to a `play_out`
@@ -64,15 +68,17 @@ The **CPN IDE** icon in the Activity Bar opens a sidebar with five views:
   **Structural Analysis** needs no backend: it shows boundedness, deadlock freedom / liveness (Commoner and the state
   equation) and P/T-invariants in sections. **Analyse State Space** explores the reachable markings on the backend
   (cancellable; limits `cpnIde.stateSpace.maxStates` and `cpnIde.stateSpace.timeoutSeconds`) and shows bounds, dead
-  markings and dead transitions, confirming or refuting the structural deadlock candidate. Every row carries a badge:
-  proved, up to N, candidate, inconclusive or approximate (the net has arcs whose token count is not fixed). A cut-short
-  search is labelled as a lower bound. **Save Analysis Report** writes both to a text file.
-  Caveats: the state space is for untimed nets only; monitors are ignored; a partial search (cap or timeout reached)
-  only gives lower bounds and is labelled as such; and the structural analysis counts tokens without their colours, so
-  its results are approximate whenever an arc's token count is not fixed (the badge says so).
-- **Backend**: the backend state (as in the status bar) and Start/Restart, Stop and Show Log. The Docker rows appear on
-  macOS, when `cpnIde.backendUrl` is set, or if the backend failed. The gear in the title opens the settings.
-- **Get Started** (collapsed by default): the bundled examples, **New Net**, the walkthrough and this documentation.
+  markings and dead transitions, confirming or refuting the structural deadlock candidate. If the net may be unbounded
+  it asks first, and the search stops with a witness as soon as a place provably grows without limit; a search cut
+  short by the cap or timeout reports Inconclusive instead of partial figures. Every row carries a badge:
+  proved, up to N, candidate, inconclusive or approximate (the net has arcs whose token count is not fixed). "Unbounded"
+  is only proved for nets whose places all have colour set `UNIT`; otherwise it is "Likely unbounded".
+  Caveats: the state space is for untimed nets only; monitors are ignored; and the structural analysis counts tokens
+  without their colours, so its results are approximate whenever an arc's token count is not fixed (the badge says so).
+- **Backend controls** are in the status bar menu (click the CPN IDE item): Start/Restart, Stop, Show Log and the
+  Docker actions. Advanced options are in the settings under **Advanced**.
+
+A `.cpn` that has a `.petri.json` twin next to it is hidden from the **Models** view; open the text model instead.
 
 To start from scratch, run **CPN IDE: New Net** from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`), or
 right-click a folder in the Explorer. It asks for a name, writes `NAME.petri.json` and `NAME.sml` with a small starter
