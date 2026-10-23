@@ -32,7 +32,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     { dispose: disposeSimulationOutput },
     SimulateLens.register(),
     createStatusBar(backend),
-    registerSidebar(backend),
+    registerSidebar(),
     registerNetView(),
     registerAnalysisView(),
     registerDefaultEditorPrompt(ctx),
