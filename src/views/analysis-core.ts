@@ -217,22 +217,39 @@ export function structuralRows(r: StructuralResults, ss?: StateSpaceResult): Ana
   return sections;
 }
 
-/** Rows for the state space result, with the caveats of a search that was cut short. */
-export function stateSpaceRows(r: StateSpaceResult): AnalysisRow[] {
-  const cut = !r.complete;
-  const strength: Strength = cut ? { kind: 'upTo', n: r.nodes, unit: 'states' } : { kind: 'proved' };
-  const overview = result(`${r.nodes} states, ${r.arcs} arcs`, strength, false, `${r.elapsedMs} ms${cut ? ' · incomplete: stopped at a cap or cancelled' : ''}`);
+/** Rows for the state space result, with the caveats of a search that was cut short. `exact`: the PT abstraction of the net is exact. */
+export function stateSpaceRows(r: StateSpaceResult, exact = true): AnalysisRow[] {
+  if (r.unbounded) {
+    const { place, trace } = r.unbounded;
+    const path = trace.join(' > ') || '(initial)';
+    const row = exact
+      ? result(`Unbounded: place ${place}`, { kind: 'proved' }, false, `reached by ${path}`)
+      : { ...result(`Likely unbounded: place ${place}`, { kind: 'candidate' }, true, `reached by ${path}`), icon: 'warning' };
+    return [section('State space', 'type-hierarchy', [row, result(`${r.nodes} states explored before stopping`, { kind: 'upTo', n: r.nodes, unit: 'states' }, false, `${r.elapsedMs} ms`)])];
+  }
+  if (!r.complete) {
+    const row = result('Inconclusive: stopped at the state cap or timeout', { kind: 'inconclusive' }, false, `${r.nodes} states, ${r.arcs} arcs, ${r.elapsedMs} ms; partial figures are hidden`);
+    return [section('State space', 'type-hierarchy', [row])];
+  }
+  const strength: Strength = { kind: 'proved' };
+  const overview = result(`${r.nodes} states, ${r.arcs} arcs`, strength, false, `${r.elapsedMs} ms`);
   const dead: AnalysisRow[] = [
     result(plural(r.deadMarkings.length, 'dead marking'), strength, false),
     ...r.deadMarkings.map<AnalysisRow>((m) => ({ kind: 'result', label: `node ${m.node}`, icon: 'debug-pause', description: m.trace.join(' > ') || '(initial)' })),
-    result(cut ? `Not fired within ${r.nodes} states` : 'Dead transitions', strength, false, r.deadTransitions.join(', ') || 'none'),
+    result('Dead transitions', strength, false, r.deadTransitions.join(', ') || 'none'),
   ];
-  const bounds = Object.entries(r.bounds).map(([n, b]) => result(n, strength, false, `${b.min}..${b.max}${cut ? ' (lower bound)' : ''}`));
+  const bounds = Object.entries(r.bounds).map(([n, b]) => result(n, strength, false, `${b.min}..${b.max}`));
   return [
     section('State space', 'type-hierarchy', [overview]),
     section('Boundedness (state space)', 'graph', bounds),
     section('Deadlocks / Liveness (state space)', 'debug-pause', dead),
   ];
+}
+
+/** Summary lines of the state space for the saved report; same logic as the rows. */
+function stateSpaceLines(r: StateSpaceResult, exact: boolean): string[] {
+  if (r.complete && !r.unbounded) return formatStateSpace(r);
+  return ['State space', ...rowsToText(stateSpaceRows(r, exact)[0].children ?? [], '  ')];
 }
 
 /** Flatten rows to indented text. */
@@ -244,7 +261,7 @@ export function rowsToText(rows: AnalysisRow[], indent = ''): string[] {
 export function reportText(name: string, structural?: StructuralResults, ss?: StateSpaceResult): string {
   const lines = [`CPN IDE analysis report: ${name}`, ''];
   if (structural) lines.push('Structural analysis', ...rowsToText(structuralRows(structural, ss), '  '), '');
-  if (ss) lines.push(...formatStateSpace(ss), '');
+  if (ss) lines.push(...stateSpaceLines(ss, structural?.net.exact ?? true), '');
   if (!structural && !ss) lines.push('No results yet.');
   return lines.join('\n');
 }

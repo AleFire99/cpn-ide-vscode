@@ -91,9 +91,25 @@ describe('stateSpaceRows', () => {
 
   it('labels an incomplete result as up to N states, with lower bounds and "not fired within"', () => {
     const text = rowsToText(stateSpaceRows(ss({ complete: false, nodes: 500, deadTransitions: ['P/t'] }))).join('\n');
-    expect(text).toContain('Not fired within 500 states: up to 500 states · P/t');
-    expect(text).not.toContain('Dead transitions');
-    expect(text).toContain('a: up to 500 states · 0..1 (lower bound)');
+    expect(text).toContain('Inconclusive: stopped at the state cap or timeout');
+    expect(text).not.toMatch(/dead marking|Dead transitions|Not fired|lower bound|0\.\.1/);
+    expect(stateSpaceRows(ss({ complete: false })).map((r) => r.label)).toEqual(['State space']);
+  });
+
+  it('puts an unbounded finding first: proved when exact, approximate otherwise', () => {
+    const u = ss({ complete: false, unbounded: { place: 'a', trace: ['t', 'u'] } });
+    const exact = rowsToText(stateSpaceRows(u, true)).join('\n');
+    expect(exact).toContain('Unbounded: place a: proved · reached by t > u');
+    expect(exact).not.toContain('Inconclusive');
+    expect(exact).not.toContain('dead marking');
+    const approx = rowsToText(stateSpaceRows(u, false)).join('\n');
+    expect(approx).toContain('Likely unbounded: place a');
+    expect(approx).toContain('approximate');
+  });
+
+  it('reports the same in the saved text', () => {
+    expect(reportText('m', undefined, ss({ complete: false }))).toContain('Inconclusive');
+    expect(reportText('m', undefined, ss({ complete: false, unbounded: { place: 'a', trace: ['t'] } }))).toContain('Unbounded: place a');
   });
 });
 
