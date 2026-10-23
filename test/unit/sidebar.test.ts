@@ -15,13 +15,12 @@ describe('modelKind', () => {
 
 describe('groupModels', () => {
   it("groups a net's files into one row, text model first", () => {
-    expect(groupModels(['a/n.sml', 'a/n.cpn', 'a/n.petri.json'])).toEqual([
+    expect(groupModels(['a/n.sml', 'a/n.petri.json'])).toEqual([
       {
         name: 'n',
         dir: 'a',
         files: [
           { path: 'a/n.petri.json', kind: 'petri' },
-          { path: 'a/n.cpn', kind: 'cpn' },
           { path: 'a/n.sml', kind: 'sml' },
         ],
         open: 'a/n.petri.json',
@@ -29,8 +28,34 @@ describe('groupModels', () => {
     ]);
   });
 
-  it('opens the .cpn when there is no text model', () => {
-    expect(groupModels(['n.sml', 'n.cpn'])[0]).toMatchObject({ dir: '', open: 'n.cpn' });
+  it('hides the .cpn export of a net that has a .petri.json', () => {
+    expect(groupModels(['a/n.sml', 'a/n.cpn', 'a/n.petri.json'])).toEqual([
+      {
+        name: 'n',
+        dir: 'a',
+        files: [
+          { path: 'a/n.petri.json', kind: 'petri' },
+          { path: 'a/n.sml', kind: 'sml' },
+        ],
+        open: 'a/n.petri.json',
+      },
+    ]);
+    expect(groupModels(['n.petri.json', 'n.cpn'])[0].files.map((f) => f.kind)).toEqual(['petri']);
+  });
+
+  it('lists a lone .cpn (with its .sml) and opens the .cpn', () => {
+    expect(groupModels(['n.sml', 'n.cpn'])).toEqual([
+      {
+        name: 'n',
+        dir: '',
+        files: [
+          { path: 'n.cpn', kind: 'cpn' },
+          { path: 'n.sml', kind: 'sml' },
+        ],
+        open: 'n.cpn',
+      },
+    ]);
+    expect(groupModels(['a/n.cpn'])[0]).toMatchObject({ dir: 'a', open: 'a/n.cpn', files: [{ path: 'a/n.cpn', kind: 'cpn' }] });
   });
 
   it('keeps same-named files in different folders apart and skips lone .sml files', () => {

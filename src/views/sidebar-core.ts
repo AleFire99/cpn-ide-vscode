@@ -21,15 +21,17 @@ export interface ModelGroup {
   name: string;
   /** Folder of the files (workspace-relative, '' at the root). */
   dir: string;
-  /** Workspace-relative paths of the files, text model first. */
+  /** Workspace-relative paths of the listed files, text model first. A .cpn is left out when the net has a .petri.json. */
   files: { path: string; kind: ModelKind }[];
-  /** The file a click opens in the canvas: the .petri.json if present, else the .cpn. */
+  /** The file a click opens in the canvas: the .petri.json if present, else the .cpn (its only text model). */
   open: string;
 }
 
 /**
  * Group NAME.petri.json / NAME.cpn / NAME.sml in the same folder into one net, sorted by folder then name,
- * case-insensitively. A lone .sml (declarations without a net) is not listed. Takes workspace-relative paths.
+ * case-insensitively. A .cpn next to a .petri.json is its export, so it is not listed as a file of the net
+ * (the group is opened on the .petri.json); a lone .cpn stays listed and opens the .cpn. A lone .sml
+ * (declarations without a net) is not listed. Takes workspace-relative paths.
  */
 export function groupModels(paths: readonly string[]): ModelGroup[] {
   const groups = new Map<string, ModelGroup>();
@@ -46,6 +48,8 @@ export function groupModels(paths: readonly string[]): ModelGroup[] {
   }
   const result: ModelGroup[] = [];
   for (const g of groups.values()) {
+    // The .petri.json is the primary format; a .cpn beside it is only its export.
+    if (g.files.some((f) => f.kind === 'petri')) g.files = g.files.filter((f) => f.kind !== 'cpn');
     g.files.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind));
     const first = g.files[0];
     if (first.kind === 'sml') continue;
