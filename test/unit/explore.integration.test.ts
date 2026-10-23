@@ -80,14 +80,17 @@ describe.skipIf(!process.env.CPN_IT)('state space exploration on the real backen
   it('05-dining-philosophers: reaches a dead marking (everyone holds one fork)', async () => {
     const r = await explore('05-dining-philosophers');
     expect(r.complete).toBe(true);
+    expect(r.unbounded).toBeUndefined();
     expect(r.deadMarkings.length).toBeGreaterThan(0);
     expect(r.deadMarkings[0].trace.length).toBeGreaterThan(0);
   }, 120000);
 
-  it('06-unbounded-producer: stops at the state cap, incomplete', async () => {
+  it('06-unbounded-producer: stops early with an unbounded witness', async () => {
     const r = await explore('06-unbounded-producer', 50);
     expect(r.complete).toBe(false);
-    expect(r.nodes).toBeGreaterThanOrEqual(50);
+    expect(r.unbounded).toBeDefined();
+    expect(r.unbounded?.trace.length).toBeGreaterThan(0);
+    expect(r.nodes).toBeLessThan(50);
   }, 120000);
 
   it('01-simple-flow: has a dead marking reached by named transitions', async () => {
