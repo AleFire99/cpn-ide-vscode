@@ -82,7 +82,8 @@ class ModelsProvider implements vscode.TreeDataProvider<ModelElement>, vscode.Di
       const { group } = element;
       const item = new vscode.TreeItem(group.name, vscode.TreeItemCollapsibleState.Collapsed);
       item.id = `${group.dir}/${group.name}`;
-      item.description = group.dir || undefined;
+      const cpn = modelKind(group.open) === 'cpn';
+      item.description = [cpn ? 'CPN Tools model' : undefined, group.dir || undefined].filter(Boolean).join(' · ') || undefined;
       item.tooltip = group.open;
       item.iconPath = new vscode.ThemeIcon('type-hierarchy');
       item.contextValue = 'net';
