@@ -651,17 +651,17 @@
     "@types/node": "^22.20.5",
     "@types/vscode": "^1.90.0",
     "@vscode/test-electron": "^3.1.0",
-    "@vscode/vsce": "^4.0.0",
+    "@vscode/vsce": "^4.1.0",
     "esbuild": "^0.28.2",
-    "eslint": "^10.12.0",
-    "fast-xml-parser": "^5.11.2",
+    "eslint": "^10.14.0",
+    "fast-xml-parser": "^5.12.0",
     "mocha": "^12.0.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.71.2",
-    "vitest": "^5.0.5"
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
   },
   "dependencies": {
-    "javascript-lp-solver": "^0.4.24",
+    "javascript-lp-solver": "^1.0.3",
     "jsonc-parser": "^3.3.1"
   }
 }
